@@ -74,3 +74,26 @@
 - **Trải nghiệm thao tác (AJAX)**: Ưu tiên không load lại website với những tác vụ nhẹ. Chuyên nghiệp hóa trang bị tối ưu hóa trải nghiệm tương thích cao (Responsive) cho mọi kích thước smartphone.
 - **Hệ thống xử lý kịch bản gửi Email (PHPMailer)**: Chạy kịch bản tự động cảnh báo từ giao thức SMTP của Google (gửi Email xác nhận hóa đơn, thông báo tồn kho Admin).
 - **Bảo mật An Toàn (Security)**: Lớp hóa mật khẩu Bcrypt băm, ngăn chặn tất cả hành động đưa truy vấn tấn công lỗ hổng XSS / SQL Injection thông qua xử lý PDO Prepared Statements.
+
+
+
+## Hệ thống Quản trị (Admin) - Hà :
+- SRS_ADMIN_DASHBOARD.MD
+- SRS_ADMIN_QL_DANH_MUC.MD
+- SRS_ADMIN_QL_DON_HANG.MD
+- SRS_ADMIN_QL_KHACH_HANG.MD
+- SRS_ADMIN_QL_SAN_PHAM.MD
+- SRS_ADMIN_QL_TIN_TUC.MD
+
+## Giao diện Khách hàng & Tương tác mua hàng (User/Shop) - Kiên:
+- SRS_TIM_KIEM_SAN_PHAM.MD
+- SRS_CHI_TIET_SAN_PHAM.MD
+- SRS_GIO_HANG.MD
+- SRS_THANH_TOAN.MD (Bao gồm tach hợp VNPAY/COD)
+
+## Chức năng Hỗ trợ & Thông tin bổ sung - Nhân :
+- SRS_TRANG_CHU.MD
+- SRS_QUAN_LY_TAI_KHOAN.MD
+- SRS_QUEN_MAT_KHAU.MD
+- RS_BLOG_TIN_TUC.MD
+- SRS_LIEN_HE.MD
