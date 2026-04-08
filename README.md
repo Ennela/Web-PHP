@@ -16,6 +16,19 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 
 ---
 
+## 📝 Phân công công việc
+
+### Hệ thống Quản trị (Admin) — Hà
+- Dashboard, Quản lý Danh mục, Đơn hàng, Khách hàng, Sản phẩm, Tin tức
+
+### Giao diện mua hàng (Shop) — Kiên
+- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Thanh toán (VNPAY/COD)
+
+### Chức năng hỗ trợ & Thông tin — Nhân
+- Trang chủ, Quản lý tài khoản, Quên mật khẩu, Blog/Tin tức, Liên hệ
+
+---
+
 ## 📋 Mục lục
 
 - [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
@@ -24,7 +37,6 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 - [Chức năng chính](#-chức-năng-chính)
 - [Hướng dẫn cài đặt](#-hướng-dẫn-cài-đặt)
 - [Tài liệu SRS](#-tài-liệu-srs)
-- [Thành viên](#-thành-viên)
 
 ---
 
@@ -337,17 +349,4 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 | `SRS_ADMIN_QL_DON_HANG.MD` | Đặc tả quản lý đơn hàng |
 | `SRS_ADMIN_QL_KHACH_HANG.MD` | Đặc tả quản lý khách hàng |
 | `SRS_ADMIN_QL_TIN_TUC.MD` | Đặc tả quản lý tin tức |
-
----
-
-## 📝 Phân công công việc
-
-### Hệ thống Quản trị (Admin) — Hà
-- Dashboard, Quản lý Danh mục, Đơn hàng, Khách hàng, Sản phẩm, Tin tức
-
-### Giao diện mua hàng (Shop) — Kiên
-- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Thanh toán (VNPAY/COD)
-
-### Chức năng hỗ trợ & Thông tin — Nhân
-- Trang chủ, Quản lý tài khoản, Quên mật khẩu, Blog/Tin tức, Liên hệ
 
