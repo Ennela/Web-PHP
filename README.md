@@ -286,7 +286,7 @@ WEB-PHP/
 1. **Clone hoặc tải source code** vào thư mục `htdocs` của XAMPP:
    ```bash
    cd C:\xampp\htdocs
-   git clone <repository-url> WEB-PHP
+   git clone https://github.com/Ennela/Web-PHP.git WEB-PHP
    ```
 
 2. **Khởi động XAMPP** → Bật **Apache** và **MySQL**
@@ -325,7 +325,7 @@ Chỉnh sửa file `vnpay_php/config.php` với thông tin Merchant do VNPAY c�
 
 ## 📄 Tài liệu SRS
 
-Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu trong thư mục `documents/`:
+Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu trong thư mục `documents/`. Bạn có thể đọc trực tiếp trên GitHub tại: [Ennela/Web-PHP/documents](https://github.com/Ennela/Web-PHP/tree/main/documents)
 
 | File | Mô tả |
 |---|---|
