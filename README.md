@@ -4,6 +4,18 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 
 ---
 
+## 👥 Thành viên
+
+- **Lớp**: D18CNPM2
+
+| STT | Họ và tên | Mã sinh viên |
+|---|---|---|
+| 1 | Nguyễn Văn Kiên | 23810310138 |
+| 2 | Đỗ Quang Hà | 23810310132 |
+| 3 | Nguyễn Bá Nhân | 23810310144 |
+
+---
+
 ## 📋 Mục lục
 
 - [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
@@ -339,14 +351,3 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 ### Chức năng hỗ trợ & Thông tin — Nhân
 - Trang chủ, Quản lý tài khoản, Quên mật khẩu, Blog/Tin tức, Liên hệ
 
----
-
-## 👥 Thành viên
-
-- **Lớp**: D18CNPM2
-
-| STT | Họ và tên | Mã sinh viên |
-|---|---|---|
-| 1 | Nguyễn Văn Kiên | 23810310138 |
-| 2 | Đỗ Quang Hà | 23810310132 |
-| 3 | Nguyễn Bá Nhân | 23810310144 |
