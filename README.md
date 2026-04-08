@@ -325,28 +325,28 @@ Chỉnh sửa file `vnpay_php/config.php` với thông tin Merchant do VNPAY c�
 
 ## 📄 Tài liệu SRS
 
-Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu trong thư mục `documents/`. Bạn có thể đọc trực tiếp trên GitHub tại: [Ennela/Web-PHP/documents](https://github.com/Ennela/Web-PHP/tree/main/documents)
+Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu trong thư mục `documents/`:
 
 | File | Mô tả |
 |---|---|
-| `De_cuong_chuc_nang.md` | Đề cương chức năng tổng quan toàn hệ thống |
-| `SRS_TRANG_CHU.MD` | Đặc tả trang chủ |
-| `SRS_DANG_KY.MD` | Đặc tả chức năng đăng ký |
-| `SRS_DANG_NHAP.MD` | Đặc tả chức năng đăng nhập |
-| `SRS_DANG_XUAT.MD` | Đặc tả chức năng đăng xuất |
-| `SRS_QUAN_LY_TAI_KHOAN.MD` | Đặc tả quản lý tài khoản |
-| `SRS_QUEN_MAT_KHAU.MD` | Đặc tả quên mật khẩu |
-| `SRS_TIM_KIEM_SAN_PHAM.MD` | Đặc tả tìm kiếm sản phẩm |
-| `SRS_CHI_TIET_SAN_PHAM.MD` | Đặc tả chi tiết sản phẩm |
-| `SRS_GIO_HANG.MD` | Đặc tả giỏ hàng |
-| `SRS_DAT_HANG.MD` | Đặc tả đặt hàng |
-| `SRS_THANH_TOAN.MD` | Đặc tả thanh toán (VNPAY/COD) |
-| `SRS_BLOG_TIN_TUC.MD` | Đặc tả blog/tin tức |
-| `SRS_LIEN_HE.MD` | Đặc tả trang liên hệ |
-| `SRS_ADMIN_DASHBOARD.MD` | Đặc tả dashboard admin |
-| `SRS_ADMIN_QL_SAN_PHAM.MD` | Đặc tả quản lý sản phẩm |
-| `SRS_ADMIN_QL_DANH_MUC.MD` | Đặc tả quản lý danh mục |
-| `SRS_ADMIN_QL_DON_HANG.MD` | Đặc tả quản lý đơn hàng |
-| `SRS_ADMIN_QL_KHACH_HANG.MD` | Đặc tả quản lý khách hàng |
-| `SRS_ADMIN_QL_TIN_TUC.MD` | Đặc tả quản lý tin tức |
+| [`De_cuong_chuc_nang.md`](https://github.com/Ennela/Web-PHP/blob/main/documents/De_cuong_chuc_nang.md) | Đề cương chức năng tổng quan toàn hệ thống |
+| [`SRS_TRANG_CHU.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_TRANG_CHU.MD) | Đặc tả trang chủ |
+| [`SRS_DANG_KY.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DANG_KY.MD) | Đặc tả chức năng đăng ký |
+| [`SRS_DANG_NHAP.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DANG_NHAP.MD) | Đặc tả chức năng đăng nhập |
+| [`SRS_DANG_XUAT.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DANG_XUAT.MD) | Đặc tả chức năng đăng xuất |
+| [`SRS_QUAN_LY_TAI_KHOAN.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_QUAN_LY_TAI_KHOAN.MD) | Đặc tả quản lý tài khoản |
+| [`SRS_QUEN_MAT_KHAU.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_QUEN_MAT_KHAU.MD) | Đặc tả quên mật khẩu |
+| [`SRS_TIM_KIEM_SAN_PHAM.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_TIM_KIEM_SAN_PHAM.MD) | Đặc tả tìm kiếm sản phẩm |
+| [`SRS_CHI_TIET_SAN_PHAM.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả chi tiết sản phẩm |
+| [`SRS_GIO_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_GIO_HANG.MD) | Đặc tả giỏ hàng |
+| [`SRS_DAT_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DAT_HANG.MD) | Đặc tả đặt hàng |
+| [`SRS_THANH_TOAN.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_THANH_TOAN.MD) | Đặc tả thanh toán (VNPAY/COD) |
+| [`SRS_BLOG_TIN_TUC.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_BLOG_TIN_TUC.MD) | Đặc tả blog/tin tức |
+| [`SRS_LIEN_HE.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_LIEN_HE.MD) | Đặc tả trang liên hệ |
+| [`SRS_ADMIN_DASHBOARD.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_DASHBOARD.MD) | Đặc tả dashboard admin |
+| [`SRS_ADMIN_QL_SAN_PHAM.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_SAN_PHAM.MD) | Đặc tả quản lý sản phẩm |
+| [`SRS_ADMIN_QL_DANH_MUC.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_DANH_MUC.MD) | Đặc tả quản lý danh mục |
+| [`SRS_ADMIN_QL_DON_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_DON_HANG.MD) | Đặc tả quản lý đơn hàng |
+| [`SRS_ADMIN_QL_KHACH_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_KHACH_HANG.MD) | Đặc tả quản lý khách hàng |
+| [`SRS_ADMIN_QL_TIN_TUC.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_TIN_TUC.MD) | Đặc tả quản lý tin tức |
 
