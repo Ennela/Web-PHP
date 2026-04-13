@@ -1,6 +1,8 @@
 # 🏪 Website Bán Giày Thông Minh
 
-Dự án môn học xây dựng một website bán giày thể thao fullstack với PHP thuần, triển khai trên XAMPP. Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, thành viên).
+Dự án môn học xây dựng một website bán giày thể thao fullstack với PHP thuần, triển khai trên XAMPP. Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, tra cứu lịch sử mua hàng cá nhân, thanh toán VNPAY) và **quản trị viên** (quản lý sản phẩm với thuộc tính size, đơn hàng, khách hàng, bài viết, thành viên). 
+
+Vừa qua, dự án đã được cập nhật lớn về mặt giao diện thiết kế (Brutalist-Minimalist trên các trang chính) cùng nâng cấp logic doanh thu, liên kết người dùng và tuỳ biến chi tiết sản phẩm.
 
 ---
 
@@ -22,10 +24,10 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 - Dashboard, Quản lý Danh mục, Đơn hàng, Khách hàng, Sản phẩm, Tin tức
 
 ### Giao diện mua hàng (Shop) — Kiên
-- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Thanh toán (VNPAY/COD)
+- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Đặt hàng Online, Tra cứu Đơn hàng cá nhân, Thanh toán (VNPAY/COD)
 
 ### Chức năng hỗ trợ & Thông tin — Nhân
-- Trang chủ, Quản lý tài khoản, Quên mật khẩu, Blog/Tin tức, Liên hệ
+- Trang chủ (Banner Carousel), Quản lý tài khoản, Quên mật khẩu, Blog/Tin tức, Liên hệ
 
 ---
 
@@ -34,7 +36,7 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 - [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
 - [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
 - [Cơ sở dữ liệu](#-cơ-sở-dữ-liệu)
-- [Chức năng chính](#-chức-năng-chính)
+- [Chức năng nổi bật](#-chức-năng-nổi-bật)
 - [Hướng dẫn cài đặt](#-hướng-dẫn-cài-đặt)
 - [Tài liệu SRS](#-tài-liệu-srs)
 
@@ -45,13 +47,13 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 | Thành phần      | Công nghệ | Lý do lựa chọn |
 | --------------- | --------- | -------------- |
 | **Ngôn ngữ**    | PHP 8.x (thuần) | Dễ triển khai, cú pháp trực quan, giúp sinh viên nắm vững kiến thức cốt lõi về backend, session và luồng xử lý web động trước khi học Framework. |
-| **Database**    | MariaDB 10.4 | Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ, mã nguồn mở, tích hợp sẵn trong XAMPP, truy vấn SQL chuẩn và tối ưu tốt với PHP. |
-| **Web Server**  | Apache (XAMPP) | Môi trường phát triển cục bộ trọn gói, dễ cài đặt và chạy ngay trên Windows mà không cần tự cấu hình các service rời rạc. |
-| **Frontend**    | HTML5, JS, Bootstrap 5 | Chuẩn web hiện đại kết hợp framework CSS phổ biến, hỗ trợ dàn trang (Grid/Flexbox) và responsive UI trên di động nhanh chóng. |
-| **Font & Icon** | Montserrat, FontAwesome | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện và tạo trải nghiệm người dùng tốt hơn. |
+| **Database**    | MariaDB 10.4 | Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ, mã nguồn mở, tích hợp sẵn trong XAMPP. |
+| **Web Server**  | Apache (XAMPP) | Môi trường phát triển cục bộ trọn gói, thao tác khởi động dịch vụ web thuận tiện cho Windows. |
+| **Frontend**    | HTML5, Vanilla JS, CSS/Bootstrap | Áp dụng xu hướng thiết kế "Editorial/Brutalist" tân tiến trên các trang shop/cart/thanh toán, kết hợp tuỳ biến linh hoạt hiệu ứng micro-animations. |
+| **Font & Icon** | Montserrat, FontAwesome | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện. |
 | **Thanh toán**  | VNPAY (IPN) | API thanh toán uy tín và sát thực tế, giúp làm quen với luồng thanh toán bảo mật, webhook xác thực giao dịch chuẩn e-Commerce. |
-| **Email**       | PHPMailer (SMTP) | Thư viện gửi email ổn định qua Mail Server thực tế (Gmail SMTP), khắc phục hoàn toàn những giới hạn của hàm `mail()` mặc định trên localhost. |
-| **Thư viện JS** | BaguetteBox, Vanilla Zoom | Các thư viện thao tác DOM bằng Vanilla JS (không phụ thuộc jQuery), gọn nhẹ, mượt mà, chuyên dùng để hiện thực hiệu ứng xem chi tiết ảnh (zoom/lightbox). |
+| **Email**       | PHPMailer (SMTP) | Thư viện gửi email ổn định qua Mail Server thực tế (Gmail SMTP), khắc phục giới hạn của hàm `mail()` mặc định trên localhost. |
+| **Thư viện Ảnh**| Custom Image Zoom | Thay thế các thư viện rườm rà bằng hiệu ứng di chuột (hover/mousemove zoom gallery) chính xác, tương thích mượt mà cho ảnh SP. |
 
 ---
 
@@ -59,99 +61,32 @@ Dự án môn học xây dựng một website bán giày thể thao fullstack v�
 
 ```
 WEB-PHP/
-├── index.php                  # Entry point – redirect đến trang chủ
 ├── config.php                 # Cấu hình BASE_URL, BASE_PATH
-│
 ├── includes/                  # Shared components
-│   ├── connect.php            # Kết nối MySQLi đến DB giaythethao2
-│   ├── header.php             # Header + Navbar chung (Bootstrap)
-│   ├── pagination.php         # Component phân trang
-│   └── fix_db.php             # Script sửa lỗi DB
+│   └── connect.php            # Kết nối MySQLi đến DB giaythethao2
 │
-├── home/                      # Trang công khai (Khách hàng)
-│   ├── trangchu.php           # Trang chủ – banner, sản phẩm nổi bật
-│   ├── vechungtoi.php         # Giới thiệu về cửa hàng
-│   └── lienhe.php             # Trang liên hệ
+├── home/                      # Trang đánh giới thiệu (Khách hàng)
+│   ├── trangchu.php           # Landing Page hiện đại, Carousel Banner, Sản phẩm Highlights
 │
 ├── auth/                      # Xác thực người dùng
-│   ├── dangnhap.php           # Đăng nhập khách hàng
-│   ├── dangki.php             # Đăng ký tài khoản mới
-│   └── thongtintaikhoan.php   # Quản lý thông tin cá nhân
+│   ├── dangnhap.php           # Đăng nhập & bảo mật Session KH
 │
-├── shop/                      # Module mua sắm
-│   ├── shop.php               # Danh sách sản phẩm (grid + phân trang)
-│   ├── chitietsanpham.php     # Chi tiết sản phẩm (ảnh, mô tả, giá)
-│   ├── giohang.php            # Giỏ hàng (Session-based)
-│   ├── infodathang.php        # Form thông tin đặt hàng
-│   ├── dathangonline.php      # Xử lý đặt hàng (COD)
-│   ├── test_vnpay.php         # Tạo URL thanh toán VNPAY
-│   └── vnpay_return.php       # Callback xử lý kết quả VNPAY
-│
-├── blog/                      # Module tin tức
-│   ├── baiviet.php            # Danh sách bài viết
-│   └── chitietbaiviet.php     # Chi tiết bài viết
+├── shop/                      # Module mua sắm & Tài khoản KH
+│   ├── shop.php               # Bố cục UI Grid cao cấp lọc sản phẩm
+│   ├── chitietsanpham.php     # Slider đa ảnh, Custom UI chọn Size
+│   ├── giohang.php            # Giỏ hàng, kết nối AJAX 
+│   ├── infodathang.php        # Form đặt hàng tự điền (Auto-fill profiles)
+│   ├── tradonhang.php         # Quản lý danh sách mọi đơn hàng của user [TÍNH NĂNG MỚI]
+│   └── chitietdonhang.php     # Tracking Timeline đơn hàng theo Status [TÍNH NĂNG MỚI]
 │
 ├── admin/                     # 🔒 Trang quản trị (Admin Panel)
-│   ├── index.php              # Redirect admin
-│   ├── trangchu.php           # Dashboard – thống kê tổng quan
-│   ├── dangnhap.php           # Đăng nhập admin
-│   ├── dangki.php             # Đăng ký tài khoản admin
-│   ├── quenmatkhau.php        # Quên mật khẩu admin
-│   ├── connect_db.php         # Kết nối DB cho admin
-│   ├── function.php           # Hàm tiện ích admin
-│   ├── pagination.php         # Phân trang admin
-│   ├── inhoadon.php           # In hóa đơn đơn hàng
-│   │
-│   ├── quanlisanpham.php      # CRUD sản phẩm (danh sách)
-│   ├── themsanpham.php        # Thêm sản phẩm mới
-│   ├── edit_qlsanpham.php     # Sửa sản phẩm
-│   ├── delete_qlsanpham.php   # Xóa sản phẩm
-│   │
-│   ├── quanlidanhmuc.php      # Quản lý danh mục sản phẩm
-│   ├── themdanhmuc.php        # Thêm danh mục
-│   │
-│   ├── quanlidonhang.php      # Quản lý đơn hàng
-│   ├── themdonhang.php        # Tạo đơn hàng thủ công
-│   ├── delete_qldonhang.php   # Xóa đơn hàng
-│   │
-│   ├── quanlikhachhang.php    # Quản lý tài khoản khách hàng
-│   ├── themkhachhang.php      # Thêm khách hàng
-│   ├── delete_qlkhachhang.php # Xóa khách hàng
-│   │
-│   ├── quanlithanhvien.php    # Quản lý thành viên (nhân viên)
-│   ├── themthanhvien.php      # Thêm thành viên
-│   ├── edit_qlthanhvien.php   # Sửa thành viên
-│   ├── delete_qlthanhvien.php # Xóa thành viên
-│   │
-│   ├── quanlibaidang.php      # Quản lý bài đăng (blog)
-│   ├── thembaidang.php        # Thêm bài đăng
-│   ├── edit_qlbaidang.php     # Sửa bài đăng
-│   ├── delete_qlbaidang.php   # Xóa bài đăng
-│   │
-│   ├── canhbao.php            # Cảnh báo hệ thống
-│   ├── gallery_delete.php     # Xóa ảnh thư viện
-│   └── uploads/               # Thư mục lưu ảnh upload
+│   ├── trangchu.php           # Dashboard doanh thu thực (Lọc theo ngaytao/DELIVERED)
+│   ├── quanlidonhang.php      # Thay đổi quy trình đơn, cập nhật Tracking.
+│   ├── quanlisanpham.php      # Thêm mặt hàng kèm mảng Sizes/Biến thể.
 │
-├── vnpay_php/                 # SDK thanh toán VNPAY
-│   ├── config.php             # Cấu hình VNPAY (TmnCode, HashSecret)
-│   ├── vnpay_create_payment.php
-│   ├── vnpay_return.php
-│   ├── vnpay_ipn.php          # Instant Payment Notification
-│   ├── vnpay_query.php        # Truy vấn giao dịch
-│   └── vnpay_refund.php       # Hoàn tiền giao dịch
-│
-├── PHPMailer-master/          # Thư viện gửi email (SMTP)
-├── assets/                    # Tài nguyên tĩnh
-│   ├── bootstrap/             # Bootstrap 5 CSS/JS
-│   ├── css/                   # Custom CSS
-│   ├── js/                    # JavaScript
-│   ├── fonts/                 # FontAwesome, icon fonts
-│   └── img/                   # Ảnh giao diện
-│
-├── images/                    # Ảnh tĩnh (logo, icon mạng xã hội)
-├── documents/                 # 📄 Tài liệu SRS & đề cương chức năng
-├── giaythethao2.sql           # 💾 File dump cơ sở dữ liệu
-└── import_sql.php             # Script tự động import SQL
+├── vnpay_php/                 # API tích hợp cổng thanh toán Sandbox VNPAY
+├── PHPMailer-master/          # Gửi Email thư viện
+└── documents/                 # 📄 Tài liệu SRS & kiến trúc đề cương yêu cầu
 ```
 
 ---
@@ -160,166 +95,42 @@ WEB-PHP/
 
 **Database**: `giaythethao2` · **Engine**: InnoDB · **Charset**: UTF-8
 
-### Sơ đồ các bảng
+### Sơ đồ các bảng liên hệ nghiệp vụ (Lọc điểm chính)
 
-```
-┌──────────────────────┐     ┌──────────────────────┐
-│   tbl_qlthanhvien    │     │    tbl_dangnhap      │
-│ (Thành viên/Admin)   │     │  (Đăng nhập Admin)   │
-├──────────────────────┤     ├──────────────────────┤
-│ id (PK)              │     │ mavn (PK)            │
-│ hoten                │     │ hoten                │
-│ gioitinh             │     │ taikhoan             │
-│ ngaysinh             │     │ matkhau              │
-│ diachicuthe          │     │ ngaysinh             │
-│ tinh, thanhpho       │     │ created_time         │
-│ phuongxa             │     │ last_updated         │
-│ chucvu               │     └──────────────────────┘
-│ motacongviec         │
-│ taikhoan (UNIQUE)    │
-│ matkhau              │
-│ ngaytao, ngaycapnhat │
-└──────────────────────┘
-
-┌──────────────────────┐     ┌──────────────────────┐
-│   tbl_qlsanpham      │────▶│   tbl_thuvienanh     │
-│   (Sản phẩm)         │ 1:N │  (Thư viện ảnh SP)   │
-├──────────────────────┤     ├──────────────────────┤
-│ masp (PK)            │     │ id (PK)              │
-│ tensp                │     │ masp (FK)            │
-│ anhdaidien           │     │ path                 │
-│ anhgiuoithieu1       │     │ ngaytao              │
-│ anhgiuoithieu2       │     │ ngaycapnhat          │
-│ giasanpham           │     └──────────────────────┘
-│ giagoc               │
-│ noidung              │
-│ nhomsp               │
-│ ngaytao, ngaycapnhat │
-└──────┬───────────────┘
-       │ 1:N
-       ▼
-┌──────────────────────┐     ┌──────────────────────┐
-│    oder_chitiet      │────▶│       oder           │
-│ (Chi tiết đơn hàng)  │ N:1 │   (Đơn hàng)         │
-├──────────────────────┤     ├──────────────────────┤
-│ id (PK)              │     │ id (PK)              │
-│ madonhang (FK→oder)  │     │ tenkh                │
-│ masp (FK→tbl_qlsp)   │     │ diachi               │
-│ quantity             │     │ sdt                  │
-│ price                │     │ note                 │
-│ created_time         │     │ ngaytao              │
-│ last_updated         │     │ tongtien             │
-└──────────────────────┘     │ donhangthang         │
-                             │ status               │
-                             │ vnpay_tranId         │
-                             └──────────────────────┘
-
-┌──────────────────────┐     ┌──────────────────────┐
-│   tbl_tkkhachhang    │     │   tbl_qlbaidang      │
-│ (Tài khoản KH)       │     │  (Bài đăng/Blog)     │
-├──────────────────────┤     ├──────────────────────┤
-│ makh (PK)            │     │ id (PK)              │
-│ username (UNIQUE)    │     │ nguoiphutrach        │
-│ password             │     │ tieude               │
-│ hoten                │     │ noidung              │
-│ ngaytao              │     │ anhdaidien           │
-└──────────────────────┘     │ anhgiuoithieu1, 2    │
-                             │ chedo (Hiện/Ẩn)      │
-                             │ ngaytao, ngaycapnhat │
-                             └──────────────────────┘
-```
-
-### Quan hệ giữa các bảng
-
-| Quan hệ | Mô tả |
-|---|---|
-| `oder_chitiet.madonhang` → `oder.id` | Mỗi đơn hàng có nhiều chi tiết sản phẩm (CASCADE) |
-| `oder_chitiet.masp` → `tbl_qlsanpham.masp` | Mỗi chi tiết liên kết đến 1 sản phẩm (CASCADE) |
-| `tbl_thuvienanh.masp` → `tbl_qlsanpham.masp` | Mỗi sản phẩm có nhiều ảnh phụ (CASCADE) |
+| Bảng dữ liệu | Chức năng nổi bật |
+| --- | --- |
+| `tbl_tkkhachhang` | Lưu giữ định danh `makh`. |
+| `tbl_qlsanpham` | Chứa dữ liệu danh mục, cấu trúc mô tả sản phẩm. |
+| `oder` | Đã liên kết với `makh` (Khách hàng). Thay đổi tính giá trị doanh thu bằng trường `ngaytao` (Timestamp sinh lời thực) thay vì mốc tháng tĩnh. |
+| `oder_chitiet` | Liên kết N-1 với đơn hàng (`madonhang`). Gặp sự bổ sung thuộc tính **`size`** – đáp ứng cá nhân hóa theo từng biến thể sản phẩm bán ra. |
 
 ---
 
-## ⚡ Chức năng chính
+## ⚡ Chức năng nổi bật (Mới cập nhật)
 
 ### 👤 Phía Khách hàng (Frontend)
 
-| Chức năng | Mô tả |
-|---|---|
-| **Trang chủ** | Banner quảng cáo, carousel sản phẩm nổi bật, sản phẩm bán chạy |
-| **Cửa hàng** | Xem danh sách sản phẩm dạng grid, phân trang, lọc theo danh mục |
-| **Chi tiết SP** | Xem ảnh sản phẩm (zoom), mô tả, giá gốc/giá khuyến mãi |
-| **Tìm kiếm** | Thanh tìm kiếm sản phẩm theo từ khóa |
-| **Giỏ hàng** | Thêm/sửa/xóa sản phẩm, tính tổng tiền (Session-based) |
-| **Đặt hàng** | Form thông tin nhận hàng, ghi chú đơn hàng |
-| **Thanh toán COD** | Thanh toán khi nhận hàng |
-| **Thanh toán VNPAY** | Thanh toán trực tuyến qua cổng VNPAY (ATM, Visa, QR Code) |
-| **Đăng ký/Đăng nhập** | Tạo tài khoản, đăng nhập để quản lý thông tin |
-| **Quên mật khẩu** | Khôi phục mật khẩu qua email (PHPMailer) |
-| **Blog/Tin tức** | Đọc bài viết về xu hướng giày, mẹo vệ sinh, review |
-| **Giới thiệu** | Thông tin về cửa hàng |
-| **Liên hệ** | Form gửi liên hệ đến bộ phận CSKH |
+- **Giao diện Cao Cấp (Premium UI):** Trang bán hàng (Shop, Cart, Order) được viết lại theo phong cách tối giản, sử dụng các gradient mượt, thẻ sản phẩm thiết kế góc bo hiện đại và độ phủ tương tác cao (hover micro-animations).
+- **Hero Carousel Banner:** Vòng lặp banner chuyển động trực quan giúp trang chủ (Landing Area) trông sinh động, chuyên nghiệp hơn.
+- **Tùy chọn Cỡ (Size):** Người dùng khi chọn mua sản phẩm bắt buộc phải chọn cỡ chuẩn tại trang chi tiết sản phẩm trước khi mua đồ.
+- **Image Zoom Tracker:** Tích hợp logic tuỳ chỉnh xử lý hiệu ứng Zoom theo toạ độ chuột trực tiếp trên chi tiết sản phẩm. Không phụ thuộc nặng nề vào các dependencies bên thứ ba.
+- **Tracking Hành trình (Order Timeline):** Khi đăng nhập, khách hàng có thể theo sát kiện hàng tiến triển qua thẻ "Timeline báo hiệu" (Từ Chờ xét duyệt -> Xác Nhận -> Giao Xong). Việc tra cứu được mã hoá chặt chẽ chốt ID `makh`.
 
 ### 🔒 Phía Quản trị viên (Admin Panel)
 
-| Chức năng | Mô tả |
-|---|---|
-| **Dashboard** | Tổng quan thống kê: doanh thu, đơn hàng, sản phẩm bán chạy |
-| **Quản lý sản phẩm** | CRUD sản phẩm (ảnh, giá, mô tả, danh mục), upload nhiều ảnh |
-| **Quản lý danh mục** | Thêm/sửa nhóm sản phẩm (Giày nam, Giày nữ, ...) |
-| **Quản lý đơn hàng** | Xem/sửa trạng thái đơn, in hóa đơn, xóa đơn |
-| **Quản lý khách hàng** | Xem danh sách tài khoản KH, thêm/xóa |
-| **Quản lý thành viên** | CRUD nhân viên quản trị (phân quyền: Quản lí / Nhân viên) |
-| **Quản lý bài đăng** | CRUD bài viết blog, ẩn/hiện bài viết |
-| **Đăng nhập Admin** | Hệ thống xác thực riêng biệt cho quản trị viên |
+- **Dashboard Doanh thu thông minh:** Thay vì lưu và đối soát doanh số qua một file tĩnh hay tháng cưng nhắc, logic được quy về việc query đếm tổng `tongtien` từ bảng `oder` được trích xuất bằng timestamp `ngaytao`. Khẳng định số liệu báo trước mặt Admin chỉ cộng gộp cho các đơn đạt trạng thái `DELIVERED` (Đã giao tận tay).
+- **Hỗ trợ Admin Sizes:** Các biểu mẫu quản lý / thêm sửa sản phẩm, cập nhật form sửa đơn hàng để theo dõi Size chân cụ thể của khách mà không phải dựa vào mô tả chung.
 
 ---
 
 ## 🚀 Hướng dẫn cài đặt
 
-### Yêu cầu hệ thống
-
-- [XAMPP](https://www.apachefriends.org/) (Apache + MariaDB/MySQL + PHP 8.x)
-- Trình duyệt web hiện đại (Chrome, Firefox, Edge)
-
-### Các bước cài đặt
-
-1. **Clone hoặc tải source code** vào thư mục `htdocs` của XAMPP:
-   ```bash
-   cd C:\xampp\htdocs
-   git clone https://github.com/Ennela/Web-PHP.git WEB-PHP
-   ```
-
-2. **Khởi động XAMPP** → Bật **Apache** và **MySQL**
-
-3. **Tạo database** bằng một trong hai cách:
-
-   - **Cách 1 – phpMyAdmin**: Truy cập `http://localhost/phpmyadmin`, tạo database `giaythethao2` (charset `utf8_general_ci`), sau đó Import file `giaythethao2.sql`
-
-   - **Cách 2 – Script tự động**: Truy cập `http://localhost/WEB-PHP/import_sql.php`
-
-4. **Kiểm tra kết nối DB**: Mở `includes/connect.php`, đảm bảo thông tin phù hợp:
-   ```php
-   $con = mysqli_connect("127.0.0.1", "root", "", "giaythethao2");
-   ```
-
-5. **Truy cập website**:
-   - 🌐 Trang khách hàng: `http://localhost/WEB-PHP/`
-   - 🔐 Trang quản trị: `http://localhost/WEB-PHP/admin/`
-
-### Tài khoản mặc định
-
-| Vai trò | Tài khoản | Mật khẩu |
-|---|---|---|
-| Admin (Quản lí) | `noah2005` | `kudo-kun` |
-| Nhân viên | `ha` | `ha123` |
-| Nhân viên | `nhan` | `nhan123` |
-| Khách hàng | `test05` | `kudo-kun` |
-
-### Cấu hình VNPAY (tùy chọn)
-
-Chỉnh sửa file `vnpay_php/config.php` với thông tin Merchant do VNPAY cấp:
-- `vnp_TmnCode` – Mã website
-- `vnp_HashSecret` – Chuỗi bí mật
+1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`
+2. **Khởi động XAMPP (Apache + MySQL)**
+3. **Database:** Import tự động thông qua `http://localhost/WEB-PHP/import_sql.php`
+4. **Truy cập:**
+   - 🌐 Trang khách hàng: `http://localhost/WEB-PHP/` (Tài khoản mẫu: `test05` / `kudo-kun`)
+   - 🔐 Trang quản trị: `http://localhost/WEB-PHP/admin/` (Tài khoản Admin: `noah2005` / `kudo-kun`)
 
 ---
 
@@ -329,24 +140,12 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 
 | File | Mô tả |
 |---|---|
-| [`De_cuong_chuc_nang.md`](https://github.com/Ennela/Web-PHP/blob/main/documents/De_cuong_chuc_nang.md) | Đề cương chức năng tổng quan toàn hệ thống |
-| [`SRS_TRANG_CHU.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_TRANG_CHU.MD) | Đặc tả trang chủ |
-| [`SRS_DANG_KY.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DANG_KY.MD) | Đặc tả chức năng đăng ký |
-| [`SRS_DANG_NHAP.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DANG_NHAP.MD) | Đặc tả chức năng đăng nhập |
-| [`SRS_DANG_XUAT.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DANG_XUAT.MD) | Đặc tả chức năng đăng xuất |
-| [`SRS_QUAN_LY_TAI_KHOAN.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_QUAN_LY_TAI_KHOAN.MD) | Đặc tả quản lý tài khoản |
-| [`SRS_QUEN_MAT_KHAU.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_QUEN_MAT_KHAU.MD) | Đặc tả quên mật khẩu |
-| [`SRS_TIM_KIEM_SAN_PHAM.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_TIM_KIEM_SAN_PHAM.MD) | Đặc tả tìm kiếm sản phẩm |
-| [`SRS_CHI_TIET_SAN_PHAM.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả chi tiết sản phẩm |
-| [`SRS_GIO_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_GIO_HANG.MD) | Đặc tả giỏ hàng |
-| [`SRS_DAT_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_DAT_HANG.MD) | Đặc tả đặt hàng |
-| [`SRS_THANH_TOAN.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_THANH_TOAN.MD) | Đặc tả thanh toán (VNPAY/COD) |
-| [`SRS_BLOG_TIN_TUC.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_BLOG_TIN_TUC.MD) | Đặc tả blog/tin tức |
-| [`SRS_LIEN_HE.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_LIEN_HE.MD) | Đặc tả trang liên hệ |
-| [`SRS_ADMIN_DASHBOARD.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_DASHBOARD.MD) | Đặc tả dashboard admin |
-| [`SRS_ADMIN_QL_SAN_PHAM.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_SAN_PHAM.MD) | Đặc tả quản lý sản phẩm |
-| [`SRS_ADMIN_QL_DANH_MUC.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_DANH_MUC.MD) | Đặc tả quản lý danh mục |
-| [`SRS_ADMIN_QL_DON_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_DON_HANG.MD) | Đặc tả quản lý đơn hàng |
-| [`SRS_ADMIN_QL_KHACH_HANG.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_KHACH_HANG.MD) | Đặc tả quản lý khách hàng |
-| [`SRS_ADMIN_QL_TIN_TUC.MD`](https://github.com/Ennela/Web-PHP/blob/main/documents/SRS_ADMIN_QL_TIN_TUC.MD) | Đặc tả quản lý tin tức |
+| [`De_cuong_chuc_nang.md`](./documents/De_cuong_chuc_nang.md) | Đề cương chức năng kiến trúc |
+| [`SRS_ADMIN_DASHBOARD.MD`](./documents/SRS_ADMIN_DASHBOARD.MD) | Đặc tả Dashboard & Báo cáo doanh thu thời gian thực |
+| [`SRS_ADMIN_QL_SAN_PHAM.MD`](./documents/SRS_ADMIN_QL_SAN_PHAM.MD) | Đặc tả Quản lý Sản phẩm / Kích cỡ Size |
+| [`SRS_CHI_TIET_SAN_PHAM.MD`](./documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả Giao diện View SP, Chọn Cỡ & Hover Zoom |
+| [`SRS_DAT_HANG.MD`](./documents/SRS_DAT_HANG.MD) | Đặc tả Khâu Đặt hàng liên kết tài khoản KH ẩn danh/cá nhân hoá |
+| [`SRS_TRA_CUU_DON_HANG.MD`](./documents/SRS_TRA_CUU_DON_HANG.MD) | (MỚI) Đặc tả Tracking hành trình kiên hàng |
+| Và các tài liệu khác... | ... (Tồn tại trong `/documents`) |
 
+*Website bán giày được củng cố theo tiêu chuẩn Web Responsive - Cung cấp định nghĩa bảo mật hiện vật an toàn, trải nghiệm người dùng tuyệt hảo.*

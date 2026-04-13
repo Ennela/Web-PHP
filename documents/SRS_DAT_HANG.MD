@@ -40,10 +40,10 @@ Cung cấp luồng quy trình cho phép khách hàng chuyển đổi các sản 
   * Danh sách chi tiết các món đồ đã mua trong đơn: Mã sản phẩm/Sku, kích cỡ, số lượng, và đặc biệt là mức giá được chốt tại thời điểm lập hóa đơn, đảm bảo không thay đổi dù giá gốc sau này có cập nhật.
 
 ### 4. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)
-* **Toàn vẹn hàng hóa:** Kiểm tra lại số lượng tồn kho theo thời gian thực (Real-time stock) ngay tại thời điểm khách bấm nút Xác nhận. Tránh tình huống báo lỗi ảo hoặc hết hàng do thao tác mua trùng lặp với người khác.
+* **Xác thực Đơn Hàng:** Người dùng bắt buộc phải đăng nhập thì mới có thể tiến hành đặt mua hàng (`makh` phải tồn tại). Hệ thống sẽ gắn ID người dùng vào bản lưu Đơn Hàng trực tiếp trên CSDL để thiết lập danh tính khách.
 * **Đồng bộ tồn kho:** Sau khi duyệt đơn thành công (chờ xử lý hoặc đã thanh toán trực tuyến), hệ thống phải trừ ngay lập tức số lượng hàng hóa nằm trong kho để nhường slot.
 * **Tích Hợp Thanh Toán Mạng:** Mọi dữ liệu chuyển dịch sang cổng thanh toán cần phải được mã hóa thành chữ ký điện tử an toàn kết hợp với mã bí mật của đối tác, tránh rò rỉ dữ liệu thẻ hay nguy cơ bị bên thứ ba sửa giá trên trình duyệt.
-* **Cập nhật trạng thái Độc lập:** Trạng thái của đơn hàng thanh toán online luôn luôn phải được định đoạt hoàn toàn bởi các kịch bản đối soát ngầm gửi từ máy chủ đối tác tới máy chủ cửa hàng (server-to-server connection), loại bỏ việc dựa vào luồng duyệt của người dùng, qua đó xóa rủi ro sai lệch dữ liệu do người dùng đóng đột ngột trình duyệt.
+* **Cập nhật trạng thái Độc lập:** Trạng thái của đơn hàng thanh toán online luôn luôn phải được định đoạt hoàn toàn bởi các kịch bản đối soát ngầm gửi từ máy chủ đối tác tới máy chủ cửa hàng (server-to-server connection).
 
 ### 5. Trường hợp ngoại lệ & Xử lý lỗi (Edge Cases)
 * **Trường hợp:** Số lượng khách muốn mua lại nhiều hơn tổng số lượng hiện đang còn trong kho.

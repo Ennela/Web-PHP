@@ -7,17 +7,18 @@
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Hệ thống cung cấp một bảng điều khiển trung tâm (Dashboard) dành riêng cho Quản trị viên tại đường dẫn `admin/trangchu.php`. Chức năng này giúp Admin theo dõi các chỉ số cơ bản như số lượng đơn hàng đã đặt, số lượng sản phẩm đang bán, tổng số thành viên và số lượng bài viết.
+Hệ thống cung cấp một bảng điều khiển trung tâm (Dashboard) dành riêng cho Quản trị viên tại đường dẫn `admin/trangchu.php`. Chức năng này giúp Admin theo dõi các chỉ số cơ bản như số lượng đơn hàng đã đặt, số lượng sản phẩm đang bán, tổng số thành viên và báo cáo tổng Doanh Thu theo tháng dựa trên thời gian thực.
 
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động Admin | Phản hồi hệ thống |
 | :--- | :--- | :--- |
 | 1 | Truy cập vào `admin/index.php` hoặc `admin/trangchu.php` | Hệ thống kiểm tra session đăng nhập admin (`$_SESSION['admin']`). |
 | 2 | Đăng nhập thành công | Hiển thị giao diện trang chủ Admin. |
-| 3 | Xem các thẻ tóm tắt số liệu (Cards) | Hệ thống thực thi các câu truy vấn `COUNT` từ các bảng `oder`, `tbl_qlsanpham`, `tbl_tkkhachhang` để in con số. |
+| 3 | Xem các thẻ tóm tắt số liệu (Cards) | Hệ thống thực thi các câu truy vấn `COUNT` từ các bảng `oder`, `tbl_qlsanpham`, `tbl_tkkhachhang` để in con số. Các hàm `SUM` trích xuất thu nhập cho hoá đơn hợp lệ. |
 
 ### 3. Yêu cầu dữ liệu (Data Requirements)
 #### 3.1. Dữ liệu đối chiếu
+* **Doanh thu Thực (Revenue):** `SELECT SUM(tongtien) FROM oder WHERE status = 'DELIVERED'` đi kèm hàm so sánh Timestamp `ngaytao` để tính toán doanh thu các sản phẩm **THỰC TẾ ĐÃ HOÀN TẤT** chuyển đi, xóa bỏ rủi ro thống kê hoá đơn bị người dùng huỷ. 
 * **Bảng Đơn hàng (`oder`):** `SELECT COUNT(id) FROM oder;`
 * **Bảng Khách hàng (`tbl_tkkhachhang`):** `SELECT COUNT(makh) FROM tbl_tkkhachhang;`
 * **Bảng Sản phẩm (`tbl_qlsanpham`):** `SELECT COUNT(masp) FROM tbl_qlsanpham;`

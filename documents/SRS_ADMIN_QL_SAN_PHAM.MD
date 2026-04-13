@@ -7,21 +7,22 @@
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Hệ thống cho phép Quản trị viên (Admin) tạo mới, chỉnh sửa thông tin hoặc xóa bỏ các sản phẩm giày dép (`quanlisanpham.php`). Chức năng yêu cầu nạp hình ảnh chính và ảnh phụ, định giá sản phẩm (giá bán/giá gốc) và điền trực tiếp tên Nhóm sản phẩm (nhomsp). Cấu trúc hiện tại không yêu cầu quản lý số lượng tồn kho hay phân loại cỡ kích size (Variants).
+Hệ thống cho phép Quản trị viên (Admin) tạo mới, chỉnh sửa thông tin hoặc xóa bỏ các sản phẩm giày dép (`quanlisanpham.php`). Chức năng yêu cầu nạp hình ảnh chính và ảnh phụ, định giá sản phẩm (giá bán/giá gốc) và điền trực tiếp tên Nhóm sản phẩm (nhomsp). Cấu trúc hiện đã yêu cầu và cho phép quản lý và định nghĩa các kích cỡ chân (Sizes), tăng tính phong phú biến thể sản phẩm phục vụ chính xác người dùng.
 
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động Admin | Phản hồi hệ thống |
 | :--- | :--- | :--- |
 | 1 | Truy cập "Quản lý Sản phẩm" | Hệ thống Load bảng kê hàng hóa (`tbl_qlsanpham`). |
-| 2 | Nhấn "Thêm sản phẩm mới" (`themsanpham.php`) | Màn hình Form nhập liệu với các trường (Tên, Ảnh 1, 2, 3, Giá gốc, Giá bán, Mô tả, Nhóm SP). |
+| 2 | Nhấn "Thêm sản phẩm mới" (`themsanpham.php`) | Màn hình Form nhập liệu với các trường (Tên, Thư viện Ản, Giá gốc, Giá bán, Mô tả, Nhóm SP, Sizes). |
 | 3 | Khai báo và ấn Lưu | Ứng dụng tải 3 hình ảnh lên thư mục `uploads/` trên máy chủ sử dụng hàm `move_uploaded_file()`. |
-| 4 | *Trường hợp thành công:* Lưu vào kho | Chèn thông số bao gồm đường dẫn ảnh vào CSDL (`INSERT INTO tbl_qlsanpham`). |
+| 4 | *Trường hợp thành công:* Lưu vào kho | Chèn thông số bao gồm đường dẫn ảnh và thiết lập Size vào CSDL. |
 
 ### 3. Yêu cầu dữ liệu (Data Requirements)
 #### 3.1. Dữ liệu Đầu vào (Input Fields)
 * **Tên sản phẩm (`tensp`):** Tên định danh hiển thị.
-* **Nhóm Sản Phẩm (`nhomsp`):** Chuỗi giá trị tự do (VD: "Giày nam", "Giày nữ").
-* **Tài nguyên ảnh:** Hỗ trợ cứng đúng 03 ô upload ảnh (Ảnh đại diện, Ảnh phụ 1, Ảnh phụ 2). Ghi lại đường dẫn tương đối (Ví dụ: `uploads/giay.jpg`).
+* **Nhóm Sản Phẩm (`nhomsp`):** Danh mục cấu trúc SP.
+* **Thuộc tính Sizes (`size`):** Hệ thống có thể gắn thêm thuộc tính cho phép khách lựa size trong phần chi tiết.
+* **Tài nguyên ảnh:** Hỗ trợ cứng đúng 03 ô upload ảnh (Ảnh đại diện, Ảnh phụ 1, Ảnh phụ 2). 
 * **Giá cả:** `giasanpham` (Giá thanh toán) và `giagoc` (Giá ảo gạch ngang đối chứng hiển thị). 
 * **Nội dung (`noidung`):** Thẻ đoạn văn mô tả dạng Text/HTML.
 
