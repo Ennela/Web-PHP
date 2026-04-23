@@ -52,7 +52,9 @@ Vừa qua, dự án đã được cập nhật lớn về mặt giao diện thi�
 | **Frontend**    | HTML5, Vanilla JS, CSS/Bootstrap | Áp dụng xu hướng thiết kế "Editorial/Brutalist" tân tiến trên các trang shop/cart/thanh toán, kết hợp tuỳ biến linh hoạt hiệu ứng micro-animations. |
 | **Font & Icon** | Montserrat, FontAwesome | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện. |
 | **Thanh toán**  | VNPAY (IPN) | API thanh toán uy tín và sát thực tế, giúp làm quen với luồng thanh toán bảo mật, webhook xác thực giao dịch chuẩn e-Commerce. |
-| **Email**       | PHPMailer (SMTP) | Thư viện gửi email ổn định qua Mail Server thực tế (Gmail SMTP), khắc phục giới hạn của hàm `mail()` mặc định trên localhost. |
+| **Email**       | Resend HTTP API | Tích hợp gửi email bằng API HTTP thay vì SMTP truyền thống (PHPMailer), giải quyết triệt để lỗi block cổng outbound (Port 25/465/587) trên các nền tảng Cloud (Railway), giúp luồng thanh toán không bị treo. |
+| **Thông báo UI**| SweetAlert2 | Hiển thị thông báo (Toast Notifications) không chặn màn hình, thay thế hoàn toàn `alert()` mặc định của trình duyệt, nâng cao trải nghiệm người dùng (UX). |
+| **Triển khai**  | Docker & Railway | Đóng gói ứng dụng linh hoạt, tự động bind cổng và biến môi trường, tối ưu hoá quá trình CI/CD và đưa website lên mạng chạy trực tuyến (Cloud Serverless). |
 | **Thư viện Ảnh**| Custom Image Zoom | Thay thế các thư viện rườm rà bằng hiệu ứng di chuột (hover/mousemove zoom gallery) chính xác, tương thích mượt mà cho ảnh SP. |
 
 ---
@@ -85,7 +87,8 @@ WEB-PHP/
 │   ├── quanlisanpham.php      # Thêm mặt hàng kèm mảng Sizes/Biến thể.
 │
 ├── vnpay_php/                 # API tích hợp cổng thanh toán Sandbox VNPAY
-├── PHPMailer-master/          # Gửi Email thư viện
+├── vendor/                    # Các thư viện Composer (bao gồm Resend API)
+├── Dockerfile                 # File cấu hình container triển khai Railway
 └── documents/                 # 📄 Tài liệu SRS & kiến trúc đề cương yêu cầu
 ```
 
@@ -110,7 +113,9 @@ WEB-PHP/
 
 ### 👤 Phía Khách hàng (Frontend)
 
-- **Giao diện Cao Cấp (Premium UI):** Trang bán hàng (Shop, Cart, Order) được viết lại theo phong cách tối giản, sử dụng các gradient mượt, thẻ sản phẩm thiết kế góc bo hiện đại và độ phủ tương tác cao (hover micro-animations).
+- **Giao diện Cao Cấp (Premium UI) & Mobile-First:** Trang bán hàng (Shop, Cart, Order) được viết lại theo phong cách tối giản, sử dụng các gradient mượt, thẻ sản phẩm thiết kế góc bo hiện đại và tối ưu hóa hiển thị trên mọi thiết bị di động (Responsive Grid, Clamp Typography).
+- **Trải nghiệm thông báo mượt mà:** Ứng dụng SweetAlert2 cho mọi luồng thao tác (Thêm giỏ hàng, Đăng nhập, Thanh toán), cung cấp các Toast notifications chuyên nghiệp thay vì cảnh báo gián đoạn của trình duyệt.
+- **Tự động điền dữ liệu (Auto-fill Checkout):** Hệ thống tự động nhận diện người dùng đã đăng nhập để điền trước các thông tin thanh toán (Tên, SĐT, Địa chỉ, Email), giảm thiểu thời gian hoàn tất đơn hàng.
 - **Hero Carousel Banner:** Vòng lặp banner chuyển động trực quan giúp trang chủ (Landing Area) trông sinh động, chuyên nghiệp hơn.
 - **Tùy chọn Cỡ (Size):** Người dùng khi chọn mua sản phẩm bắt buộc phải chọn cỡ chuẩn tại trang chi tiết sản phẩm trước khi mua đồ.
 - **Image Zoom Tracker:** Tích hợp logic tuỳ chỉnh xử lý hiệu ứng Zoom theo toạ độ chuột trực tiếp trên chi tiết sản phẩm. Không phụ thuộc nặng nề vào các dependencies bên thứ ba.
@@ -123,14 +128,27 @@ WEB-PHP/
 
 ---
 
-## 🚀 Hướng dẫn cài đặt
+## 🚀 Hướng dẫn cài đặt & Triển khai
 
-1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`
-2. **Khởi động XAMPP (Apache + MySQL)**
-3. **Database:** Import tự động thông qua `http://localhost/WEB-PHP/import_sql.php`
-4. **Truy cập:**
+### 💻 Môi trường Local (XAMPP)
+1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`.
+2. Chạy lệnh `composer install` để cài đặt các thư viện phụ thuộc (Resend API).
+3. **Khởi động XAMPP (Apache + MySQL)**.
+4. **Database:** Import CSDL từ file `railway_migration_v2.sql`.
+5. Cấu hình biến môi trường (mã nguồn ưu tiên đọc file `.env` nếu có) hoặc sửa trực tiếp trong `includes/connect.php` và `config.php`.
+6. **Truy cập:**
    - 🌐 Trang khách hàng: `http://localhost/WEB-PHP/` (Tài khoản mẫu: `test05` / `kudo-kun`)
    - 🔐 Trang quản trị: `http://localhost/WEB-PHP/admin/` (Tài khoản Admin: `noah2005` / `kudo-kun`)
+
+### ☁️ Triển khai lên Railway (Cloud)
+Dự án đã được cấu hình sẵn `Dockerfile` để triển khai tự động lên Railway:
+1. Khởi tạo dự án trên Railway.
+2. Thêm dịch vụ MySQL, thực thi file `railway_migration_v2.sql` để khởi tạo cấu trúc dữ liệu.
+3. Liên kết kho lưu trữ GitHub chứa dự án vào dịch vụ Web trên Railway.
+4. Cấu hình các biến môi trường (Environment Variables) trên Web service:
+   - `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT`
+   - `RESEND_API_KEY`
+5. Railway sẽ tự động build từ `Dockerfile` và cấp phát tên miền.
 
 ---
 

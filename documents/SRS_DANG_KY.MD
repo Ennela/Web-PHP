@@ -16,8 +16,8 @@ Hệ thống cho phép người dùng vãng lai hoặc khách hàng mới tạo 
 | 1 | Truy cập trang Đăng ký tài khoản từ thanh điều hướng | Hệ thống bắt đầu hiển thị biểu mẫu điền thông tin Đăng ký. |
 | 2 | Cung cấp thông tin bắt buộc (Họ tên, Email/Số điện thoại, Mật khẩu) | Hệ thống kiểm tra nhẹ tính hợp lệ cơ bản của dữ liệu nhập (định dạng, độ dài nội dung). |
 | 3 | Người dùng nhấn chọn nút "Tạo tài khoản" | Máy chủ đối chiếu lại tổng quát dữ liệu với kho dự trữ xem Email/Số điện thoại đã bị trùng lặp hay chưa. |
-| 4 | *Trường hợp thành công:* Thông tin hợp lệ và hoàn toàn mới mẻ | Lưu thông tin người dùng mới này vào hệ thống, thông báo tin báo "Đăng ký thành công" và tự động điều hướng sang trang Đăng nhập. |
-| 5 | *Trường hợp thất bại:* Dữ liệu sai cấu trúc hoặc nội dung bị trùng lặp | Dừng lại tiến trình, giữ nguyên thông tin vừa nhập (ngoại trừ ô vùng chứa mật khẩu), bôi màu cảnh báo đoạn bị lỗi kèm hiển thị nhắc nhở khắc phục. |
+| 4 | *Trường hợp thành công:* Thông tin hợp lệ và hoàn toàn mới mẻ | Lưu thông tin vào CSDL, hiển thị SweetAlert2 Toast thông báo "Đăng ký thành công" và tự động điều hướng sang trang Đăng nhập. |
+| 5 | *Trường hợp thất bại:* Dữ liệu sai cấu trúc hoặc nội dung bị trùng lặp | Giữ nguyên thông tin vừa nhập, hiển thị thông báo lỗi bằng SweetAlert2 Toast (ví dụ: "Tài khoản đã tồn tại"). |
 
 ### 3. Yêu cầu dữ liệu (Data Requirements)
 #### 3.1. Dữ liệu cần thiết đính kèm yêu cầu (Input Fields)
@@ -50,6 +50,7 @@ Hệ thống cho phép người dùng vãng lai hoặc khách hàng mới tạo 
   * **Xử lý:** Vẫn cấm nộp lệnh tới máy chủ. Vùng đó sẽ bị nhấp nháy chuyển màu và hiển thị nhãn lỗi.
 
 ### 6. Giao diện (UI/UX)
+* Thông báo thân thiện: Tích hợp thư viện SweetAlert2 để xử lý toàn bộ các hộp thoại cảnh báo (lỗi trùng email, thành công, thiếu thông tin) dưới dạng Toast góc màn hình, thay thế cho cơ chế `alert()` mặc định.
 * Khung thao tác chữ tự động chèn kèm những thông điệp kiểu chữ ẩn nhạt để dẫn dụ/làm mẫu cho người viết (VD: *nguyenvana_123@gmail.com*).
 * Nút "Tạo mới tài khoản" ngay khi kích hoạt sẽ chuyển pha mờ đi, kết hợp thể hiện vòng tải tín hiệu (Loading Spinner) với mục tiêu để hệ thống tự xử, tránh gặp sự cố nhấp nháy nhiều lần cùng một lệnh.
 * Hiệu suất nhập liệu mượt mà, gọi đúng bàn phím cảm ứng hỗ trợ tương đương với dữ kiện (Dĩ nhiên bàn phím con số tự động chường ra khi màn hình tới cấu kiện cần gõ Số Điện Thoại).

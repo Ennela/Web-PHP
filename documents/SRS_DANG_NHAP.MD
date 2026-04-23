@@ -47,8 +47,9 @@ Hệ thống xác thực cho phép khách hàng truy cập vào tài khoản cá
 
 ### 6. Giao diện (UI/UX)
 * Thiết kế khung biểu mẫu đăng nhập tuân thủ khả năng tương thích trải nghiệm trên cả thiết bị điện thoại, máy tính bảng và màn hình lớn.
+* Hệ thống thông báo thân thiện: Các thông báo lỗi (sai mật khẩu, tài khoản bị khóa) và thành công được hiển thị dưới dạng SweetAlert2 Toast ở góc màn hình, thay thế hoàn toàn cảnh báo `alert()` mặc định, giúp luồng trải nghiệm không bị đứt gãy.
 * Các nút bấm tương tác ("Đăng nhập") phải thay đổi trạng thái hình dáng hiệu ứng (như nút bị xám đi, quay vòng tải tín hiệu) và đóng băng hoàn toàn ngay khi đang chờ hệ thống xử lý để chống rủi ro nhấn đúp.
-* Hỗ trợ tích hợp sẵn biểu tượng bật/tắt mắt thường ở phần khung văn bản điền Mật khẩu để người dùng kiểm ra được chuỗi ký tự họ vừa gõ mà không bị làm mờ một cách tùy ý.
+* Hỗ trợ tích hợp sẵn biểu tượng bật/tắt mắt thường ở phần khung văn bản điền Mật khẩu để người dùng kiểm tra được chuỗi ký tự họ vừa gõ mà không bị làm mờ một cách tùy ý.
 * Bổ sung nhanh tiện ích phím tắt (Nhấn phím Enter trên bàn phím cứng) để đẩy luồng nộp biểu mẫu thân thiện hơn đối với thao tác trên máy tính cá nhân.
 
 ---

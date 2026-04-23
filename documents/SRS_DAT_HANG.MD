@@ -17,7 +17,7 @@ Cung cấp luồng quy trình cho phép khách hàng chuyển đổi các sản 
 | 2 | Điền thông tin giao nhận hàng | Kiểm tra tính hợp lệ và sự tồn tại của dữ liệu (điện thoại, địa chỉ). |
 | 3 | Lựa chọn phương thức thanh toán (COD hoặc VNPAY) | Hệ thống tự động tính toán và báo cáo tổng số tiền cuối cùng. |
 | 4 | Nhấn nút "Xác nhận đặt hàng" | Sinh mã đơn hàng 9 chữ số ngẫu nhiên duy nhất (`order_code`), lưu thông tin vào cơ sở dữ liệu. Xử lý logic theo phương thức đã chọn. |
-| 5a | *Đối với COD:* Hoàn tất hành động | Hiển thị màn hình "Đặt hàng thành công", hệ thống gửi Email xác nhận hóa đơn. |
+| 5a | *Đối với COD:* Hoàn tất hành động | Hiển thị Toast thông báo thành công (SweetAlert2), hệ thống gửi Email xác nhận hóa đơn qua Resend API và chuyển hướng về trang chủ. |
 | 5b | *Đối với VNPAY:* Xác nhận chuyển hướng thanh toán | Khởi tạo yêu cầu thanh toán với chữ ký bảo mật và chuyển hướng sang cổng thanh toán. |
 | 6 | Thực hiện thanh toán trên cổng VNPAY | VNPAY xử lý yêu cầu, trừ tiền khách và đồng thời gọi lại API trả kết quả. |
 | 7 | Cập nhật kết quả thanh toán | Hệ thống đối soát trạng thái tức thời; Cập nhật tình trạng "Đã thanh toán", làm rỗng giỏ hàng cá nhân. |
@@ -54,8 +54,9 @@ Cung cấp luồng quy trình cho phép khách hàng chuyển đổi các sản 
   * **Xử lý:** Hệ thống tự động từ chối hoàn toàn việc phê duyệt tiếp, cảnh báo dòng chữ *"Chữ ký giao dịch không hợp pháp"*, ghi nhận vào Log Audit sự cố nguy hiểm nhằm phòng ngừa hành vi Hack URL.
 
 ### 6. Giao diện (UI/UX)
-* Khung biểu mẫu điền thông tin và Khung hiển thị tổng kết chi phí thanh toán được chia cục diện hai cột song song để dễ trực quan theo dõi.
+* Giao diện Responsive: Tối ưu hóa hiển thị Mobile-First, sử dụng CSS Grid để bố trí Khung biểu mẫu và Khung hiển thị tổng kết chi phí linh hoạt theo kích thước thiết bị.
+* Trải nghiệm thông báo mượt mà: Sử dụng SweetAlert2 thay thế các hộp thoại `alert()` truyền thống để thông báo lỗi hoặc xác nhận thành công một cách chuyên nghiệp.
 * Khi nhấn nút "Xác nhận", nút bấm lập tức bị khóa lại (Disable state) và hiển thị biểu tượng tải vòng tròn (Loading spinner) nhằm ngăn việc nhấn đúp liên tục gây hệ quả trùng lặp đơn hàng (Double submit).
-* Cung cấp các công cụ tự động điền sẵn (Autofill data) như tên, sdt, địa chỉ lấy từ thông tin hồ sơ của các tài khoản đã đăng nhập để đẩy nhanh tối đa tiến trình giao dịch chốt đơn.
+* Tự động điền dữ liệu (Auto-fill): Nhận diện tài khoản đăng nhập để tự động điền chính xác Tên, SĐT, Địa chỉ và Email vào form Thanh toán, tăng tốc độ chốt đơn.
 
 ---

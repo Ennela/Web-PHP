@@ -36,7 +36,7 @@ Hệ thống cho phép khách hàng đăng nhập để xem danh sách các đơ
 * **Trường hợp khách hàng muốn xem đơn hàng dạng chưa đăng nhập (Khách lạ):** 
   * Định hướng phát triển tương lai có thể xét URL token gửi qua email để xem. Hiện tại bị chặn cứng.
 * **Trường hợp truy cập ID đơn hàng không thuộc về mình:**
-  * **Xử lý:** SQL không query ra result, JS tung catch `alert('Bạn không có quyền xem đơn hàng này!');` rồi đẩy người dùng lùi về danh sách cũ.
+  * **Xử lý:** SQL không query ra result, JS hiển thị thông báo lỗi bằng SweetAlert2 Toast (`Bạn không có quyền xem đơn hàng này!`) và tự động điều hướng người dùng quay lại danh sách đơn hàng.
 
 ### 6. Giao diện (UI/UX)
 * **Trực quan trạng thái:** Sử dụng Timeline dọc/ngang (hoặc các Alert banners) với màu phân biệt: Đỏ (Đã huỷ), Xanh lá (Đã giao), Cam (Chờ xử lí), nhằm cung cấp ngay lập tức Insight về kiện hàng.

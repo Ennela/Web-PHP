@@ -27,7 +27,7 @@
 ### 1.5. Chức năng Giỏ hàng và Đặt hàng
 - **Thêm sản phẩm vào giỏ**: Tiện ích cho phép lựa chọn chính xác size, màu, và số lượng. Hệ thống thêm sản phẩm ngay bằng giao tiếp ngầm AJAX không làm giật trang.
 - **Xem và Cập nhật giỏ hàng**: Quản lý giỏ hàng ở dạng Fly-out (Mini-cart) hoặc trang giỏ hàng chi tiết. Cho phép thay đổi số lượng từng mặt hàng, tự động cập nhật tổng tiền, hoặc xóa sản phẩm khỏi giỏ.
-- **Thông tin đặt hàng (Checkout Form)**: Form kiểm duyệt tối ưu: tự động nhận diện tài khoản, điền lại thông tin có sẵn, yêu cầu điền đầy đủ và đúng định dạng các mục người nhận, địa chỉ cụ thể và phần ghi chú đơn hàng.
+- **Thông tin đặt hàng (Checkout Form)**: Form kiểm duyệt tối ưu với tính năng Auto-fill: tự động nhận diện người dùng đã đăng nhập để điền trước thông tin thanh toán (Tên, SĐT, Địa chỉ, Email), giúp tiết kiệm thời gian và giảm thiểu sai sót.
 
 ### 1.6. Chức năng Thanh Toán
 - **Thanh toán khi nhận hàng (COD)**: Nền tảng ghi nhận hóa đơn chờ đóng gói để thu tiền khi sản phẩm chuyển tới tận tay người nhận hàng bằng đơn vị vận chuyển (shipper).
@@ -70,10 +70,12 @@
 ---
 
 ## 3. Đặc điểm kỹ thuật và nổi bật của hệ thống
+- **Kiến trúc Triển khai Đám mây (Docker & Railway)**: Tích hợp sẵn `Dockerfile` chuẩn mực hỗ trợ môi trường biến (Environment Variables), sẵn sàng đưa hệ thống lên các nền tảng serverless đám mây như Railway với khả năng bind cổng linh hoạt.
+- **Trải nghiệm thao tác mượt mà (AJAX & SweetAlert2)**: Ưu tiên không load lại website với những tác vụ nhẹ bằng AJAX. Cải thiện trải nghiệm người dùng với hệ thống Toast Notifications từ SweetAlert2 thay thế hoàn toàn cho các hộp thoại `alert` gián đoạn.
+- **Giao diện Mobile-First Responsive**: Ứng dụng tư duy thiết kế Mobile-First, sử dụng CSS Grid/Flexbox và kĩ thuật clamp typography, đảm bảo bố cục hoàn hảo trên mọi kích thước màn hình smartphone, tablet và desktop.
+- **Hệ thống gửi Email (Resend HTTP API)**: Thay thế giao thức SMTP truyền thống (PHPMailer) bằng dịch vụ Resend qua API HTTP. Đảm bảo tốc độ gửi mail cực nhanh (non-blocking) và vượt qua các rào cản chặn cổng outbound trên Cloud.
 - **Tích hợp thanh toán an toàn IPN (VNPAY)**: Cơ chế Instant Payment Notification đảm bảo việc đối soát và xác thực trạng thái online vô cùng chính xác, khắc phục bất cập khách đóng trình duyệt sau khi trả thẻ.
-- **Trải nghiệm thao tác (AJAX)**: Ưu tiên không load lại website với những tác vụ nhẹ. Chuyên nghiệp hóa trang bị tối ưu hóa trải nghiệm tương thích cao (Responsive) cho mọi kích thước smartphone.
-- **Hệ thống xử lý kịch bản gửi Email (PHPMailer)**: Chạy kịch bản tự động cảnh báo từ giao thức SMTP của Google (gửi Email xác nhận hóa đơn, thông báo tồn kho Admin).
-- **Bảo mật An Toàn (Security)**: Lớp hóa mật khẩu Bcrypt băm, ngăn chặn tất cả hành động đưa truy vấn tấn công lỗ hổng XSS / SQL Injection thông qua xử lý PDO Prepared Statements.
+- **Bảo mật An Toàn (Security)**: Lớp hóa mật khẩu Bcrypt băm, ngăn chặn tất cả hành động đưa truy vấn tấn công lỗ hổng XSS / SQL Injection thông qua xử lý chuẩn bị truy vấn (Prepared Statements).
 
 
 
