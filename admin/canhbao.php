@@ -21,7 +21,7 @@ if(isset($_POST['dangnhap'])) {
 		$row_dangnhap = mysqli_fetch_array($sql_select_admin);
 		if($count>0){
 			$_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
-			$_SESSION['manv'] = $row_dangnhap['manv'];
+			$_SESSION['manv'] = $row_dangnhap['id'];
 			header('Location: trangchu.php');
 
 
