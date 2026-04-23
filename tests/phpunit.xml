@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         failOnRisky="true"
+         failOnWarning="true">
+
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>Integration</directory>
+        </testsuite>
+        <testsuite name="Api">
+            <directory>Api</directory>
+        </testsuite>
+        <testsuite name="System">
+            <directory>System</directory>
+        </testsuite>
+        <testsuite name="Acceptance">
+            <directory>Acceptance</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_USER" value="root"/>
+        <env name="DB_PASS" value=""/>
+        <env name="DB_NAME" value="giaythethao2_test"/>
+        <env name="BASE_URL" value="http://localhost/WEB-PHP/"/>
+    </php>
+
+    <source>
+        <include>
+            <directory suffix=".php">../auth</directory>
+            <directory suffix=".php">../shop</directory>
+            <directory suffix=".php">../admin</directory>
+            <directory suffix=".php">../includes</directory>
+        </include>
+    </source>
+</phpunit>
