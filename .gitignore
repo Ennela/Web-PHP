@@ -70,3 +70,9 @@ images/
 # Temporary / runtime files
 *.tmp
 *.temp
+
+# Scratch / temporary development files
+scratch/
+scratch_*
+new_*_style.css
+new_style.css
