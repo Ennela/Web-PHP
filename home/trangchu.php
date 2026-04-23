@@ -509,7 +509,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame2.png" alt="Nguyễn Văn Kiên" />
+                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/kien.jpg" alt="Nguyễn Văn Kiên" />
                         </div>
                         <div class="team-info">
                             <h4>Nguyễn Văn Kiên</h4>
@@ -525,7 +525,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame3.png" alt="Đỗ Quang Hà" />
+                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/ha.jpg" alt="Đỗ Quang Hà" />
                         </div>
                         <div class="team-info">
                             <h4>Đỗ Quang Hà</h4>
@@ -541,7 +541,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame1.png" alt="Nguyễn Bá Nhân" />
+                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/nhan.jpg" alt="Nguyễn Bá Nhân" />
                         </div>
                         <div class="team-info">
                             <h4>Nguyễn Bá Nhân</h4>

@@ -424,7 +424,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame2.png"
+                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/kien.jpg"
                                 alt="Nguyễn Văn Kiên" />
                         </div>
                         <div class="team-info">
@@ -441,7 +441,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame3.png"
+                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/ha.jpg"
                                 alt="Đỗ Quang Hà" />
                         </div>
                         <div class="team-info">
@@ -458,7 +458,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame1.png"
+                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/nhan.jpg"
                                 alt="Nguyễn Bá Nhân" />
                         </div>
                         <div class="team-info">
