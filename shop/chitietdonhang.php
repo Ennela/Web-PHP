@@ -5,6 +5,7 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 include BASE_PATH . 'includes/connect.php';
+require_once BASE_PATH . 'includes/inventory_helper.php';
 
 // ===== BẮT BUỘC ĐĂNG NHẬP =====
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
@@ -523,15 +524,16 @@ include BASE_PATH . 'includes/header.php';
                             <i class="fas fa-shopping-bag"></i> Sản phẩm đã đặt (<?= count($orderItems) ?> sản phẩm)
                         </div>
                         <div class="info-card-body" style="padding: 0;">
-                            <table class="product-table">
+                            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                            <table class="product-table" style="min-width: 500px;">
                                 <thead>
                                     <tr>
                                         <th style="width: 60px;"></th>
-                                        <th>Sản phẩm</th>
-                                        <th style="text-align: center;">Size</th>
-                                        <th style="text-align: center;">SL</th>
-                                        <th style="text-align: right;">Đơn giá</th>
-                                        <th style="text-align: right;">Thành tiền</th>
+                                        <th style="min-width: 150px; white-space: nowrap;">Sản phẩm</th>
+                                        <th style="text-align: center; white-space: nowrap;">Size</th>
+                                        <th style="text-align: center; white-space: nowrap;">SL</th>
+                                        <th style="text-align: right; white-space: nowrap;">Đơn giá</th>
+                                        <th style="text-align: right; white-space: nowrap;">Thành tiền</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -580,14 +582,25 @@ include BASE_PATH . 'includes/header.php';
                                     </tr>
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Back button -->
+            <!-- Action + Back buttons -->
             <div class="text-center mt-5 animate-in" style="animation-delay: 0.3s;">
+                <?php if ($currentStatus === 'SHIPPING'): ?>
+                <button class="btn-action-detail btn-receive-detail" onclick="orderDetailAction(<?= $order['id'] ?>, 'receive', this)">
+                    <i class="fas fa-check-circle mr-2"></i> Xác nhận đã nhận hàng
+                </button>
+                <?php endif; ?>
+                <?php if (in_array($currentStatus, ['PENDING', 'CONFIRMED'])): ?>
+                <button class="btn-action-detail btn-cancel-detail" onclick="orderDetailAction(<?= $order['id'] ?>, 'cancel', this)">
+                    <i class="fas fa-times mr-2"></i> Hủy đơn hàng
+                </button>
+                <?php endif; ?>
                 <a href="<?= BASE_URL ?>shop/tradonhang.php" class="btn-detail" style="padding: 14px 40px; font-size: 1rem;">
                     <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách
                 </a>
@@ -602,4 +615,84 @@ include BASE_PATH . 'includes/header.php';
 
 </main>
 
+<style>
+.btn-action-detail {
+    border: none;
+    border-radius: 10px;
+    padding: 14px 32px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    margin-bottom: 8px;
+}
+.btn-receive-detail {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+}
+.btn-receive-detail:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+.btn-cancel-detail {
+    background: #fff;
+    color: #ef4444;
+    border: 2px solid #fecaca;
+}
+.btn-cancel-detail:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    transform: translateY(-2px);
+}
+.btn-action-detail:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+</style>
+
 <?php include BASE_PATH . 'includes/footer.php'; ?>
+
+<script>
+function orderDetailAction(orderId, action, btn) {
+    let confirmMsg = action === 'receive' 
+        ? 'Xác nhận bạn đã nhận được hàng thành công?' 
+        : 'Bạn chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang xử lý...';
+    
+    fetch('<?= BASE_URL ?>shop/api_order_action.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action, order_id: orderId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message || 'Có lỗi xảy ra');
+            btn.disabled = false;
+            btn.innerHTML = action === 'receive' 
+                ? '<i class="fas fa-check-circle mr-2"></i> Xác nhận đã nhận hàng'
+                : '<i class="fas fa-times mr-2"></i> Hủy đơn hàng';
+        }
+    })
+    .catch(() => {
+        alert('Lỗi kết nối. Vui lòng thử lại.');
+        btn.disabled = false;
+        btn.innerHTML = action === 'receive' 
+            ? '<i class="fas fa-check-circle mr-2"></i> Xác nhận đã nhận hàng'
+            : '<i class="fas fa-times mr-2"></i> Hủy đơn hàng';
+    });
+}
+</script>

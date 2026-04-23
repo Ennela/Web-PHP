@@ -6,6 +6,7 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 require_once(BASE_PATH . 'vnpay_php/config.php');
 include BASE_PATH . 'includes/connect.php'; 
+require_once BASE_PATH . 'includes/inventory_helper.php';
 
 // Load the cart from session
 $cart = isset($_SESSION['chuyen']) ? $_SESSION['chuyen'] : [];
@@ -51,10 +52,27 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $_SESSION['email_kh'] = $email_kh;
     $_SESSION['tenkh_order'] = $tenkh;
 
+    // Validate + trừ tồn kho trong 1 transaction (chống race condition)
+    $stockCheckItems = [];
+    foreach ($orderProducts as $sp) {
+        $stockCheckItems[] = [
+            'masp' => $sp['masp'],
+            'size' => $sp['order_size'] ?? 0,
+            'quantity' => $sp['qty_in_cart']
+        ];
+    }
+    $stockResult = validateAndDeductStock($con, $stockCheckItems);
+    if (!$stockResult['success']) {
+        $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
+        $errorText = implode('\\n', $errorMsgs);
+        echo "<script>alert('Không thể đặt hàng:\\n" . $errorText . "'); window.location.href='" . BASE_URL . "shop/giohang.php';</script>";
+        exit;
+    }
+
     $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
     require_once BASE_PATH . 'includes/order_helper.php';
     $orderCode = generateOrderCode($con);
-    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `tenkh`, `sdt`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `makh`) VALUES (NULL, '$orderCode', '$tenkh', '$sdt', '$diachi', '$note', '$total', '" . time() . "', 'PENDING', $makh_val)");
+    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `tenkh`, `sdt`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$tenkh', '$sdt', '$diachi', '$note', '$total', '" . time() . "', 'PENDING', 'UNPAID', $makh_val)");
     $orderID = $con->insert_id;
 
     $insertString = "";
@@ -67,6 +85,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     }
     mysqli_query($con, "INSERT INTO `oder_chitiet` (`id`, `madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES " . $insertString . ";");
 
+    // Tồn kho đã được trừ trong validateAndDeductStock() ở trên
     unset($_SESSION['giohang']); 
     unset($_SESSION['chuyen']);
     unset($_SESSION['chuyen_size']);

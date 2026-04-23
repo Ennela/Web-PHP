@@ -3,6 +3,7 @@ require_once dirname(__DIR__) . '/config.php';
     session_start();
 
     include BASE_PATH . 'includes/connect.php';
+    require_once BASE_PATH . 'includes/inventory_helper.php';
 
     if (isset($_GET['login'])) {
         $dangxuat = $_GET['login'];
@@ -48,6 +49,42 @@ require_once dirname(__DIR__) . '/config.php';
         }
     }//function GuiMail
 
+    function GuiMailKhachHang($email, $tenkh, $orderCode, $token, $total)
+    {
+        require_once BASE_PATH . 'PHPMailer-master/src/PHPMailer.php';
+        require_once BASE_PATH . 'PHPMailer-master/src/SMTP.php';
+        require_once BASE_PATH . 'PHPMailer-master/src/Exception.php';
+        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+        try {
+            $mail->SMTPDebug = 0;
+            $mail->isSMTP();
+            $mail->CharSet = "utf-8";
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'remkyorosi@gmail.com'; // Gmail người bán
+            $mail->Password = 'nvui gcgt snxd rpib';  // App Password
+            $mail->SMTPSecure = 'ssl';
+            $mail->Port = 465;
+            $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
+            $mail->addAddress($email, $tenkh);
+            $mail->isHTML(true);
+            $mail->Subject = "Xác nhận đơn hàng #$orderCode";
+            $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCode . "&token=" . $token;
+            $mail->Body = "
+                <h3>Xin chào $tenkh,</h3>
+                <p>Cảm ơn bạn đã đặt hàng tại Shop Sneakers. Đơn hàng <strong>#$orderCode</strong> của bạn đã được ghi nhận.</p>
+                <p>Tổng giá trị đơn hàng: <strong>" . number_format($total, 0, ',', '.') . "đ</strong></p>
+                <p>Để xem trạng thái chi tiết đơn hàng, vui lòng truy cập đường dẫn sau:</p>
+                <p><a href='$trackingLink'>$trackingLink</a></p>
+                <br>
+                <p>Trân trọng,<br>Shop Sneakers</p>
+            ";
+            $mail->smtpConnect(array("ssl" => array("verify_peer" => false, "verify_peer_name" => false, "allow_self_signed" => true)));
+            $mail->send();
+        } catch (Exception $e) {
+        }
+    }
+
     // Load the cart from session for display
     $cart = isset($_SESSION['chuyen']) ? $_SESSION['chuyen'] : [];
     $cartSizes = isset($_SESSION['chuyen_size']) ? $_SESSION['chuyen_size'] : [];
@@ -87,7 +124,7 @@ require_once dirname(__DIR__) . '/config.php';
             $submitProducts[] = $row;
             $total += $row['giasanpham'] * $_POST['quantity'][$row['masp']];
         }
-        if ($_POST['tenkh'] == '' || $_POST['sdt'] == '' || $_POST['diachi'] == '' || $_POST['quantity'] == '') {
+        if ($_POST['tenkh'] == '' || $_POST['sdt'] == '' || $_POST['diachi'] == '' || empty($_POST['email']) || $_POST['quantity'] == '') {
             ?>
             <script>
                 alert('Mời bạn nhập đầy đủ thông tin');
@@ -98,7 +135,28 @@ require_once dirname(__DIR__) . '/config.php';
         $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
         require_once BASE_PATH . 'includes/order_helper.php';
         $orderCode = generateOrderCode($con);
-        $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `tenkh`, `sdt`, `diachi`, `note`, `tongtien`, `ngaytao`,`donhangthang`, `makh`) VALUES (NULL, '$orderCode', '" . $_POST['tenkh'] . "', '" . $_POST['sdt'] . "', '" . $_POST['diachi'] . "', '" . $_POST['note'] . "', '" . $total . "', '" . time() . "', '" . date('m') . "', $makh_val)");
+        
+        // Validate + trừ tồn kho trong 1 transaction (chống race condition)
+        $stockCheckItems = [];
+        foreach ($submitProducts as $sp) {
+            $stockCheckItems[] = [
+                'masp' => $sp['masp'],
+                'size' => $sp['order_size'] ?? 0,
+                'quantity' => $_POST['quantity'][$sp['masp']]
+            ];
+        }
+        $stockResult = validateAndDeductStock($con, $stockCheckItems);
+        if (!$stockResult['success']) {
+            $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
+            $errorText = implode('\\n', $errorMsgs);
+            echo "<script>alert('Không thể đặt hàng:\\n" . $errorText . "'); window.location.href='" . BASE_URL . "shop/giohang.php';</script>";
+            exit;
+        }
+        
+        $email = mysqli_real_escape_string($con, trim($_POST['email']));
+        $token = bin2hex(random_bytes(16)); // generate token for tracking
+
+        $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`,`donhangthang`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$token', '" . $_POST['tenkh'] . "', '" . $_POST['sdt'] . "', '$email', '" . $_POST['diachi'] . "', '" . $_POST['note'] . "', '" . $total . "', '" . time() . "', '" . date('m') . "', 'PENDING', 'UNPAID', $makh_val)");
         $orderID = $con->insert_id;// lưu id giỏ hàng
         $insertString = "";
         foreach ($submitProducts as $key => $timsanpham) {
@@ -110,9 +168,15 @@ require_once dirname(__DIR__) . '/config.php';
             }
         }
         $insertOrder = mysqli_query($con, "INSERT INTO `oder_chitiet` (`id`, `madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES " . $insertString . ";");
+        
+        // Tồn kho đã được trừ trong validateAndDeductStock() ở trên
+        
         unset($_SESSION['giohang']); // xoá lại giỏ hàng
         unset($_SESSION['chuyen_size']);
         GuiMail();
+        if (!empty($email)) {
+            GuiMailKhachHang($email, $_POST['tenkh'], $orderCode, $token, $total);
+        }
         ?>
         <script>
             alert('Đơn hàng đã đặt thành công !');
@@ -121,6 +185,42 @@ require_once dirname(__DIR__) . '/config.php';
         </script>
         <?php
 
+    }
+
+    // --- Lấy thông tin mặc định để điền sẵn vào form ---
+    $default_name = '';
+    $default_phone = '';
+    $default_address = '';
+    $default_email = '';
+
+    if (!empty($_SESSION['makh'])) {
+        $makh_val_prefill = intval($_SESSION['makh']);
+        
+        // 1. Lấy từ sổ địa chỉ (ưu tiên địa chỉ mặc định)
+        $address_query = mysqli_query($con, "SELECT * FROM `tbl_diachi` WHERE `makh` = $makh_val_prefill ORDER BY `macdinh` DESC, `ngaytao` DESC LIMIT 1");
+        if ($address_query && mysqli_num_rows($address_query) > 0) {
+            $address_row = mysqli_fetch_assoc($address_query);
+            $default_name = $address_row['hoten'];
+            $default_phone = $address_row['sdt'];
+            
+            $addr_parts = [];
+            if (!empty($address_row['diachi_cuthe'])) $addr_parts[] = $address_row['diachi_cuthe'];
+            if (!empty($address_row['phuong_xa'])) $addr_parts[] = $address_row['phuong_xa'];
+            if (!empty($address_row['quan_huyen'])) $addr_parts[] = $address_row['quan_huyen'];
+            if (!empty($address_row['tinh'])) $addr_parts[] = $address_row['tinh'];
+            
+            $default_address = implode(', ', $addr_parts);
+        } else {
+            // 2. Fallback lấy từ thông tin tài khoản
+            $customer_query = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang` WHERE `makh` = $makh_val_prefill LIMIT 1");
+            if ($customer_query && mysqli_num_rows($customer_query) > 0) {
+                $customer_row = mysqli_fetch_assoc($customer_query);
+                $default_name = $customer_row['hoten'] ?? '';
+                $default_phone = $customer_row['sdt'] ?? '';
+                $default_address = $customer_row['diachi'] ?? '';
+                $default_email = $customer_row['email'] ?? '';
+            }
+        }
     }
 
     include BASE_PATH . 'includes/header.php';
@@ -155,15 +255,19 @@ require_once dirname(__DIR__) . '/config.php';
                             <form method="post" action="<?php echo BASE_URL; ?>shop/infodathang.php?action=submit">
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Họ tên người nhận <span class="text-danger">*</span></label>
-                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên"/>
+                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= htmlspecialchars($default_name) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Số điện thoại <span class="text-danger">*</span></label>
-                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx"/>
+                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx" value="<?= htmlspecialchars($default_phone) ?>"/>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold">Email nhận thông báo <span class="text-danger">*</span></label>
+                                    <input name="email" required class="form-control" type="email" placeholder="example@gmail.com" value="<?= htmlspecialchars($default_email) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."></textarea>
+                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."><?= htmlspecialchars($default_address) ?></textarea>
                                 </div>
                                 <div class="form-group mb-4">
                                     <label class="font-weight-bold">Ghi chú (nếu có)</label>

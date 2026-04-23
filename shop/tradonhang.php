@@ -5,6 +5,10 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 include BASE_PATH . 'includes/connect.php';
+require_once BASE_PATH . 'includes/inventory_helper.php';
+
+// Tự động chuyển đơn SHIPPING > 15 ngày sang DELIVERED
+autoCompleteShippingOrders($con);
 
 // ===== BẮT BUỘC ĐĂNG NHẬP =====
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
@@ -252,6 +256,45 @@ include BASE_PATH . 'includes/header.php';
         box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
     }
 
+    /* Action buttons */
+    .btn-action {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-right: 8px;
+    }
+    .btn-receive {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+    }
+    .btn-receive:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-cancel-order {
+        background: #fff;
+        color: #ef4444;
+        border: 2px solid #fecaca;
+    }
+    .btn-cancel-order:hover {
+        background: #fef2f2;
+        border-color: #ef4444;
+        transform: translateY(-1px);
+    }
+    .btn-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
     /* Empty state */
     .empty-state {
         text-align: center;
@@ -377,6 +420,19 @@ include BASE_PATH . 'includes/header.php';
                             </div>
                         </div>
                         <div class="order-card-footer">
+                            <?php
+                            $orderStatus = strtoupper($order['status'] ?? 'PENDING');
+                            ?>
+                            <?php if ($orderStatus === 'SHIPPING'): ?>
+                            <button class="btn-action btn-receive" onclick="orderAction(<?= $order['id'] ?>, 'receive', this)">
+                                <i class="fas fa-check-circle mr-1"></i> Đã nhận hàng
+                            </button>
+                            <?php endif; ?>
+                            <?php if (in_array($orderStatus, ['PENDING', 'CONFIRMED'])): ?>
+                            <button class="btn-action btn-cancel-order" onclick="orderAction(<?= $order['id'] ?>, 'cancel', this)">
+                                <i class="fas fa-times mr-1"></i> Hủy đơn
+                            </button>
+                            <?php endif; ?>
                             <a href="<?= BASE_URL ?>shop/chitietdonhang.php?id=<?= $order['id'] ?>" class="btn-detail">
                                 Xem chi tiết <i class="fas fa-arrow-right"></i>
                             </a>
@@ -407,3 +463,43 @@ include BASE_PATH . 'includes/header.php';
 </main>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>
+
+<script>
+function orderAction(orderId, action, btn) {
+    let confirmMsg = '';
+    if (action === 'receive') {
+        confirmMsg = 'Xác nhận bạn đã nhận được hàng thành công?';
+    } else if (action === 'cancel') {
+        confirmMsg = 'Bạn chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.';
+    }
+    
+    if (!confirm(confirmMsg)) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang xử lý...';
+    
+    fetch('<?= BASE_URL ?>shop/api_order_action.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action, order_id: orderId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message || 'Có lỗi xảy ra');
+            btn.disabled = false;
+            if (action === 'receive') btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Đã nhận hàng';
+            if (action === 'cancel') btn.innerHTML = '<i class="fas fa-times mr-1"></i> Hủy đơn';
+        }
+    })
+    .catch(() => {
+        alert('Lỗi kết nối. Vui lòng thử lại.');
+        btn.disabled = false;
+        if (action === 'receive') btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Đã nhận hàng';
+        if (action === 'cancel') btn.innerHTML = '<i class="fas fa-times mr-1"></i> Hủy đơn';
+    });
+}
+</script>
