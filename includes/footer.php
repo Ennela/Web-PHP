@@ -48,32 +48,38 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
         <?php if (!empty($_SESSION['swal_error'])): ?>
-            Swal.fire({
+            Toast.fire({
                 icon: 'error',
-                title: 'Lỗi!',
-                text: '<?php echo addslashes($_SESSION['swal_error']); ?>',
-                confirmButtonColor: '#3b82f6'
+                title: '<?php echo addslashes($_SESSION['swal_error']); ?>'
             });
             <?php unset($_SESSION['swal_error']); ?>
         <?php endif; ?>
 
         <?php if (!empty($_SESSION['swal_success'])): ?>
-            Swal.fire({
+            Toast.fire({
                 icon: 'success',
-                title: 'Thành công!',
-                text: '<?php echo addslashes($_SESSION['swal_success']); ?>',
-                confirmButtonColor: '#3b82f6'
+                title: '<?php echo addslashes($_SESSION['swal_success']); ?>'
             });
             <?php unset($_SESSION['swal_success']); ?>
         <?php endif; ?>
 
         <?php if (!empty($_SESSION['swal_warning'])): ?>
-            Swal.fire({
+            Toast.fire({
                 icon: 'warning',
-                title: 'Cảnh báo',
-                text: '<?php echo addslashes($_SESSION['swal_warning']); ?>',
-                confirmButtonColor: '#3b82f6'
+                title: '<?php echo addslashes($_SESSION['swal_warning']); ?>'
             });
             <?php unset($_SESSION['swal_warning']); ?>
         <?php endif; ?>

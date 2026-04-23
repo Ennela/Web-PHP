@@ -1,9 +1,9 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
+session_start();
 
     include_once BASE_PATH . 'includes/connect.php';
     if (isset($_POST['dangki'])) {
-        session_start();
         $hoten = trim($_POST['hoten'] ?? '');
         $taikhoan = trim($_POST['taikhoan'] ?? '');
         $matkhau = trim($_POST['matkhau'] ?? '');
