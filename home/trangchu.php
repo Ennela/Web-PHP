@@ -20,73 +20,348 @@ include BASE_PATH . 'includes/header.php';
 ?>
 
 <main class="page landing-page">
-    <style>
-        .modern-caption {
-            background: rgba(15, 23, 42, 0.92);
-            border-left: 6px solid #fff;
-            padding: 30px 35px;
-            bottom: 12%;
-            top: auto;
-            left: 8%;
-            right: auto;
-            max-width: 480px;
-            text-align: left;
-            position: absolute;
-            transform: translateX(-40px);
-            opacity: 0;
-            transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
-            transition-delay: 0.1s;
-            z-index: 10;
-        }
-        .carousel-item.active .modern-caption {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        .modern-caption h2 {
-            font-weight: 900;
-            font-size: 2.2rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #fff;
-            margin-bottom: 15px;
-            line-height: 1.1;
-        }
-        .modern-caption p {
-            font-size: 1.1rem;
-            color: #e0e0e0;
-            margin-bottom: 30px;
-            font-weight: 300;
-            line-height: 1.6;
-        }
-        .modern-btn {
-            background: #fff;
-            color: #000 !important;
-            border: 2px solid #fff;
-            border-radius: 2px;
-            border-color: #fff;
-            padding: 12px 45px;
-            font-size: 1rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .modern-btn:hover {
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff !important;
-            transform: scale(1.02);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-    </style>
+<style>
+/* ===== HOMEPAGE (MOBILE-FIRST) ===== */
+.hero-img {
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+    height: clamp(260px, 60vw, 600px);
+}
+
+.modern-caption {
+    background: rgba(15, 23, 42, 0.92);
+    border-left: clamp(4px, 1vw, 6px) solid #fff;
+    padding: clamp(12px, 3vw, 30px) clamp(14px, 4vw, 35px);
+    bottom: clamp(5%, 10vw, 12%);
+    top: auto;
+    left: clamp(4%, 6vw, 8%);
+    right: auto;
+    max-width: clamp(220px, 70vw, 480px);
+    text-align: left;
+    position: absolute;
+    transform: translateX(-40px);
+    opacity: 0;
+    transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+    transition-delay: 0.1s;
+    z-index: 10;
+}
+.carousel-item.active .modern-caption {
+    transform: translateX(0);
+    opacity: 1;
+}
+.modern-caption h2 {
+    font-weight: 900;
+    font-size: clamp(1rem, 4vw, 2.2rem);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: clamp(5px, 2vw, 15px);
+    line-height: 1.1;
+}
+.modern-caption p {
+    font-size: clamp(0.75rem, 2vw, 1.1rem);
+    color: #e0e0e0;
+    margin-bottom: clamp(10px, 3vw, 30px);
+    font-weight: 300;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+@media (min-width: 768px) {
+    .modern-caption p {
+        -webkit-line-clamp: unset;
+        display: block;
+    }
+}
+.modern-btn {
+    background: #fff;
+    color: #000 !important;
+    border: 2px solid #fff;
+    border-radius: 2px;
+    padding: clamp(8px, 2vw, 12px) clamp(20px, 4vw, 45px);
+    font-size: clamp(0.72rem, 1.8vw, 1rem);
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px; /* Touch target */
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+@media (hover: hover) {
+    .modern-btn:hover {
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff !important;
+        transform: scale(1.02);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+}
+
+.editorial-section, .features-section, .bestseller-section, .team-section {
+    padding: clamp(50px, 8vw, 80px) 0;
+}
+
+.editorial-section { background-color: #f1f5f9; }
+.features-section { background-color: #f1f5f9; }
+.bestseller-section { background: #fff; }
+.team-section { background-color: #fff; }
+
+.editorial-heading, .bestseller-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: clamp(1px, 0.5vw, 2px);
+    color: #0f172a;
+    margin-bottom: 15px;
+    font-size: clamp(1.3rem, 4vw, 2.2rem);
+}
+.editorial-subheading, .bestseller-subheading {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: #64748b;
+    margin-bottom: clamp(30px, 6vw, 50px);
+    font-weight: 300;
+}
+
+.product-highlight-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    color: #0f172a;
+    margin-bottom: clamp(15px, 4vw, 25px);
+}
+.product-highlight-text {
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    line-height: 1.8;
+    color: #64748b;
+    margin-bottom: clamp(20px, 4vw, 30px);
+}
+.img-editorial {
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    transition: transform 0.5s ease;
+    width: 100%;
+    height: auto;
+}
+@media (hover: hover) {
+    .img-editorial:hover {
+        transform: translateY(-10px);
+    }
+}
+.btn-editorial {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: clamp(10px, 2.5vw, 14px) clamp(25px, 5vw, 40px);
+    font-weight: 700;
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px; /* Touch target */
+}
+@media (hover: hover) {
+    .btn-editorial:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+    }
+}
+
+.feature-box {
+    text-align: center;
+    padding: clamp(25px, 4vw, 40px) clamp(15px, 3vw, 25px);
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+@media (hover: hover) {
+    .feature-box:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        border-color: #cbd5e1;
+    }
+}
+.feature-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e293b;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 28px;
+    transition: background 0.3s;
+}
+@media (hover: hover) {
+    .feature-box:hover .feature-icon-wrapper {
+        background: #3b82f6;
+    }
+}
+.feature-title {
+    font-weight: 800;
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    color: #1e293b;
+}
+.feature-desc {
+    color: #64748b;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
+    line-height: 1.6;
+}
+
+.product-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+}
+@media (hover: hover) {
+    .product-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        border-color: #cbd5e1;
+    }
+}
+.pc-img-wrap {
+    position: relative;
+    overflow: hidden;
+    background: #f8fafc;
+    aspect-ratio: 1 / 1;
+}
+.pc-img-wrap img {
+    transition: transform 0.5s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 20px;
+}
+@media (hover: hover) {
+    .product-card:hover .pc-img-wrap img {
+        transform: scale(1.05);
+    }
+}
+.btn-editorial-outline {
+    background: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+    border-radius: 10px;
+    padding: clamp(10px, 2vw, 14px) clamp(20px, 4vw, 40px);
+    font-weight: 700;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px; /* Touch target */
+}
+@media (hover: hover) {
+    .btn-editorial-outline:hover {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #fff;
+        border-color: #3b82f6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+}
+
+.team-member {
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+@media (hover: hover) {
+    .team-member:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        transform: translateY(-6px);
+        border-color: #cbd5e1;
+    }
+}
+.team-img-wrapper {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+}
+.team-img-wrapper img {
+    transition: transform 0.5s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+@media (hover: hover) {
+    .team-member:hover .team-img-wrapper img {
+        transform: scale(1.05);
+    }
+}
+.team-info {
+    padding: clamp(15px, 4vw, 25px);
+    background: #fff;
+    text-align: center;
+}
+.team-info h4 {
+    font-weight: 800;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: #1e293b;
+}
+.team-info p {
+    color: #94a3b8;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    font-size: clamp(0.85rem, 2vw, 0.9rem);
+}
+.social-icons a {
+    display: inline-flex;
+    width: 44px; /* Touch target */
+    height: 44px; /* Touch target */
+    align-items: center;
+    justify-content: center;
+    background: #1e293b;
+    color: #fff;
+    border-radius: 50%;
+    margin: 0 4px;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+@media (hover: hover) {
+    .social-icons a:hover {
+        background: #3b82f6;
+        transform: translateY(-3px);
+    }
+}
+
+</style>
+    
     <section class="clean-block clean-hero p-0" style="color: transparent;">
         <div class="carousel slide" data-bs-ride="carousel" id="carousel-hero"
             style="width: 100%; position: relative; z-index: 2;">
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img class="w-100 d-block" src="<?php echo BASE_URL; ?>images/632663.jpg" alt="Nike LeBron 7"
-                        style="height: 600px; object-fit: cover; object-position: center;">
+                    <img class="w-100 d-block hero-img" src="<?php echo BASE_URL; ?>images/632663.jpg" alt="Nike LeBron 7">
                     <div class="carousel-caption d-none d-md-block modern-caption">
                         <h2 class="text-white">Nike LeBron 7</h2>
                         <p class="text-white">Sức mạnh trên từng bước chạy — hiệu suất vượt trội cho mọi sân đấu.</p>
@@ -94,9 +369,7 @@ include BASE_PATH . 'includes/header.php';
                     </div>
                 </div>
                 <div class="carousel-item">
-                    <img class="w-100 d-block" src="<?php echo BASE_URL; ?>images/Jordan-1-Light-Smoke-Gray-min.jpg"
-                        alt="Air Jordan 1 High Light Smoke Gray"
-                        style="height: 600px; object-fit: cover; object-position: center;">
+                    <img class="w-100 d-block hero-img" src="<?php echo BASE_URL; ?>images/Jordan-1-Light-Smoke-Gray-min.jpg" alt="Air Jordan 1 High Light Smoke Gray">
                     <div class="carousel-caption d-none d-md-block modern-caption">
                         <h2 class="text-white">Air Jordan 1 High Light Smoke Gray</h2>
                         <p class="text-white">Huyền thoại sân bóng rổ — phong cách bất tử qua mọi thế hệ.</p>
@@ -104,9 +377,7 @@ include BASE_PATH . 'includes/header.php';
                     </div>
                 </div>
                 <div class="carousel-item">
-                    <img class="w-100 d-block"
-                        src="<?php echo BASE_URL; ?>images/pexels-howard-senton-2148272793-30707531.jpg"
-                        alt="Adidas Superstar" style="height: 600px; object-fit: cover; object-position: center;">
+                    <img class="w-100 d-block hero-img" src="<?php echo BASE_URL; ?>images/pexels-howard-senton-2148272793-30707531.jpg" alt="Adidas Superstar">
                     <div class="carousel-caption d-none d-md-block modern-caption">
                         <h2 class="text-white">Adidas Superstar</h2>
                         <p class="text-white">Biểu tượng đường phố — đơn giản mà đẳng cấp, không bao giờ lỗi mốt.</p>
@@ -129,67 +400,7 @@ include BASE_PATH . 'includes/header.php';
             </ol>
         </div>
     </section>
-    <style>
-        .editorial-section {
-            background-color: #f1f5f9;
-            padding: 80px 0;
-        }
-        .editorial-heading {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #0f172a;
-            margin-bottom: 15px;
-        }
-        .editorial-subheading {
-            font-size: 1.2rem;
-            color: #64748b;
-            margin-bottom: 50px;
-            font-weight: 300;
-        }
-        .product-highlight-title {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 800;
-            font-size: 2.2rem;
-            color: #0f172a;
-            margin-bottom: 25px;
-        }
-        .product-highlight-text {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: #64748b;
-            margin-bottom: 30px;
-        }
-        .img-editorial {
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            transition: transform 0.5s ease;
-        }
-        .img-editorial:hover {
-            transform: translateY(-10px);
-        }
-        .btn-editorial {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 14px 40px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-editorial:hover {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-        }
-    </style>
+    
     <section class="clean-block editorial-section">
         <div class="container">
             <div class="text-center">
@@ -211,56 +422,7 @@ include BASE_PATH . 'includes/header.php';
             </div>
         </div>
     </section>
-    <style>
-        .features-section {
-            padding: 80px 0;
-            background-color: #f1f5f9;
-        }
-        .feature-box {
-            text-align: center;
-            padding: 40px 25px;
-            background: #fff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-        .feature-box:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-            border-color: #cbd5e1;
-        }
-        .feature-icon-wrapper {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #1e293b;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 28px;
-            transition: background 0.3s;
-        }
-        .feature-box:hover .feature-icon-wrapper {
-            background: #3b82f6;
-        }
-        .feature-title {
-            font-weight: 800;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            color: #1e293b;
-        }
-        .feature-desc {
-            color: #64748b;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-    </style>
+    
     <section class="features-section">
         <div class="container">
             <div class="text-center mb-5">
@@ -299,70 +461,7 @@ include BASE_PATH . 'includes/header.php';
             </div>
         </div>
     </section>
-    <style>
-        .bestseller-section {
-            padding: 80px 0;
-            background: #fff;
-        }
-        .bestseller-heading {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #0f172a;
-            margin-bottom: 15px;
-            font-size: 2.2rem;
-        }
-        .bestseller-subheading {
-            color: #64748b;
-            font-size: 1.1rem;
-            margin-bottom: 50px;
-            font-weight: 300;
-        }
-        .product-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            transition: all 0.3s ease;
-        }
-        .product-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-            border-color: #cbd5e1;
-        }
-        .pc-img-wrap {
-            position: relative;
-            overflow: hidden;
-            background: #f8fafc;
-        }
-        .pc-img-wrap img {
-            transition: transform 0.5s ease;
-        }
-        .product-card:hover .pc-img-wrap img {
-            transform: scale(1.05);
-        }
-        .btn-editorial-outline {
-            background: transparent;
-            color: #3b82f6;
-            border: 2px solid #3b82f6;
-            border-radius: 10px;
-            padding: 10px 25px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-editorial-outline:hover {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: #fff;
-            border-color: #3b82f6;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        }
-    </style>
+    
     <section class="bestseller-section">
         <div class="container">
             <div class="text-center">
@@ -399,70 +498,7 @@ include BASE_PATH . 'includes/header.php';
             </div>
         </div>
     </section>
-    <style>
-        .team-section {
-            padding: 80px 0;
-            background-color: #fff;
-        }
-        .team-member {
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .team-member:hover {
-            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-            transform: translateY(-6px);
-            border-color: #cbd5e1;
-        }
-        .team-img-wrapper {
-            position: relative;
-            overflow: hidden;
-        }
-        .team-img-wrapper img {
-            transition: transform 0.5s ease;
-        }
-        .team-member:hover .team-img-wrapper img {
-            transform: scale(1.05);
-        }
-        .team-info {
-            padding: 25px;
-            background: #fff;
-            text-align: center;
-        }
-        .team-info h4 {
-            font-weight: 800;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-size: 1.2rem;
-            color: #1e293b;
-        }
-        .team-info p {
-            color: #94a3b8;
-            font-weight: 600;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
-        .social-icons a {
-            display: inline-flex;
-            width: 38px;
-            height: 38px;
-            align-items: center;
-            justify-content: center;
-            background: #1e293b;
-            color: #fff;
-            border-radius: 50%;
-            margin: 0 4px;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
-        .social-icons a:hover {
-            background: #3b82f6;
-            transform: translateY(-3px);
-        }
-    </style>
+    
     <section class="team-section">
         <div class="container">
             <div class="block-heading text-center mb-5">
@@ -523,87 +559,7 @@ include BASE_PATH . 'includes/header.php';
     </section>
 
     <!-- Responsive rules for homepage -->
-    <style>
-        @media (max-width: 768px) {
-            .modern-caption {
-                padding: 18px 20px;
-                max-width: 280px;
-                bottom: 8%;
-                left: 4%;
-                border-left-width: 4px;
-            }
-            .modern-caption h2 {
-                font-size: 1.3rem;
-                margin-bottom: 8px;
-            }
-            .modern-caption p {
-                font-size: 0.85rem;
-                margin-bottom: 15px;
-            }
-            .modern-btn {
-                padding: 8px 25px;
-                font-size: 0.8rem;
-            }
-            .carousel-item img {
-                height: 350px !important;
-            }
-            .editorial-heading, .bestseller-heading {
-                font-size: 1.6rem !important;
-                letter-spacing: 1px;
-            }
-            .editorial-subheading, .bestseller-subheading {
-                font-size: 1rem;
-            }
-            .product-highlight-title {
-                font-size: 1.5rem;
-            }
-            .product-highlight-text {
-                font-size: 0.95rem;
-            }
-            .btn-editorial {
-                padding: 10px 25px;
-                font-size: 0.95rem;
-            }
-            .editorial-section, .features-section, .bestseller-section, .team-section {
-                padding: 50px 0;
-            }
-            .feature-box {
-                padding: 25px 15px;
-            }
-            .team-info h4 {
-                font-size: 1rem;
-            }
-        }
-        @media (max-width: 480px) {
-            .modern-caption {
-                padding: 12px 14px;
-                max-width: 220px;
-                bottom: 5%;
-            }
-            .modern-caption h2 {
-                font-size: 1rem;
-                margin-bottom: 5px;
-            }
-            .modern-caption p {
-                font-size: 0.75rem;
-                margin-bottom: 10px;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-            }
-            .modern-btn {
-                padding: 6px 18px;
-                font-size: 0.72rem;
-            }
-            .carousel-item img {
-                height: 260px !important;
-            }
-            .editorial-heading, .bestseller-heading {
-                font-size: 1.3rem !important;
-            }
-        }
-    </style>
+    
 
 </main>
 

@@ -12,6 +12,7 @@ require_once dirname(__DIR__) . '/config.php';
         header('Location: giohang.php');
     }
     include BASE_PATH . 'includes/connect.php';
+    require_once BASE_PATH . 'includes/inventory_helper.php';
 
     // ===== MIGRATE OLD SESSION FORMAT =====
     // Old format: $_SESSION['giohang'][$masp] = quantity (int)
@@ -31,12 +32,32 @@ require_once dirname(__DIR__) . '/config.php';
     if (isset($_GET['action'])) {
         function update_cart($add = false)
         {
+            global $con;
+            $makh = isset($_SESSION['makh']) ? intval($_SESSION['makh']) : 0;
+            $preferredSize = null;
+            if ($makh > 0) {
+                $sizeResult = mysqli_query($con, "SELECT `size_value` FROM `tbl_sizegiay` WHERE `makh` = $makh AND `he_size` = 'EU' ORDER BY `ngaycapnhat` DESC LIMIT 1");
+                if ($sizeResult && $sizeRow = mysqli_fetch_assoc($sizeResult)) {
+                    $preferredSize = (int)$sizeRow['size_value'];
+                }
+            }
+
             if (isset($_POST['quantity'])) {
                 foreach ($_POST['quantity'] as $masp => $quantity) {
                     if ($quantity == 0) {
                         unset($_SESSION["giohang"][$masp]);
                     } else {
                         $currentSize = isset($_POST['size'][$masp]) ? (int)$_POST['size'][$masp] : null;
+                        
+                        if ($add && empty($currentSize) && $preferredSize) {
+                            $stockCheck = mysqli_query($con, "SELECT `soluong` FROM `tbl_tonkho` WHERE `masp` = " . (int)$masp . " AND `size` = $preferredSize");
+                            if ($stockCheck && $stockRow = mysqli_fetch_assoc($stockCheck)) {
+                                if ((int)$stockRow['soluong'] > 0) {
+                                    $currentSize = $preferredSize;
+                                }
+                            }
+                        }
+
                         if ($add) {
                             $existingQty = isset($_SESSION["giohang"][$masp]) ? (int)$_SESSION["giohang"][$masp]['quantity'] : 0;
                             $_SESSION["giohang"][$masp] = [
@@ -55,6 +76,16 @@ require_once dirname(__DIR__) . '/config.php';
                 $masp = $_GET['masp'];
                 $quantity = isset($_GET['quantity']) ? (int)$_GET['quantity'] : 1;
                 $size = isset($_GET['size']) ? (int)$_GET['size'] : null;
+
+                if ($add && empty($size) && $preferredSize) {
+                    $stockCheck = mysqli_query($con, "SELECT `soluong` FROM `tbl_tonkho` WHERE `masp` = " . (int)$masp . " AND `size` = $preferredSize");
+                    if ($stockCheck && $stockRow = mysqli_fetch_assoc($stockCheck)) {
+                        if ((int)$stockRow['soluong'] > 0) {
+                            $size = $preferredSize;
+                        }
+                    }
+                }
+
                 if ($add) {
                     $existingQty = isset($_SESSION["giohang"][$masp]) ? (int)$_SESSION["giohang"][$masp]['quantity'] : 0;
                     $_SESSION["giohang"][$masp] = [
@@ -108,282 +139,343 @@ require_once dirname(__DIR__) . '/config.php';
     if (!empty($_SESSION["giohang"])) {
         $products = mysqli_query($con,
             "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN (" . implode(",", array_keys($_SESSION["giohang"])) . ")");
+        
+        // Query stock for all cart products
+        $cartMasps = array_keys($_SESSION['giohang']);
+        $cartStockData = [];
+        if (!empty($cartMasps)) {
+            $stockResult = mysqli_query($con, "SELECT `masp`, `size`, `soluong` FROM `tbl_tonkho` WHERE `masp` IN (" . implode(',', array_map('intval', $cartMasps)) . ") ORDER BY `masp`, `size`");
+            if ($stockResult) {
+                while ($sr = mysqli_fetch_assoc($stockResult)) {
+                    $cartStockData[(int)$sr['masp']][(int)$sr['size']] = (int)$sr['soluong'];
+                }
+            }
+        }
     }
+    
+    // Check for stock issues
+    $hasStockIssues = false;
+    $stockWarnings = [];
+
     include BASE_PATH . 'includes/header.php';
 ?>
 
 
 <style>
-    .cart-section {
-        padding: 120px 0 80px;
-        background-color: #f1f5f9;
+/* ===== CART PAGE (MOBILE-FIRST) ===== */
+.cart-section {
+    padding: clamp(90px, 12vw, 120px) 0 clamp(40px, 8vw, 80px);
+    background-color: #f1f5f9;
+}
+.editorial-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: clamp(1px, 0.5vw, 2px);
+    color: #0f172a;
+    margin-bottom: 10px;
+    font-size: clamp(1.5rem, 4vw, 2.8rem);
+}
+.editorial-subheading {
+    color: #64748b;
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    margin-bottom: clamp(25px, 4vw, 40px);
+    font-weight: 300;
+}
+.cart-items-wrapper {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    padding: clamp(12px, 3vw, 30px);
+    margin-bottom: 30px;
+    overflow: hidden; /* Prevent inner elements overflowing */
+}
+.cart-product-item {
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+.cart-product-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+.cart-product-item .row {
+    gap: 5px; /* Default for mobile */
+}
+@media (min-width: 768px) {
+    .cart-product-item .row {
+        gap: 0;
     }
-    .editorial-heading {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: #0f172a;
-        margin-bottom: 10px;
-        font-size: 2.8rem;
-    }
-    .editorial-subheading {
-        color: #64748b;
-        font-size: 1.15rem;
-        margin-bottom: 40px;
-        font-weight: 300;
-    }
-    .cart-items-wrapper {
-        background: #fff;
-        border-radius: 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        padding: 30px;
-        margin-bottom: 30px;
-    }
-    .cart-product-item {
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-    }
-    .cart-product-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-        margin-bottom: 0;
-    }
-    .cart-product-name {
-        font-weight: 800;
-        font-size: 1.1rem;
-        color: #1e293b;
-        text-decoration: none;
-        transition: color 0.3s;
-    }
+}
+.cart-size-col {
+    position: relative;
+    min-height: 50px;
+}
+.cart-product-name {
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    color: #1e293b;
+    text-decoration: none;
+    transition: color 0.3s;
+    display: block;
+    word-break: break-word; /* Prevent overflow */
+}
+@media (hover: hover) {
     .cart-product-name:hover {
         color: #3b82f6;
     }
-    .cart-price {
-        font-weight: 700;
-        font-size: 1.2rem;
-        color: #2563eb;
-        transition: opacity 0.3s ease;
-    }
-    .cart-price.updating {
-        opacity: 0.4;
-    }
-    .quantity-input {
-        width: 56px;
-        text-align: center;
-        font-weight: 800;
-        border: none;
-        border-top: 2px solid #e2e8f0;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 6px 0;
-        font-size: 0.95rem;
-        color: #1e293b;
-        outline: none;
-        -moz-appearance: textfield;
-    }
-    .quantity-input::-webkit-inner-spin-button,
-    .quantity-input::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
+}
+.cart-price {
+    font-weight: 700;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: #2563eb;
+    transition: opacity 0.3s ease;
+}
+.cart-price.updating {
+    opacity: 0.4;
+}
+.quantity-input {
+    width: clamp(40px, 8vw, 56px);
+    height: 44px; /* Touch target */
+    text-align: center;
+    font-weight: 800;
+    border: none;
+    border-top: 2px solid #e2e8f0;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0;
+    font-size: 0.95rem;
+    color: #1e293b;
+    outline: none;
+    -moz-appearance: textfield;
+}
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.qty-cart-control {
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    overflow: hidden;
+    width: fit-content;
+    margin: 0 auto; /* Center on mobile by default */
+}
+@media (min-width: 768px) {
     .qty-cart-control {
-        display: flex;
-        align-items: center;
-        border-radius: 10px;
-        overflow: hidden;
-        width: fit-content;
+        margin: 0; /* Align left on md+ */
     }
-    .qty-cart-btn {
-        background: #1e293b;
-        color: #fff;
-        border: none;
-        width: 34px;
-        height: 36px;
-        font-size: 1.1rem;
-        font-weight: 700;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
-        line-height: 1;
-    }
+}
+.qty-cart-btn {
+    background: #1e293b;
+    color: #fff;
+    border: none;
+    width: clamp(40px, 8vw, 44px);
+    height: 44px; /* Touch target min 44px */
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    line-height: 1;
+}
+@media (hover: hover) {
     .qty-cart-btn:hover {
         background: #3b82f6;
     }
+}
 
-    /* Auto-save indicator */
-    .cart-save-status {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: #1e293b;
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 30px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        opacity: 0;
-        transform: translateY(10px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        z-index: 100;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-        pointer-events: none;
-    }
-    .cart-save-status.show {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .cart-save-status.error {
-        background: #ef4444;
-    }
-    .cart-save-spinner {
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
+/* Auto-save indicator */
+.cart-save-status {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 100;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+.cart-save-status.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.cart-save-status.error {
+    background: #ef4444;
+}
+.cart-save-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
-    /* Delete animation */
-    .cart-product-item.removing {
-        opacity: 0;
-        transform: translateX(-30px);
-        max-height: 0;
-        padding: 0;
-        margin: 0;
-        overflow: hidden;
-        transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.4s ease 0.1s, padding 0.4s ease 0.1s, margin 0.4s ease 0.1s;
-    }
+/* Delete animation */
+.cart-product-item.removing {
+    opacity: 0;
+    transform: translateX(-30px);
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.4s ease 0.1s, padding 0.4s ease 0.1s, margin 0.4s ease 0.1s;
+}
 
-    /* Size selector in cart */
-    .cart-size-select {
-        appearance: none;
-        -webkit-appearance: none;
-        background: #fff;
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 6px 30px 6px 12px;
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: #1e293b;
-        cursor: pointer;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3e%3cpath fill='%2364748b' d='M6 8L1 3h10z'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        min-width: 75px;
-    }
+/* Size selector in cart */
+.cart-size-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 6px 30px 6px 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3e%3cpath fill='%2364748b' d='M6 8L1 3h10z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    min-width: 75px;
+    min-height: 44px; /* Touch target */
+    width: 100%;
+}
+@media (hover: hover) {
     .cart-size-select:hover {
         border-color: #3b82f6;
     }
-    .cart-size-select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
-    .cart-size-label {
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #94a3b8;
-        display: block;
-        margin-bottom: 4px;
-    }
-    .cart-size-warning {
-        font-size: 0.72rem;
-        color: #ef4444;
-        font-weight: 600;
-        margin-top: 3px;
-    }
+}
+.cart-size-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.cart-size-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 4px;
+}
+.cart-size-warning {
+    font-size: 0.72rem;
+    color: #ef4444;
+    font-weight: 600;
+    margin-top: 3px;
+    white-space: nowrap;
+}
 
-    .cart-summary {
-        background: #fff;
-        color: #1e293b;
-        border-radius: 16px;
-        border: 1px solid #e2e8f0;
-        padding: 30px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    .cart-summary h3 {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 25px;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 15px;
-        font-size: 1.3rem;
-        color: #0f172a;
-    }
-    .cart-summary h4 {
-        display: flex;
-        justify-content: space-between;
-        font-size: 1.05rem;
-        margin-bottom: 15px;
-        color: #64748b;
-    }
-    .cart-summary h4 .price {
-        color: #1e293b;
-        font-weight: 700;
-    }
-    .cart-summary h4.total {
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: #2563eb;
-        margin-top: 20px;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 20px;
-    }
-    .cart-summary h4.total .price {
-        color: #2563eb;
-    }
-    .btn-editorial-light {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        padding: 14px 20px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        width: 100%;
-        margin-bottom: 10px;
-        transition: all 0.3s ease;
-        letter-spacing: 0.5px;
-    }
+.cart-summary {
+    background: #fff;
+    color: #1e293b;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: clamp(20px, 4vw, 30px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.cart-summary h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 15px;
+    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+    color: #0f172a;
+}
+.cart-summary h4 {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.05rem;
+    margin-bottom: 15px;
+    color: #64748b;
+    flex-wrap: wrap; /* Prevent overflow */
+}
+.cart-summary h4 .price {
+    color: #1e293b;
+    font-weight: 700;
+}
+.cart-summary h4.total {
+    font-size: clamp(1.2rem, 3vw, 1.3rem);
+    font-weight: 800;
+    color: #2563eb;
+    margin-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
+}
+.cart-summary h4.total .price {
+    color: #2563eb;
+}
+.btn-editorial-light {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    min-height: 48px; /* Touch target */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@media (hover: hover) {
     .btn-editorial-light:hover {
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: #fff;
         transform: translateY(-1px);
         box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
     }
-    .btn-editorial-outline-light {
-        background: transparent;
-        color: #3b82f6;
-        border: 2px solid #3b82f6;
-        border-radius: 10px;
-        padding: 14px 20px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        width: 100%;
-        margin-bottom: 10px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        letter-spacing: 0.5px;
-    }
+}
+.btn-editorial-outline-light {
+    background: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    min-height: 48px; /* Touch target */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@media (hover: hover) {
     .btn-editorial-outline-light:hover {
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: #fff;
@@ -391,72 +483,52 @@ require_once dirname(__DIR__) . '/config.php';
         transform: translateY(-1px);
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
-    .btn-editorial-danger {
-        background: linear-gradient(135deg, #0f172a, #1e293b);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        padding: 14px 20px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        width: 100%;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        letter-spacing: 0.5px;
-    }
+}
+.btn-editorial-danger {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    width: 100%;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    min-height: 48px; /* Touch target */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@media (hover: hover) {
     .btn-editorial-danger:hover {
         background: linear-gradient(135deg, #1e293b, #334155);
         transform: translateY(-1px);
         box-shadow: 0 4px 15px rgba(30, 41, 59, 0.3);
     }
+}
 
-    /* ===== CART RESPONSIVE ===== */
-    @media (max-width: 768px) {
-        .cart-section {
-            padding: 100px 0 50px;
-        }
-        .editorial-heading {
-            font-size: 1.8rem;
-        }
-        .editorial-subheading {
-            font-size: 1rem;
-            margin-bottom: 25px;
-        }
-        .cart-items-wrapper {
-            padding: 15px;
-        }
-        .cart-product-name {
-            font-size: 0.95rem;
-        }
-        .cart-price {
-            font-size: 1rem;
-        }
-        .cart-summary {
-            padding: 20px;
-        }
-        .cart-summary h3 {
-            font-size: 1.1rem;
-        }
+/* Delete button */
+.btn-delete-cart {
+    color: #ef4444;
+    border: none;
+    background: transparent;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+@media (hover: hover) {
+    .btn-delete-cart:hover {
+        color: #b91c1c;
     }
-    @media (max-width: 576px) {
-        .cart-section {
-            padding: 90px 0 40px;
-        }
-        .editorial-heading {
-            font-size: 1.5rem;
-            letter-spacing: 1px;
-        }
-        .cart-items-wrapper {
-            padding: 12px;
-        }
-        .cart-product-item .row {
-            gap: 5px;
-        }
-        .qty-cart-control {
-            margin: 0 auto;
-        }
-    }
+}
+
 </style>
 
 <main class="page shopping-cart-page">
@@ -488,19 +560,37 @@ require_once dirname(__DIR__) . '/config.php';
                                                     <div class="col-md-3 mb-3 mb-md-0">
                                                         <a class="cart-product-name" href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>"><?= $row['tensp'] ?></a>
                                                     </div>
-                                                    <div class="col-4 col-md-2 mb-3 mb-md-0">
+                                                    <div class="col-4 col-md-2 mb-3 mb-md-0 cart-size-col">
                                                         <span class="cart-size-label">Size</span>
-                                                        <select name="size[<?= $row['masp'] ?>]" class="cart-size-select" data-masp="<?= $row['masp'] ?>">
+                                                        <?php
+                                                        $itemStockMap = $cartStockData[$row['masp']] ?? [];
+                                                        $selectedSizeStock = (!empty($itemSize) && isset($itemStockMap[$itemSize])) ? $itemStockMap[$itemSize] : -1;
+                                                        $sizeOutOfStock = ($selectedSizeStock === 0);
+                                                        $sizeOverQty = ($selectedSizeStock > 0 && $itemQty > $selectedSizeStock);
+                                                        if ($sizeOutOfStock || $sizeOverQty || empty($itemSize)) $hasStockIssues = true;
+                                                        ?>
+                                                        <select name="size[<?= $row['masp'] ?>]" class="cart-size-select <?= $sizeOutOfStock ? 'stock-error-border' : '' ?>" data-masp="<?= $row['masp'] ?>">
                                                             <option value="">--</option>
                                                             <?php
                                                             $sizes = [36, 37, 38, 39, 40, 41, 42, 43, 44];
                                                             foreach ($sizes as $s):
+                                                                $sStock = $itemStockMap[$s] ?? 0;
+                                                                $isDisabled = ($sStock <= 0);
                                                             ?>
-                                                            <option value="<?= $s ?>" <?= ($itemSize == $s) ? 'selected' : '' ?>><?= $s ?></option>
+                                                            <option value="<?= $s ?>" 
+                                                                    <?= ($itemSize == $s) ? 'selected' : '' ?>
+                                                                    <?= $isDisabled ? 'disabled' : '' ?>
+                                                                    data-stock="<?= $sStock ?>">
+                                                                <?= $s ?><?= $isDisabled ? ' (Hết hàng)' : '' ?>
+                                                            </option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                         <?php if (empty($itemSize)): ?>
-                                                        <div class="cart-size-warning">⚠ Chọn size</div>
+                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Chọn size</div>
+                                                        <?php elseif ($sizeOutOfStock): ?>
+                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Hết hàng</div>
+                                                        <?php elseif ($sizeOverQty): ?>
+                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Còn <?= $selectedSizeStock ?></div>
                                                         <?php endif; ?>
                                                     </div>
                                                     <div class="col-4 col-md-2 mb-3 mb-md-0">
@@ -515,7 +605,7 @@ require_once dirname(__DIR__) . '/config.php';
                                                         <span class="cart-price" id="price-<?= $row['masp'] ?>"><?= number_format($row['giasanpham'] * $itemQty, 0, ",", ".") ?> đ</span>
                                                     </div>
                                                     <div class="col-1 col-md-1 text-md-end">
-                                                        <button type="button" class="text-danger border-0 bg-transparent" title="Xóa" onclick="cartDeleteItem(<?= $row['masp'] ?>)"><i class="fas fa-trash-alt fs-5"></i></button>
+                                                        <button type="button" class="btn-delete-cart text-danger border-0 bg-transparent" title="Xóa" onclick="cartDeleteItem(<?= $row['masp'] ?>)"><i class="fas fa-trash-alt fs-5"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -546,8 +636,11 @@ require_once dirname(__DIR__) . '/config.php';
                                 <?php } ?>
                                 
                                 <div class="mt-4">
-                                    <button class="btn-editorial-outline-light" name="dathang" type="submit">THANH TOÁN TIỀN MẶT</button>
-                                    <button class="btn-editorial-danger" name="thanhtoanonline" type="submit"><i class="fas fa-credit-card me-2"></i> THANH TOÁN VNPAY</button>
+                                    <div class="alert-stock-issue" id="global-stock-alert" style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; margin-bottom:14px; color:#dc2626; font-size:0.85rem; font-weight:600; display:<?= $hasStockIssues ? 'block' : 'none' ?>;">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> Giỏ hàng có sản phẩm hết hàng hoặc vượt tồn kho. Vui lòng kiểm tra lại trước khi thanh toán.
+                                    </div>
+                                    <button class="btn-editorial-outline-light" id="btn-cod" name="dathang" type="submit" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>>THANH TOÁN TIỀN MẶT</button>
+                                    <button class="btn-editorial-danger" id="btn-vnpay" name="thanhtoanonline" type="submit" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>><i class="fas fa-credit-card me-2"></i> THANH TOÁN VNPAY</button>
                                 </div>
                             </div>
                         </div>
@@ -653,8 +746,18 @@ function debouncedUpdate(masp) {
         const sizeSelect = document.querySelector('.cart-size-select[data-masp="' + masp + '"]');
         if (!qtyInput) return;
         
-        const qty = Math.max(1, parseInt(qtyInput.value) || 1);
-        qtyInput.value = qty;
+        let qty = Math.max(1, parseInt(qtyInput.value) || 1);
+        
+        // Kiểm tra tồn kho trước khi gửi AJAX
+        if (sizeSelect && sizeSelect.value) {
+            const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            const maxStock = parseInt(selectedOption.dataset.stock) || 999;
+            if (qty > maxStock) {
+                qty = maxStock;
+                qtyInput.value = qty;
+                showStockAlert(masp, maxStock);
+            }
+        }
         
         // Update local price immediately
         const item = document.querySelector('.cart-product-item[data-masp="' + masp + '"]');
@@ -667,6 +770,10 @@ function debouncedUpdate(masp) {
         ajaxUpdate(masp, {
             quantity: qty,
             size: sizeSelect ? sizeSelect.value : ''
+        }, (res) => {
+            if (res.stockWarning) {
+                showStockAlert(masp, 0);
+            }
         });
     }, 400);
 }
@@ -681,6 +788,18 @@ function cartChangeQty(masp, delta) {
     const input = document.querySelector('.quantity-input[data-masp="' + masp + '"]');
     if (!input) return;
     let val = Math.max(1, (parseInt(input.value) || 1) + delta);
+    
+    // Kiểm tra tồn kho
+    const sizeSelect = document.querySelector('.cart-size-select[data-masp="' + masp + '"]');
+    if (sizeSelect && sizeSelect.value) {
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const maxStock = parseInt(selectedOption.dataset.stock) || 999;
+        if (val > maxStock) {
+            val = maxStock;
+            showStockAlert(masp, maxStock);
+        }
+    }
+    
     input.value = val;
     
     // Instant local price update
@@ -695,6 +814,26 @@ function cartChangeQty(masp, delta) {
     recalcLocalTotal();
     
     debouncedUpdate(masp);
+}
+
+// Hiển thị cảnh báo tồn kho
+function showStockAlert(masp, maxStock) {
+    // Xóa cảnh báo cũ nếu có
+    const existingAlert = document.querySelector('.stock-alert-toast');
+    if (existingAlert) existingAlert.remove();
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'stock-alert-toast';
+    alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> Số lượng vượt quá tồn kho! Chỉ còn <strong>' + maxStock + '</strong> sản phẩm.';
+    alertDiv.style.cssText = 'position:fixed; top:20px; right:20px; z-index:99999; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; padding:14px 24px; border-radius:12px; font-weight:600; font-size:0.88rem; box-shadow:0 8px 30px rgba(239,68,68,0.4); animation:slideInRight 0.3s ease; max-width:400px;';
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transform = 'translateX(20px)';
+        alertDiv.style.transition = 'all 0.3s ease';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 3000);
 }
 
 // Delete item with animation
@@ -765,10 +904,74 @@ document.addEventListener('DOMContentLoaded', () => {
             ajaxUpdate(masp, {
                 quantity: qtyInput ? parseInt(qtyInput.value) : 1,
                 size: this.value
+            }, function(res) {
+                // Re-check all stock issues and update global alert + buttons
+                recheckStockIssues(res);
             });
         });
     });
 });
+
+// ===== RE-CHECK STOCK ISSUES AFTER AJAX =====
+function recheckStockIssues(res) {
+    let hasIssues = false;
+    const stockData = res.stock || {};
+    
+    document.querySelectorAll('.cart-product-item').forEach(item => {
+        const masp = item.dataset.masp;
+        const sizeSelect = item.querySelector('.cart-size-select');
+        const qtyInput = item.querySelector('.quantity-input');
+        const selectedSize = sizeSelect ? sizeSelect.value : '';
+        const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
+        
+        // Remove old warning
+        const oldWarning = item.querySelector('.cart-size-warning');
+        if (oldWarning) oldWarning.remove();
+        
+        if (!selectedSize) {
+            // No size selected
+            hasIssues = true;
+            const w = document.createElement('div');
+            w.className = 'cart-size-warning';
+            w.setAttribute('data-masp', masp);
+            w.textContent = '⚠ Chọn size';
+            if (sizeSelect) sizeSelect.parentElement.appendChild(w);
+        } else {
+            // Check stock for selected size
+            const sizeStock = (stockData[masp] && stockData[masp][selectedSize]) ? stockData[masp][selectedSize] : 0;
+            if (sizeStock <= 0) {
+                hasIssues = true;
+                const w = document.createElement('div');
+                w.className = 'cart-size-warning';
+                w.setAttribute('data-masp', masp);
+                w.textContent = '⚠ Hết hàng';
+                if (sizeSelect) sizeSelect.parentElement.appendChild(w);
+            } else if (qty > sizeStock) {
+                hasIssues = true;
+                const w = document.createElement('div');
+                w.className = 'cart-size-warning';
+                w.setAttribute('data-masp', masp);
+                w.textContent = '⚠ Còn ' + sizeStock;
+                if (sizeSelect) sizeSelect.parentElement.appendChild(w);
+            }
+        }
+    });
+    
+    // Update global alert and buttons
+    const alertEl = document.getElementById('global-stock-alert');
+    const btnCod = document.getElementById('btn-cod');
+    const btnVnpay = document.getElementById('btn-vnpay');
+    
+    if (hasIssues) {
+        if (alertEl) alertEl.style.display = 'block';
+        if (btnCod) { btnCod.disabled = true; btnCod.style.opacity = '0.5'; btnCod.style.cursor = 'not-allowed'; }
+        if (btnVnpay) { btnVnpay.disabled = true; btnVnpay.style.opacity = '0.5'; btnVnpay.style.cursor = 'not-allowed'; }
+    } else {
+        if (alertEl) alertEl.style.display = 'none';
+        if (btnCod) { btnCod.disabled = false; btnCod.style.opacity = '1'; btnCod.style.cursor = 'pointer'; }
+        if (btnVnpay) { btnVnpay.disabled = false; btnVnpay.style.opacity = '1'; btnVnpay.style.cursor = 'pointer'; }
+    }
+}
 </script>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>
