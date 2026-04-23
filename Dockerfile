@@ -19,16 +19,16 @@ RUN apt-get update && apt-get install -y \
         zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Fix MPM conflict: ensure only prefork is loaded (required by mod_php)
+RUN a2dismod mpm_event mpm_worker 2>/dev/null; \
+    a2enmod mpm_prefork rewrite
 
 # Configure Apache: allow .htaccess overrides & set ServerName
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
     && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Use PORT env variable from Railway (default 80)
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf \
-    && sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf
+# Default PORT for Railway
+ENV PORT=80
 
 # Set working directory
 WORKDIR /var/www/html
@@ -42,8 +42,5 @@ RUN mkdir -p admin/uploads auth/uploads \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 admin/uploads auth/uploads
 
-# Expose Railway's dynamic port
-EXPOSE ${PORT}
-
-# Start Apache in foreground
-CMD ["apache2-foreground"]
+# Start Apache with dynamic PORT binding (Railway injects PORT at runtime)
+CMD sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && apache2-foreground
