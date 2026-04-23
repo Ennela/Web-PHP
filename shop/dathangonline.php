@@ -32,7 +32,8 @@ if (!empty($cart)) {
 
 // Redirect if cart is empty
 if(empty($orderProducts)){
-    echo "<script>alert('Giỏ hàng trống!'); window.location.href='" . BASE_URL . "shop/giohang.php';</script>";
+    $_SESSION['swal_warning'] = 'Giỏ hàng trống!';
+    header('Location: ' . BASE_URL . 'shop/giohang.php');
     exit;
 }
 
@@ -44,7 +45,8 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $email_kh = $_POST['email_kh'] ?? '';
 
     if ($tenkh=='' || $sdt =='' || $diachi =='' || $email_kh =='') {
-        echo "<script>alert('Vui lòng nhập đầy đủ thông tin giao hàng (bao gồm Email)!'); window.location.href= 'dathangonline.php';</script>";
+        $_SESSION['swal_error'] = 'Vui lòng nhập đầy đủ thông tin giao hàng (bao gồm Email)!';
+        header('Location: dathangonline.php');
         exit;
     }
 
@@ -64,8 +66,9 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $stockResult = validateAndDeductStock($con, $stockCheckItems);
     if (!$stockResult['success']) {
         $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
-        $errorText = implode('\\n', $errorMsgs);
-        echo "<script>alert('Không thể đặt hàng:\\n" . $errorText . "'); window.location.href='" . BASE_URL . "shop/giohang.php';</script>";
+        $errorText = implode('\n', $errorMsgs);
+        $_SESSION['swal_error'] = "Không thể đặt hàng:\n" . $errorText;
+        header('Location: ' . BASE_URL . 'shop/giohang.php');
         exit;
     }
 
@@ -148,6 +151,42 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     exit;
 }
 
+// --- Lấy thông tin mặc định để điền sẵn vào form ---
+$default_name = '';
+$default_phone = '';
+$default_address = '';
+$default_email = '';
+
+if (!empty($_SESSION['makh'])) {
+    $makh_val_prefill = intval($_SESSION['makh']);
+    
+    // Luôn lấy email từ thông tin tài khoản
+    $customer_query = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang` WHERE `makh` = $makh_val_prefill LIMIT 1");
+    if ($customer_query && mysqli_num_rows($customer_query) > 0) {
+        $customer_row = mysqli_fetch_assoc($customer_query);
+        $default_name = $customer_row['hoten'] ?? '';
+        $default_phone = $customer_row['sdt'] ?? '';
+        $default_address = $customer_row['diachi'] ?? '';
+        $default_email = $customer_row['email'] ?? '';
+    }
+    
+    // Ưu tiên lấy từ sổ địa chỉ (địa chỉ mặc định) nếu có
+    $address_query = mysqli_query($con, "SELECT * FROM `tbl_diachi` WHERE `makh` = $makh_val_prefill ORDER BY `macdinh` DESC, `ngaytao` DESC LIMIT 1");
+    if ($address_query && mysqli_num_rows($address_query) > 0) {
+        $address_row = mysqli_fetch_assoc($address_query);
+        $default_name = $address_row['hoten'];
+        $default_phone = $address_row['sdt'];
+        
+        $addr_parts = [];
+        if (!empty($address_row['diachi_cuthe'])) $addr_parts[] = $address_row['diachi_cuthe'];
+        if (!empty($address_row['phuong_xa'])) $addr_parts[] = $address_row['phuong_xa'];
+        if (!empty($address_row['quan_huyen'])) $addr_parts[] = $address_row['quan_huyen'];
+        if (!empty($address_row['tinh'])) $addr_parts[] = $address_row['tinh'];
+        
+        $default_address = implode(', ', $addr_parts);
+    }
+}
+
 include BASE_PATH . 'includes/header.php';
 ?>
 
@@ -180,19 +219,19 @@ include BASE_PATH . 'includes/header.php';
                             <form method="post" action="<?php echo BASE_URL; ?>shop/dathangonline.php?action=submit">
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Họ tên người nhận <span class="text-danger">*</span></label>
-                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên"/>
+                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= htmlspecialchars($default_name) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Số điện thoại <span class="text-danger">*</span></label>
-                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx"/>
+                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx" value="<?= htmlspecialchars($default_phone) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Email nhận xác nhận đơn hàng <span class="text-danger">*</span></label>
-                                    <input name="email_kh" required class="form-control" type="email" placeholder="example@gmail.com"/>
+                                    <input name="email_kh" required class="form-control" type="email" placeholder="example@gmail.com" value="<?= htmlspecialchars($default_email) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."></textarea>
+                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."><?= htmlspecialchars($default_address) ?></textarea>
                                 </div>
                                 <div class="form-group mb-4">
                                     <label class="font-weight-bold">Ghi chú (nếu có)</label>

@@ -859,18 +859,38 @@ function showStockAlert(masp, maxStock) {
     const existingAlert = document.querySelector('.stock-alert-toast');
     if (existingAlert) existingAlert.remove();
     
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'stock-alert-toast';
-    alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> Số lượng vượt quá tồn kho! Chỉ còn <strong>' + maxStock + '</strong> sản phẩm.';
-    alertDiv.style.cssText = 'position:fixed; top:20px; right:20px; z-index:99999; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; padding:14px 24px; border-radius:12px; font-weight:600; font-size:0.88rem; box-shadow:0 8px 30px rgba(239,68,68,0.4); animation:slideInRight 0.3s ease; max-width:400px;';
-    document.body.appendChild(alertDiv);
+    let msg = '';
+    if (maxStock === 0) {
+        msg = 'Sản phẩm này hiện đang hết hàng!';
+    } else {
+        msg = 'Số lượng vượt quá tồn kho! Chỉ còn ' + maxStock + ' sản phẩm.';
+    }
     
-    setTimeout(() => {
-        alertDiv.style.opacity = '0';
-        alertDiv.style.transform = 'translateX(20px)';
-        alertDiv.style.transition = 'all 0.3s ease';
-        setTimeout(() => alertDiv.remove(), 300);
-    }, 3000);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Lưu ý',
+            text: msg,
+            confirmButtonColor: '#3b82f6',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    } else {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'stock-alert-toast';
+        alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> ' + msg;
+        alertDiv.style.cssText = 'position:fixed; top:20px; right:20px; z-index:99999; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; padding:14px 24px; border-radius:12px; font-weight:600; font-size:0.88rem; box-shadow:0 8px 30px rgba(239,68,68,0.4); animation:slideInRight 0.3s ease; max-width:400px;';
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transform = 'translateX(20px)';
+            alertDiv.style.transition = 'all 0.3s ease';
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
+    }
 }
 
 // Delete item with animation

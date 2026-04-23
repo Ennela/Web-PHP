@@ -45,5 +45,39 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.10.0/baguetteBox.min.js"></script>
 <script src="<?php echo BASE_URL; ?>assets/js/vanilla-zoom.js"></script>
 <script src="<?php echo BASE_URL; ?>assets/js/theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        <?php if (!empty($_SESSION['swal_error'])): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: '<?php echo addslashes($_SESSION['swal_error']); ?>',
+                confirmButtonColor: '#3b82f6'
+            });
+            <?php unset($_SESSION['swal_error']); ?>
+        <?php endif; ?>
+
+        <?php if (!empty($_SESSION['swal_success'])): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: '<?php echo addslashes($_SESSION['swal_success']); ?>',
+                confirmButtonColor: '#3b82f6'
+            });
+            <?php unset($_SESSION['swal_success']); ?>
+        <?php endif; ?>
+
+        <?php if (!empty($_SESSION['swal_warning'])): ?>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cảnh báo',
+                text: '<?php echo addslashes($_SESSION['swal_warning']); ?>',
+                confirmButtonColor: '#3b82f6'
+            });
+            <?php unset($_SESSION['swal_warning']); ?>
+        <?php endif; ?>
+    });
+</script>
 </body>
 </html>

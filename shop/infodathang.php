@@ -120,7 +120,8 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Redirect if cart is empty
     if (empty($orderProducts)) {
-        echo "<script>alert('Giỏ hàng trống!'); window.location.href='" . BASE_URL . "shop/giohang.php';</script>";
+        $_SESSION['swal_warning'] = 'Giỏ hàng trống!';
+        header('Location: ' . BASE_URL . 'shop/giohang.php');
         exit;
     }
 
@@ -136,12 +137,9 @@ require_once dirname(__DIR__) . '/config.php';
             $total += $row['giasanpham'] * $_POST['quantity'][$row['masp']];
         }
         if ($_POST['tenkh'] == '' || $_POST['sdt'] == '' || $_POST['diachi'] == '' || empty($_POST['email']) || $_POST['quantity'] == '') {
-            ?>
-            <script>
-                alert('Mời bạn nhập đầy đủ thông tin');
-                window.location.href = 'infodathang.php';
-            </script>
-            <?php
+            $_SESSION['swal_error'] = 'Mời bạn nhập đầy đủ thông tin';
+            header('Location: infodathang.php');
+            exit;
         }
         $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
         require_once BASE_PATH . 'includes/order_helper.php';
@@ -159,8 +157,9 @@ require_once dirname(__DIR__) . '/config.php';
         $stockResult = validateAndDeductStock($con, $stockCheckItems);
         if (!$stockResult['success']) {
             $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
-            $errorText = implode('\\n', $errorMsgs);
-            echo "<script>alert('Không thể đặt hàng:\\n" . $errorText . "'); window.location.href='" . BASE_URL . "shop/giohang.php';</script>";
+            $errorText = implode('\n', $errorMsgs);
+            $_SESSION['swal_error'] = "Không thể đặt hàng:\n" . $errorText;
+            header('Location: ' . BASE_URL . 'shop/giohang.php');
             exit;
         }
         
@@ -188,14 +187,10 @@ require_once dirname(__DIR__) . '/config.php';
         if (!empty($email)) {
             GuiMailKhachHang($email, $_POST['tenkh'], $orderCode, $token, $total);
         }
-        ?>
-        <script>
-            alert('Đơn hàng đã đặt thành công !');
-            window.location.href = 'giohang.php';
-
-        </script>
-        <?php
-
+        
+        $_SESSION['swal_success'] = 'Đơn hàng đã đặt thành công!';
+        header('Location: giohang.php');
+        exit;
     }
 
     // --- Lấy thông tin mặc định để điền sẵn vào form ---
@@ -207,7 +202,17 @@ require_once dirname(__DIR__) . '/config.php';
     if (!empty($_SESSION['makh'])) {
         $makh_val_prefill = intval($_SESSION['makh']);
         
-        // 1. Lấy từ sổ địa chỉ (ưu tiên địa chỉ mặc định)
+        // Luôn lấy email từ thông tin tài khoản
+        $customer_query = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang` WHERE `makh` = $makh_val_prefill LIMIT 1");
+        if ($customer_query && mysqli_num_rows($customer_query) > 0) {
+            $customer_row = mysqli_fetch_assoc($customer_query);
+            $default_name = $customer_row['hoten'] ?? '';
+            $default_phone = $customer_row['sdt'] ?? '';
+            $default_address = $customer_row['diachi'] ?? '';
+            $default_email = $customer_row['email'] ?? '';
+        }
+        
+        // Ưu tiên lấy từ sổ địa chỉ (địa chỉ mặc định) nếu có
         $address_query = mysqli_query($con, "SELECT * FROM `tbl_diachi` WHERE `makh` = $makh_val_prefill ORDER BY `macdinh` DESC, `ngaytao` DESC LIMIT 1");
         if ($address_query && mysqli_num_rows($address_query) > 0) {
             $address_row = mysqli_fetch_assoc($address_query);
@@ -221,16 +226,6 @@ require_once dirname(__DIR__) . '/config.php';
             if (!empty($address_row['tinh'])) $addr_parts[] = $address_row['tinh'];
             
             $default_address = implode(', ', $addr_parts);
-        } else {
-            // 2. Fallback lấy từ thông tin tài khoản
-            $customer_query = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang` WHERE `makh` = $makh_val_prefill LIMIT 1");
-            if ($customer_query && mysqli_num_rows($customer_query) > 0) {
-                $customer_row = mysqli_fetch_assoc($customer_query);
-                $default_name = $customer_row['hoten'] ?? '';
-                $default_phone = $customer_row['sdt'] ?? '';
-                $default_address = $customer_row['diachi'] ?? '';
-                $default_email = $customer_row['email'] ?? '';
-            }
         }
     }
 
