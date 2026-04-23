@@ -18,16 +18,13 @@ logs/
 # Composer
 vendor/
 composer.phar
+composer-setup.php
 
 # Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Uploads or cache generated during runtime (thường các thư mục như uploads/ hay cache/ cần ignore, nếu có)
-# uploads/
-# cache/
 
 # Environment variables
 .env
@@ -48,9 +45,28 @@ vnpay_php/config.php
 # Thư mục lưu ảnh upload của admin/sản phẩm
 admin/uploads/
 
+# Thư mục lưu avatar upload của user
+auth/uploads/
+
 # File export của Database (Tránh vô tình push data user trên server)
 *.sql
 # Lưu ý: Nếu bạn muốn chia sẻ file giaythethao2.sql lên Github để người khác có data ban đầu thì hãy comment lại dòng *.sql trên.
 
-# IDE NetBeans 
+# IDE NetBeans
 nbproject/
+
+# PHPUnit
+tests/
+.phpunit.cache/
+.phpunit.result.cache
+
+# Tài liệu nội bộ (không push lên remote)
+documents/SRS_USECASE_DIAGRAMS.MD
+images_docx/
+
+# Ảnh sản phẩm do admin upload lên server (không commit vào source)
+images/
+
+# Temporary / runtime files
+*.tmp
+*.temp
