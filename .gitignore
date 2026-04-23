@@ -35,22 +35,9 @@ yarn-error.log*
 *.swp
 *~
 
-# Database connections (Mật khẩu DB, cấu hình kết nối)
-connect.php
-vnpay_php/connect1.php
-
-# API/Gateway configs (Chứa API keys, hash secrets của VNPAY)
-vnpay_php/config.php
-
-# Thư mục lưu ảnh upload của admin/sản phẩm
-admin/uploads/
-
-# Thư mục lưu avatar upload của user
-auth/uploads/
-
-# File export của Database (Tránh vô tình push data user trên server)
-*.sql
-# Lưu ý: Nếu bạn muốn chia sẻ file giaythethao2.sql lên Github để người khác có data ban đầu thì hãy comment lại dòng *.sql trên.
+# File export của Database — cho phép giaythethao2.sql (schema/seed data cho Railway)
+# Nếu có dump runtime thì thêm tên cụ thể vào đây
+# *.sql  ← đã bỏ ignore để push schema lên GitHub cho Railway import
 
 # IDE NetBeans
 nbproject/
@@ -64,8 +51,8 @@ tests/
 documents/SRS_USECASE_DIAGRAMS.MD
 images_docx/
 
-# Ảnh sản phẩm do admin upload lên server (không commit vào source)
-images/
+# Thư mục lưu avatar upload của user (runtime data)
+auth/uploads/
 
 # Temporary / runtime files
 *.tmp

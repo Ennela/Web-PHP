@@ -201,12 +201,55 @@ require_once dirname(__DIR__) . '/config.php';
     padding-bottom: 0;
     margin-bottom: 0;
 }
-.cart-product-item .row {
-    gap: 5px; /* Default for mobile */
+/* Cart item grid layout (replaces Bootstrap row) */
+.cart-item-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    grid-template-areas:
+        "img name"
+        "size qty"
+        "price delete";
+    gap: 12px;
+    align-items: center;
+}
+.cart-item-img {
+    grid-area: img;
+}
+.cart-item-img img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.cart-item-name {
+    grid-area: name;
+}
+.cart-item-size {
+    grid-area: size;
+}
+.cart-item-qty {
+    grid-area: qty;
+}
+.cart-item-price {
+    grid-area: price;
+    display: flex;
+    align-items: center;
+}
+.cart-item-delete {
+    grid-area: delete;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 @media (min-width: 768px) {
-    .cart-product-item .row {
-        gap: 0;
+    .cart-item-grid {
+        grid-template-columns: 80px 2fr 1fr 1fr 1fr auto;
+        grid-template-areas: "img name size qty price delete";
+        gap: 16px;
+    }
+    .cart-item-price {
+        justify-content: flex-end;
     }
 }
 .cart-size-col {
@@ -261,12 +304,6 @@ require_once dirname(__DIR__) . '/config.php';
     border-radius: 10px;
     overflow: hidden;
     width: fit-content;
-    margin: 0 auto; /* Center on mobile by default */
-}
-@media (min-width: 768px) {
-    .qty-cart-control {
-        margin: 0; /* Align left on md+ */
-    }
 }
 .qty-cart-btn {
     background: #1e293b;
@@ -553,14 +590,14 @@ require_once dirname(__DIR__) . '/config.php';
                                             $itemSize = is_array($cartItem) ? ($cartItem['size'] ?? null) : null;
                                 ?>
                                             <div class="cart-product-item" data-masp="<?= $row['masp'] ?>" data-price="<?= $row['giasanpham'] ?>">
-                                                <div class="row align-items-center text-center text-md-start">
-                                                    <div class="col-md-2 mb-3 mb-md-0">
-                                                        <img class="img-fluid d-block mx-auto image" style="border-radius: 4px;" src="<?php echo BASE_URL; ?>admin/<?= $row['anhdaidien'] ?>">
+                                                <div class="cart-item-grid">
+                                                    <div class="cart-item-img">
+                                                        <img src="<?php echo BASE_URL; ?>admin/<?= $row['anhdaidien'] ?>" alt="<?= htmlspecialchars($row['tensp']) ?>">
                                                     </div>
-                                                    <div class="col-md-3 mb-3 mb-md-0">
+                                                    <div class="cart-item-name">
                                                         <a class="cart-product-name" href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>"><?= $row['tensp'] ?></a>
                                                     </div>
-                                                    <div class="col-4 col-md-2 mb-3 mb-md-0 cart-size-col">
+                                                    <div class="cart-item-size cart-size-col">
                                                         <span class="cart-size-label">Size</span>
                                                         <?php
                                                         $itemStockMap = $cartStockData[$row['masp']] ?? [];
@@ -593,19 +630,19 @@ require_once dirname(__DIR__) . '/config.php';
                                                         <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Còn <?= $selectedSizeStock ?></div>
                                                         <?php endif; ?>
                                                     </div>
-                                                    <div class="col-4 col-md-2 mb-3 mb-md-0">
+                                                    <div class="cart-item-qty">
                                                         <span class="cart-size-label">Số lượng</span>
-                                                        <div class="qty-cart-control mx-auto mx-md-0">
+                                                        <div class="qty-cart-control">
                                                             <button type="button" class="qty-cart-btn" onclick="cartChangeQty(<?= $row['masp'] ?>, -1)">−</button>
                                                             <input type="number" min="1" value="<?= $itemQty ?>" name="quantity[<?= $row['masp'] ?>]" class="quantity-input" data-masp="<?= $row['masp'] ?>">
                                                             <button type="button" class="qty-cart-btn" onclick="cartChangeQty(<?= $row['masp'] ?>, 1)">+</button>
                                                         </div>
                                                     </div>
-                                                    <div class="col-3 col-md-2 mb-3 mb-md-0 text-md-end">
-                                                        <span class="cart-price" id="price-<?= $row['masp'] ?>"><?= number_format($row['giasanpham'] * $itemQty, 0, ",", ".") ?> đ</span>
+                                                    <div class="cart-item-price">
+                                                        <span class="cart-price" id="price-<?= $row['masp'] ?>"><?= number_format($row['giasanpham'] * $itemQty, 0, ",", ".") ?>&nbsp;đ</span>
                                                     </div>
-                                                    <div class="col-1 col-md-1 text-md-end">
-                                                        <button type="button" class="btn-delete-cart text-danger border-0 bg-transparent" title="Xóa" onclick="cartDeleteItem(<?= $row['masp'] ?>)"><i class="fas fa-trash-alt fs-5"></i></button>
+                                                    <div class="cart-item-delete">
+                                                        <button type="button" class="btn-delete-cart" title="Xóa" onclick="cartDeleteItem(<?= $row['masp'] ?>)"><i class="fas fa-trash-alt"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -627,12 +664,12 @@ require_once dirname(__DIR__) . '/config.php';
                             <div class="cart-summary">
                                 <h3>TÓM LƯỢC ORDER</h3>
                                 <?php if (isset($total)) { ?>
-                                    <h4><span class="text">Tạm tính</span><span class="price" id="summary-subtotal"><?= number_format($total, 0, ",", ".") ?> đ</span></h4>
-                                    <h4><span class="text">Chiết khấu</span><span class="price">0 đ</span></h4>
-                                    <h4><span class="text">Phí vận chuyển</span><span class="price">0 đ</span></h4>
-                                    <h4 class="total"><span class="text">TỔNG CỘNG</span><span class="price" id="summary-total"><?= number_format($total, 0, ",", ".") ?> đ</span></h4>
+                                    <h4><span class="text">Tạm tính</span><span class="price" id="summary-subtotal"><?= number_format($total, 0, ",", ".") ?>&nbsp;đ</span></h4>
+                                    <h4><span class="text">Chiết khấu</span><span class="price">0&nbsp;đ</span></h4>
+                                    <h4><span class="text">Phí vận chuyển</span><span class="price">0&nbsp;đ</span></h4>
+                                    <h4 class="total"><span class="text">TỔNG CỘNG</span><span class="price" id="summary-total"><?= number_format($total, 0, ",", ".") ?>&nbsp;đ</span></h4>
                                 <?php } else { ?>
-                                    <h4 class="total"><span class="text">TỔNG CỘNG</span><span class="price" id="summary-total">0 đ</span></h4>
+                                    <h4 class="total"><span class="text">TỔNG CỘNG</span><span class="price" id="summary-total">0&nbsp;đ</span></h4>
                                 <?php } ?>
                                 
                                 <div class="mt-4">
@@ -725,7 +762,7 @@ function updatePricesFromResponse(res) {
         if (priceEl) {
             priceEl.classList.add('updating');
             setTimeout(() => {
-                priceEl.textContent = item.itemTotalFormatted;
+                priceEl.innerHTML = item.itemTotalFormatted;
                 priceEl.classList.remove('updating');
             }, 150);
         }
@@ -734,8 +771,8 @@ function updatePricesFromResponse(res) {
     // Update summary totals
     const subtotalEl = document.getElementById('summary-subtotal');
     const totalEl = document.getElementById('summary-total');
-    if (subtotalEl) subtotalEl.textContent = res.grandTotalFormatted;
-    if (totalEl) totalEl.textContent = res.grandTotalFormatted;
+    if (subtotalEl) subtotalEl.innerHTML = res.grandTotalFormatted;
+    if (totalEl) totalEl.innerHTML = res.grandTotalFormatted;
 }
 
 // Debounced update (for typing in quantity field)
@@ -764,7 +801,7 @@ function debouncedUpdate(masp) {
         if (item) {
             const unitPrice = parseInt(item.dataset.price);
             const priceEl = document.getElementById('price-' + masp);
-            if (priceEl) priceEl.textContent = formatCurrency(unitPrice * qty) + ' đ';
+            if (priceEl) priceEl.innerHTML = formatCurrency(unitPrice * qty) + '&nbsp;đ';
         }
         
         ajaxUpdate(masp, {
@@ -807,7 +844,7 @@ function cartChangeQty(masp, delta) {
     if (item) {
         const unitPrice = parseInt(item.dataset.price);
         const priceEl = document.getElementById('price-' + masp);
-        if (priceEl) priceEl.textContent = formatCurrency(unitPrice * val) + ' đ';
+        if (priceEl) priceEl.innerHTML = formatCurrency(unitPrice * val) + '&nbsp;đ';
     }
     
     // Recalculate local grand total
@@ -876,8 +913,8 @@ function recalcLocalTotal() {
     });
     const subtotalEl = document.getElementById('summary-subtotal');
     const totalEl = document.getElementById('summary-total');
-    if (subtotalEl) subtotalEl.textContent = formatCurrency(total) + ' đ';
-    if (totalEl) totalEl.textContent = formatCurrency(total) + ' đ';
+    if (subtotalEl) subtotalEl.innerHTML = formatCurrency(total) + '&nbsp;đ';
+    if (totalEl) totalEl.innerHTML = formatCurrency(total) + '&nbsp;đ';
 }
 
 // ===== EVENT LISTENERS =====

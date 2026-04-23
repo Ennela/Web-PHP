@@ -76,7 +76,6 @@
     padding: 6px 10px;
     min-width: 44px;
     min-height: 44px;
-    display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;

@@ -653,7 +653,7 @@ function getAdminStatusInfo($status) {
                                     <td><?= htmlspecialchars($row['tenkh']) ?></td>
                                     <td class="text-center"><?= htmlspecialchars($row['sdt']) ?></td>
                                     <td><?= htmlspecialchars($row['diachi']) ?></td>
-                                    <td class="text-center font-bold" style="color:#2563eb;"><?= number_format($row['tongtien'], 0, ',', '.') ?>đ</td>
+                                    <td class="text-center font-bold" style="color:#2563eb;"><?= number_format($row['tongtien'], 0, ',', '.') ?>&nbsp;đ</td>
                                     <td class="text-center"><?= date('d/m/Y H:i', $row['ngaytao']) ?></td>
                                     <td class="text-center">
                                         <span class="status-badge status-<?= $statusInfo['color'] ?>">

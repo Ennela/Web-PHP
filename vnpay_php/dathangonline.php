@@ -3,7 +3,7 @@ session_start();
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 require_once("./config.php");
 // Fix connection include path to root connect.php
-include '../connect.php'; 
+include dirname(__DIR__) . '/includes/connect.php'; 
 
 // Load the cart from session
 $cart = isset($_SESSION['chuyen']) ? $_SESSION['chuyen'] : [];
@@ -234,7 +234,7 @@ function hashUrlEncode($value) {
                                     <p class="text-xs text-gray-500 mt-1">Số lượng: <span class="font-medium text-gray-700"><?= $sp['qty_in_cart'] ?></span></p>
                                 </div>
                                 <div class="ml-4 font-medium text-gray-900">
-                                    <?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>đ
+                                    <?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>&nbsp;đ
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -243,7 +243,7 @@ function hashUrlEncode($value) {
                         <div class="border-t border-gray-200 pt-4 space-y-3">
                             <div class="flex justify-between text-gray-600">
                                 <span>Tạm tính</span>
-                                <span><?= number_format($total, 0, ',', '.') ?>đ</span>
+                                <span><?= number_format($total, 0, ',', '.') ?>&nbsp;đ</span>
                             </div>
                             <div class="flex justify-between text-gray-600">
                                 <span>Phí vận chuyển</span>
@@ -251,7 +251,7 @@ function hashUrlEncode($value) {
                             </div>
                             <div class="flex justify-between items-center pt-3 border-t border-gray-200">
                                 <span class="text-lg font-bold text-gray-800">Tổng cộng</span>
-                                <span class="text-2xl font-black text-blue-600"><?= number_format($total, 0, ',', '.') ?>đ</span>
+                                <span class="text-2xl font-black text-blue-600"><?= number_format($total, 0, ',', '.') ?>&nbsp;đ</span>
                             </div>
                         </div>
                     </div>

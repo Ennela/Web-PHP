@@ -419,7 +419,7 @@ include BASE_PATH . 'includes/header.php';
                             </div>
                             <div class="order-info-row">
                                 <span class="order-info-label"><i class="fas fa-coins"></i> Tổng tiền</span>
-                                <span class="order-info-value order-total"><?= number_format($order['tongtien'], 0, ',', '.') ?>đ</span>
+                                <span class="order-info-value order-total"><?= number_format($order['tongtien'], 0, ',', '.') ?>&nbsp;đ</span>
                             </div>
                         </div>
                         <div class="order-card-footer">

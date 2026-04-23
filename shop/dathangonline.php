@@ -219,14 +219,14 @@ include BASE_PATH . 'includes/header.php';
                                         <h6 class="my-0"><?= htmlspecialchars($sp['tensp']) ?></h6>
                                         <small class="text-muted">SL: <?= $sp['qty_in_cart'] ?><?php if (!empty($sp['order_size'])): ?> · Size: <?= $sp['order_size'] ?><?php endif; ?></small>
                                     </div>
-                                    <span class="text-muted"><?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>đ</span>
+                                    <span class="text-muted"><?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>&nbsp;đ</span>
                                 </li>
                                 <?php endforeach; ?>
                             </ul>
                             <hr>
                             <div class="d-flex justify-content-between font-weight-bold p-3 bg-light rounded text-info align-items-center">
                                 <span style="font-size: 18px">Tổng cộng</span>
-                                <strong style="font-size: 24px"><?= number_format($total, 0, ',', '.') ?>đ</strong>
+                                <strong style="font-size: 24px"><?= number_format($total, 0, ',', '.') ?>&nbsp;đ</strong>
                             </div>
                         </div>
                     </div>

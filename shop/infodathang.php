@@ -73,7 +73,7 @@ require_once dirname(__DIR__) . '/config.php';
             $mail->Body = "
                 <h3>Xin chào $tenkh,</h3>
                 <p>Cảm ơn bạn đã đặt hàng tại Shop Sneakers. Đơn hàng <strong>#$orderCode</strong> của bạn đã được ghi nhận.</p>
-                <p>Tổng giá trị đơn hàng: <strong>" . number_format($total, 0, ',', '.') . "đ</strong></p>
+                <p>Tổng giá trị đơn hàng: <strong>" . number_format($total, 0, ',', '.') . "&nbsp;đ</strong></p>
                 <p>Để xem trạng thái chi tiết đơn hàng, vui lòng truy cập đường dẫn sau:</p>
                 <p><a href='$trackingLink'>$trackingLink</a></p>
                 <br>
@@ -383,7 +383,7 @@ require_once dirname(__DIR__) . '/config.php';
                                         <h6 class="my-0"><?= htmlspecialchars($sp['tensp']) ?></h6>
                                         <small class="text-muted">SL: <?= $sp['qty_in_cart'] ?><?php if (!empty($sp['order_size'])): ?> · Size: <?= $sp['order_size'] ?><?php endif; ?></small>
                                     </div>
-                                    <span class="text-muted"><?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>đ</span>
+                                    <span class="text-muted"><?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>&nbsp;đ</span>
                                 </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -394,7 +394,7 @@ require_once dirname(__DIR__) . '/config.php';
                             </div>
                             <div class="d-flex justify-content-between font-weight-bold p-3 bg-light rounded text-info align-items-center">
                                 <span style="font-size: 18px">Tổng cộng</span>
-                                <strong style="font-size: 24px"><?= number_format($total, 0, ',', '.') ?>đ</strong>
+                                <strong style="font-size: 24px"><?= number_format($total, 0, ',', '.') ?>&nbsp;đ</strong>
                             </div>
                             <div class="text-center mt-3">
                                 <small class="text-muted"><i class="fas fa-shield-alt text-success mr-1"></i> Thanh toán khi nhận hàng — An toàn & Tiện lợi</small>

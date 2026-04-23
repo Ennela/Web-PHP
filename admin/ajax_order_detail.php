@@ -63,13 +63,13 @@ if (!$result || mysqli_num_rows($result) == 0) {
                 <?php endif; ?>
             </td>
             <td style="text-align:center; font-weight:600;"><?= $row['quantity'] ?></td>
-            <td style="text-align:right;"><?= number_format($row['price'], 0, ',', '.') ?>đ</td>
-            <td style="text-align:right; font-weight:700;"><?= number_format($lineTotal, 0, ',', '.') ?>đ</td>
+            <td style="text-align:right;"><?= number_format($row['price'], 0, ',', '.') ?>&nbsp;đ</td>
+            <td style="text-align:right; font-weight:700;"><?= number_format($lineTotal, 0, ',', '.') ?>&nbsp;đ</td>
         </tr>
         <?php endwhile; ?>
         <tr style="background:#e2e8f0; font-weight:800;">
             <td colspan="5" style="text-align:right; padding:8px 10px;">Tổng cộng:</td>
-            <td style="text-align:right; padding:8px 10px; color:#2563eb;"><?= number_format($total, 0, ',', '.') ?>đ</td>
+            <td style="text-align:right; padding:8px 10px; color:#2563eb;"><?= number_format($total, 0, ',', '.') ?>&nbsp;đ</td>
         </tr>
     </tbody>
 </table>

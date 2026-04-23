@@ -361,7 +361,7 @@ include BASE_PATH . 'includes/header.php';
                         <div style="color: #888;"><i class="far fa-calendar-alt" style="width: 18px;"></i> Ngày đặt:</div>
                         <div style="font-weight: 600; color: #333;"><?= date('d/m/Y H:i', $order['ngaytao']) ?></div>
                         <div style="color: #888;"><i class="fas fa-coins" style="width: 18px;"></i> Tổng tiền:</div>
-                        <div style="font-weight: 700; color: #2563eb; font-size: 1.05rem;"><?= number_format($order['tongtien'], 0, ',', '.') ?>đ</div>
+                        <div style="font-weight: 700; color: #2563eb; font-size: 1.05rem;"><?= number_format($order['tongtien'], 0, ',', '.') ?>&nbsp;đ</div>
                     </div>
                     <div style="margin-top: 16px; text-align: right;">
                         <a href="<?= BASE_URL ?>shop/chitietdonhang.php?id=<?= $order['id'] ?>" 

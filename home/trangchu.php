@@ -484,7 +484,7 @@ include BASE_PATH . 'includes/header.php';
                         </div>
                         <div class="card-body text-center d-flex flex-column" style="padding: 25px;">
                             <h5 class="card-title" style="font-weight: 800; font-size: 1.15rem; color: #1e293b; margin-bottom: 15px;"><?= $row['tensp'] ?></h5>
-                            <p class="card-text mb-4" style="font-weight: 700; font-size: 1.25rem; color: #2563eb;"><?= number_format($row['giasanpham'], 0, ',', '.') ?> đ</p>
+                            <p class="card-text mb-4" style="font-weight: 700; font-size: 1.25rem; color: #2563eb;"><?= number_format($row['giasanpham'], 0, ',', '.') ?>&nbsp;đ</p>
                             <div class="mt-auto">
                                 <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>" class="btn-editorial-outline">XEM CHI TIẾT</a>
                             </div>

@@ -168,7 +168,7 @@ include BASE_PATH . 'includes/header.php';
                                         <h6 class="mb-3"><?= date('d/m/Y H:i', $orderData['ngaytao']) ?></h6>
                                         
                                         <p class="mb-1 text-muted">Tổng tiền:</p>
-                                        <h4 class="text-danger font-weight-bold"><?= number_format($orderData['tongtien'], 0, ',', '.') ?>đ</h4>
+                                        <h4 class="text-danger font-weight-bold"><?= number_format($orderData['tongtien'], 0, ',', '.') ?>&nbsp;đ</h4>
                                     </div>
                                 </div>
                                 
@@ -200,7 +200,7 @@ include BASE_PATH . 'includes/header.php';
                                                         </small>
                                                     </td>
                                                     <td class="text-right align-middle">
-                                                        <strong><?= number_format($item['price'], 0, ',', '.') ?>đ</strong>
+                                                        <strong><?= number_format($item['price'], 0, ',', '.') ?>&nbsp;đ</strong>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>

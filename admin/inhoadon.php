@@ -58,7 +58,7 @@ WHERE oder.id = " . $_GET['id']);
             </ul>
             <hr />
             <label>Tổng SL:</label> <?= $totalQuantity ?> - <label>Tổng
-                tiền:</label> <?= number_format($totalMoney, 0, ",", ".") ?> đ
+                tiền:</label> <?= number_format($totalMoney, 0, ",", ".") ?>&nbsp;đ
             <p><label>Ghi chú: </label><?= $oder[0]['note'] ?></p>
         </div>
     </div>

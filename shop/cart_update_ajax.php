@@ -83,7 +83,7 @@ if (!empty($_SESSION['giohang'])) {
             'size' => $item['size'],
             'price' => $row['giasanpham'],
             'itemTotal' => $itemTotal,
-            'itemTotalFormatted' => number_format($itemTotal, 0, ",", ".") . ' đ',
+            'itemTotalFormatted' => number_format($itemTotal, 0, ",", ".") . '&nbsp;đ',
         ];
     }
 }
@@ -104,7 +104,7 @@ $response = [
     'success' => true,
     'cart' => $cartItems,
     'grandTotal' => $grandTotal,
-    'grandTotalFormatted' => number_format($grandTotal, 0, ",", ".") . ' đ',
+    'grandTotalFormatted' => number_format($grandTotal, 0, ",", ".") . '&nbsp;đ',
     'cartCount' => count($_SESSION['giohang']),
     'stock' => $stockInfo,
 ];

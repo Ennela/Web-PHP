@@ -1007,12 +1007,12 @@ require_once dirname(__DIR__) . '/config.php';
                     <!-- Price -->
                     <div class="price-block">
                         <?php if(!empty($product['giagoc']) && $product['giagoc'] > $product['giasanpham']): ?>
-                        <span class="price-original"><?= number_format($product['giagoc'], 0, ',', '.') ?>₫</span>
+                        <span class="price-original"><?= number_format($product['giagoc'], 0, ',', '.') ?>&nbsp;đ</span>
                         <?php
                             $discount = round((1 - $product['giasanpham'] / $product['giagoc']) * 100);
                         ?>
                         <?php endif; ?>
-                        <span class="price-sale"><?= number_format($product['giasanpham'], 0, ',', '.') ?>₫</span>
+                        <span class="price-sale"><?= number_format($product['giasanpham'], 0, ',', '.') ?>&nbsp;đ</span>
                         <?php if(!empty($discount) && $discount > 0): ?>
                         <span class="price-discount-badge">-<?= $discount ?>%</span>
                         <?php endif; ?>
@@ -1195,7 +1195,7 @@ require_once dirname(__DIR__) . '/config.php';
                                 <span>★</span><span>★</span><span>★</span><span>★</span><span style="color:#ddd;">★</span>
                             </div>
                             <div class="related-name"><?= htmlspecialchars($related['tensp']) ?></div>
-                            <div class="related-price"><?= number_format($related['giasanpham'], 0, ',', '.') ?>₫</div>
+                            <div class="related-price"><?= number_format($related['giasanpham'], 0, ',', '.') ?>&nbsp;đ</div>
                         </div>
                     </a>
                 </div>

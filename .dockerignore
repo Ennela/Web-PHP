@@ -1,0 +1,14 @@
+.git
+.gitignore
+.idea
+.vscode
+*.md
+documents/
+images_docx/
+tests/
+composer.phar
+composer-setup.php
+*.sql
+.phpunit.cache
+.phpunit.result.cache
+scratch/

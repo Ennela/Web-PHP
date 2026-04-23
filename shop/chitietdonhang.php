@@ -359,6 +359,10 @@ include BASE_PATH . 'includes/header.php';
 
     /* Responsive */
     @media (max-width: 768px) {
+        .detail-hero { padding: 40px 0 35px; }
+        .detail-hero h2 { font-size: 1.3rem; }
+        .detail-hero p { font-size: 0.88rem; }
+        .timeline-section { padding: 24px 16px; margin-top: -25px; }
         .status-timeline {
             flex-direction: column;
             align-items: flex-start;
@@ -378,22 +382,95 @@ include BASE_PATH . 'includes/header.php';
             height: 40px;
             font-size: 0.9rem;
             margin-bottom: 0;
+            flex-shrink: 0;
         }
         .timeline-label {
             text-align: left;
             max-width: none;
         }
-        .product-table thead { display: none; }
+        .info-card-header {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+        }
+        .info-card-body {
+            padding: 14px 16px;
+        }
+        .info-row {
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
+        }
+        .info-value {
+            text-align: left;
+        }
+        /* Product table → stacked cards on mobile */
+        .product-table {
+            min-width: 0 !important;
+        }
+        .product-table thead {
+            display: none;
+        }
+        .product-table tbody tr {
+            display: block;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
+        }
+        .product-table tbody tr:last-child {
+            border-bottom: none;
+        }
         .product-table tbody td {
             display: block;
-            text-align: right;
-            padding: 8px 16px;
+            text-align: right !important;
+            padding: 4px 0;
+            border-bottom: none;
+            font-size: 0.88rem;
         }
         .product-table tbody td::before {
             content: attr(data-label);
             float: left;
             font-weight: 700;
             color: #475569;
+            font-size: 0.82rem;
+        }
+        .product-table tbody td:first-child {
+            text-align: left !important;
+            margin-bottom: 4px;
+        }
+        .product-table tbody td:first-child::before {
+            display: none;
+        }
+        .product-thumb {
+            width: 48px;
+            height: 48px;
+        }
+        .total-row td {
+            display: block;
+            text-align: right !important;
+        }
+        .total-row td[colspan] {
+            display: none;
+        }
+        .total-row td:last-child::before {
+            content: 'Tổng cộng:';
+            float: left;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        /* Action buttons */
+        .text-center.mt-5 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+        }
+        .text-center.mt-5 a,
+        .text-center.mt-5 button {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
         }
     }
 </style>
@@ -511,7 +588,7 @@ include BASE_PATH . 'includes/header.php';
                             <?php endif; ?>
                             <div class="info-row" style="background: #f0f9ff; margin: 10px -24px -20px; padding: 16px 24px; border-radius: 0 0 16px 16px;">
                                 <span class="info-label" style="font-weight: 700; font-size: 1rem; color: #1e293b;">Tổng tiền</span>
-                                <span class="info-value" style="color: #2563eb; font-size: 1.3rem;"><?= number_format($order['tongtien'], 0, ',', '.') ?>đ</span>
+                                <span class="info-value" style="color: #2563eb; font-size: 1.3rem;"><?= number_format($order['tongtien'], 0, ',', '.') ?>&nbsp;đ</span>
                             </div>
                         </div>
                     </div>
@@ -525,7 +602,7 @@ include BASE_PATH . 'includes/header.php';
                         </div>
                         <div class="info-card-body" style="padding: 0;">
                             <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                            <table class="product-table" style="min-width: 500px;">
+                            <table class="product-table">
                                 <thead>
                                     <tr>
                                         <th style="width: 60px;"></th>
@@ -567,17 +644,17 @@ include BASE_PATH . 'includes/header.php';
                                             </span>
                                         </td>
                                         <td data-label="Đơn giá" style="text-align: right;">
-                                            <?= number_format($item['price'], 0, ',', '.') ?>đ
+                                            <?= number_format($item['price'], 0, ',', '.') ?>&nbsp;đ
                                         </td>
                                         <td data-label="Thành tiền" style="text-align: right; font-weight: 600; color: #1e293b;">
-                                            <?= number_format($item['price'] * $item['quantity'], 0, ',', '.') ?>đ
+                                            <?= number_format($item['price'] * $item['quantity'], 0, ',', '.') ?>&nbsp;đ
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
                                     <tr class="total-row">
                                         <td colspan="5" style="text-align: right;">Tổng cộng:</td>
                                         <td style="text-align: right;" class="total-amount">
-                                            <?= number_format($order['tongtien'], 0, ',', '.') ?>đ
+                                            <?= number_format($order['tongtien'], 0, ',', '.') ?>&nbsp;đ
                                         </td>
                                     </tr>
                                 </tbody>

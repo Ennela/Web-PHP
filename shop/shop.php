@@ -126,22 +126,28 @@ include BASE_PATH . 'includes/header.php';
 .filter-row {
     display: flex;
     flex-direction: column; /* Mobile first */
-    gap: 16px;
+    gap: 12px;
     align-items: stretch;
 }
 @media (min-width: 768px) {
     .filter-row {
         flex-direction: row;
-        align-items: center;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 14px;
     }
 }
 .filter-group {
     flex: 1;
-    min-width: 100%; /* Mobile first */
+    min-width: 0; /* Mobile first - prevent overflow */
 }
 @media (min-width: 768px) {
     .filter-group {
-        min-width: 280px;
+        min-width: 140px;
+        flex: 1;
+    }
+    .filter-group:first-child {
+        flex: 2;
     }
 }
 
@@ -212,15 +218,71 @@ include BASE_PATH . 'includes/header.php';
     display: flex;
 }
 
+/* Filter labels */
+.shop-filter-bar label {
+    display: block;
+    font-weight: 700;
+    font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+    color: #475569;
+    margin-bottom: 6px;
+}
+.shop-filter-bar label i {
+    margin-right: 4px;
+    color: #94a3b8;
+}
+
+/* Filter select & number inputs */
+.shop-filter-bar select,
+.shop-filter-bar input[type="number"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: clamp(0.82rem, 1.8vw, 0.9rem);
+    font-weight: 600;
+    color: #334155;
+    background: #f8fafc;
+    transition: all 0.3s ease;
+    outline: none;
+    min-height: 44px;
+    font-family: 'Montserrat', sans-serif;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+.shop-filter-bar select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+.shop-filter-bar select:focus,
+.shop-filter-bar input[type="number"]:focus {
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+/* Remove number input spinners */
+.shop-filter-bar input[type="number"]::-webkit-outer-spin-button,
+.shop-filter-bar input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.shop-filter-bar input[type="number"] {
+    -moz-appearance: textfield;
+}
+
 .filter-actions {
     display: flex;
     gap: 10px;
     width: 100%; /* Mobile first */
+    align-self: flex-end;
 }
 @media (min-width: 768px) {
     .filter-actions {
         width: auto;
-        min-width: 200px;
+        flex-shrink: 0;
     }
 }
 
@@ -530,13 +592,13 @@ include BASE_PATH . 'includes/header.php';
             </div>
 
             <!-- UC3: Filter & Sort Bar -->
-            <div class="shop-filter-bar">
+            <div class="filter-wrapper shop-filter-bar">
                 <form method="GET" action="<?php echo BASE_URL; ?>shop/shop.php" id="filterForm">
                     <?php if (!empty($category)): ?>
                     <input type="hidden" name="category" value="<?= htmlspecialchars($category) ?>">
                     <?php endif; ?>
                     <div class="filter-row">
-                        <div class="filter-group" style="flex: 1.5;">
+                        <div class="filter-group">
                             <label><i class="fas fa-search"></i> Tìm kiếm</label>
                             <div class="search-box-wrap">
                                 <input type="text" name="search" placeholder="Tìm giày Nike, Jordan, Adidas..."
@@ -623,10 +685,10 @@ include BASE_PATH . 'includes/header.php';
                             <p class="card-text mb-4" style="font-weight: 700; font-size: 1.25rem; color: #2563eb;">
                                 <?php if(!empty($row['giagoc']) && $row['giagoc'] > $row['giasanpham']) { ?>
                                     <span style="font-size: 0.9rem; text-decoration: line-through; color: #999; margin-right: 8px;">
-                                        <?= number_format($row['giagoc'], 0, ',', '.') ?> đ
+                                        <?= number_format($row['giagoc'], 0, ',', '.') ?>&nbsp;đ
                                     </span>
                                 <?php } ?>
-                                <?= number_format($row['giasanpham'], 0, ',', '.') ?> đ
+                                <?= number_format($row['giasanpham'], 0, ',', '.') ?>&nbsp;đ
                             </p>
 
                             <div class="mt-auto d-flex justify-content-between">
