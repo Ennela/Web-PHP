@@ -83,29 +83,14 @@ if ($order) {
             
             // Gửi email xác nhận
             if (!empty($_SESSION['email_kh'])) {
-                require BASE_PATH . 'PHPMailer-master/src/PHPMailer.php';
-                require BASE_PATH . 'PHPMailer-master/src/SMTP.php';
-                require BASE_PATH . 'PHPMailer-master/src/Exception.php';
-                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-                try {
-                    $amount = number_format(($_GET['vnp_Amount'] ?? 0) / 100, 0, ',', '.');
-                    $bank = $_GET['vnp_BankCode'] ?? 'N/A';
-                    $tenkh = $_SESSION['tenkh_order'] ?? 'Quý khách';
-                    
-                    $mail->SMTPDebug = 0;
-                    $mail->isSMTP();
-                    $mail->CharSet = 'utf-8';
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'remkyorosi@gmail.com';
-                    $mail->Password = 'nvui gcgt snxd rpib';
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->Port = 465;
-                    $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
-                    $mail->addAddress($_SESSION['email_kh'], $tenkh);
-                    $mail->isHTML(true);
-                    $mail->Subject = '✅ Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao';
-                    $mail->Body = "
+                $email = $_SESSION['email_kh'];
+                $tenkh = $_SESSION['tenkh_order'] ?? 'Quý khách';
+                $amount = number_format(($_GET['vnp_Amount'] ?? 0) / 100, 0, ',', '.');
+                $bank = $_GET['vnp_BankCode'] ?? 'N/A';
+                
+                $apiKey = getenv('RESEND_API_KEY');
+                if (!empty($apiKey)) {
+                    $body = "
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
                         <div style='background: #17a2b8; padding: 24px; text-align: center;'>
                             <h2 style='color: white; margin: 0;'>✅ Đơn hàng đã được xác nhận!</h2>
@@ -135,13 +120,30 @@ if ($order) {
                             <p style='color: #6c757d; font-size: 12px;'>Email này được gửi tự động, vui lòng không reply.</p>
                         </div>
                     </div>";
-                    $mail->smtpConnect(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]]);
-                    $mail->send();
-                    unset($_SESSION['email_kh']);
-                    unset($_SESSION['tenkh_order']);
-                } catch (Exception $e) {
-                    // Không hiển thị lỗi cho user
+
+                    $payload = json_encode([
+                        'from'    => 'Shop Sneakers <onboarding@resend.dev>',
+                        'to'      => [$email],
+                        'subject' => '✅ Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao',
+                        'html'    => $body,
+                    ]);
+
+                    $ch = curl_init('https://api.resend.com/emails');
+                    curl_setopt_array($ch, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_POST           => true,
+                        CURLOPT_POSTFIELDS     => $payload,
+                        CURLOPT_TIMEOUT        => 8,
+                        CURLOPT_HTTPHEADER     => [
+                            'Authorization: Bearer ' . $apiKey,
+                            'Content-Type: application/json',
+                        ],
+                    ]);
+                    curl_exec($ch);
+                    curl_close($ch);
                 }
+                unset($_SESSION['email_kh']);
+                unset($_SESSION['tenkh_order']);
             }
         } else {
             // Đã được xử lý bởi tab khác
