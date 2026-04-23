@@ -19,14 +19,8 @@ RUN apt-get update && apt-get install -y \
         zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Fix MPM conflict: forcefully remove event/worker, keep only prefork (required by mod_php)
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
-         /etc/apache2/mods-enabled/mpm_event.conf \
-         /etc/apache2/mods-enabled/mpm_worker.load \
-         /etc/apache2/mods-enabled/mpm_worker.conf \
-    && ln -sf /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load \
-    && ln -sf /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf \
-    && a2enmod rewrite
+# Enable rewrite module
+RUN a2enmod rewrite
 
 # Configure Apache: allow .htaccess overrides & set ServerName
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
@@ -41,11 +35,14 @@ WORKDIR /var/www/html
 # Copy all application files
 COPY . .
 
+# Make entrypoint executable
+RUN chmod +x docker-entrypoint.sh
+
 # Create upload directories and set permissions
 RUN mkdir -p admin/uploads auth/uploads \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 admin/uploads auth/uploads
 
-# Start Apache with dynamic PORT binding (Railway injects PORT at runtime)
-CMD sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && apache2-foreground
+# Use entrypoint script to fix MPM + PORT at runtime
+ENTRYPOINT ["./docker-entrypoint.sh"]
