@@ -18,7 +18,7 @@ Quản trị viên sử dụng hệ thống `quanlidonhang.php` để giám sát
 
 ### 3. Yêu cầu dữ liệu (Data Requirements)
 #### 3.1. Dữ liệu Hiển thị (Data Output)
-* **Bảng Đơn hàng (`oder`):** `id`, `tenkh`, `sdt`, `diachi`, `note`, `ngaytao`, `tongtien`, `status`.
+* **Bảng Đơn hàng (`oder`):** `id`, `order_code` (mã đơn 9 số hiển thị), `tenkh`, `sdt`, `diachi`, `note`, `ngaytao`, `tongtien`, `status`.
 * **Bảng Chi tiết (`oder_chitiet`):** Ánh xạ từ `masp` sang bảng `tbl_qlsanpham` để lấy tên và giá gốc tại thời điểm mua (`price`, `quantity`).
 
 ### 4. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)

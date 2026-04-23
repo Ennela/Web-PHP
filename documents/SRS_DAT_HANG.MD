@@ -16,7 +16,7 @@ Cung cấp luồng quy trình cho phép khách hàng chuyển đổi các sản 
 | 1 | Truy cập trang Giỏ hàng và nhấn "Thanh toán/Đặt hàng" | Hệ thống điều hướng người dùng tới trang Thanh toán (Checkout). |
 | 2 | Điền thông tin giao nhận hàng | Kiểm tra tính hợp lệ và sự tồn tại của dữ liệu (điện thoại, địa chỉ). |
 | 3 | Lựa chọn phương thức thanh toán (COD hoặc VNPAY) | Hệ thống tự động tính toán và báo cáo tổng số tiền cuối cùng. |
-| 4 | Nhấn nút "Xác nhận đặt hàng" | Sinh mã đơn hàng duy nhất, lưu thông tin vào cơ sở dữ liệu. Xử lý logic theo phương thức đã chọn. |
+| 4 | Nhấn nút "Xác nhận đặt hàng" | Sinh mã đơn hàng 9 chữ số ngẫu nhiên duy nhất (`order_code`), lưu thông tin vào cơ sở dữ liệu. Xử lý logic theo phương thức đã chọn. |
 | 5a | *Đối với COD:* Hoàn tất hành động | Hiển thị màn hình "Đặt hàng thành công", hệ thống gửi Email xác nhận hóa đơn. |
 | 5b | *Đối với VNPAY:* Xác nhận chuyển hướng thanh toán | Khởi tạo yêu cầu thanh toán với chữ ký bảo mật và chuyển hướng sang cổng thanh toán. |
 | 6 | Thực hiện thanh toán trên cổng VNPAY | VNPAY xử lý yêu cầu, trừ tiền khách và đồng thời gọi lại API trả kết quả. |
@@ -32,8 +32,8 @@ Cung cấp luồng quy trình cho phép khách hàng chuyển đổi các sản 
 
 #### 3.2. Dữ liệu lưu trữ thông tin
 * **Lưu trữ thông tin Đơn Hàng**: 
-  * Mã định danh hoặc mã hóa đơn ngẫu nhiên duy nhất (VD: DH1029).
-  * Liên kết với thông tin tài khoản (nếu khách mua đã đăng nhập trên hệ thống).
+  * Mã đơn hàng 9 chữ số ngẫu nhiên duy nhất (`order_code`, VD: 805659294). Được sinh bằng hàm `generateOrderCode()` trong `includes/order_helper.php`, kiểm tra trùng lặp trước khi lưu vào cột `order_code` (UNIQUE INDEX) của bảng `oder`.
+  * Liên kết với thông tin tài khoản (nếu khách mua đã đăng nhập trên hệ thống) qua cột `makh`.
   * Thông tin giao nhận hàng: Họ tên, số điện thoại, địa chỉ nhận hàng đích, ghi chú cho tài xế/người đóng gói.
   * Thông tin giao dịch: Tổng thành tiền, phương thức thanh toán được áp dụng, trạng thái hiện tại (Chờ xử lý, Đang giao, Đã thanh toán, Đã hủy).
 * **Lưu trữ thông tin Chi Tiết Đơn Hàng**: 

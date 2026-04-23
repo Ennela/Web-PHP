@@ -12,7 +12,7 @@ Hệ thống cho phép khách hàng đăng nhập để xem danh sách các đơ
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động người dùng | Phản hồi hệ thống |
 | :--- | :--- | :--- |
-| 1 | Đăng nhập tài khoản cá nhân và truy cập "Tra cứu đơn hàng" | Hệ thống truy xuất CSDL bảng `oder` theo `makh` tương ứng với session hiện tại và hiển thị thẻ thông tin tóm tắt từng đơn. |
+| 1 | Đăng nhập tài khoản cá nhân và truy cập "Tra cứu đơn hàng" | Hệ thống truy xuất CSDL bảng `oder` theo `makh` tương ứng với session hiện tại và hiển thị thẻ thông tin tóm tắt từng đơn với mã đơn hàng 9 số (`order_code`). |
 | 2 | Chọn bộ lọc trạng thái (VD: Đang giao, Chờ xử lý) | Truy vấn SQL có thêm tham chiếu `status` giúp trả về danh sách lọc linh hoạt. |
 | 3 | Nhấn "Xem chi tiết" tại một đơn hàng | Điều hướng sang `chitietdonhang.php?id=...`. Hệ thống xác thực quyền sở hữu đơn hàng (so sánh `makh` của đơn hàng với `$_SESSION['makh']`). |
 | 4 | Xem hành trình đơn hàng | Hiển thị Timeline (Chờ xử lý -> Xác nhận -> Đang giao -> Đã giao) và danh sách sản phẩm cùng tổng chi phí. |
@@ -23,6 +23,7 @@ Hệ thống cho phép khách hàng đăng nhập để xem danh sách các đơ
 * **Order ID:** Tham số `$id` độc nhất truyền vào URL trang chi tiết đơn hàng.
 
 #### 3.2. Dữ liệu Đầu ra (Data Output Output)
+* **Mã đơn hàng:** Mã 9 chữ số ngẫu nhiên (`order_code`) hiển thị cho khách hàng thay vì `id` nội bộ.
 * **Thông tin giao vận:** Địa chỉ đích, SĐT, ngày giờ khởi tạo (`ngaytao`), trạng thái hiện tại.
 * **Dữ liệu Thanh Toán:** Tổng thành tiền, Phương thức thanh toán (COD hoặc thẻ qua `vnpay_tranId`).
 * **Chi tiết giỏ hàng lúc mua:** `oder_chitiet` lồng ghép tên mặt hàng (`tensp`), hình ảnh (`anhdaidien`), số lượng, kích cỡ (`size`), và giá mua ngay lúc chốt hoá đơn.
