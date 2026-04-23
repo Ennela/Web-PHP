@@ -32,7 +32,7 @@ include BASE_PATH . 'includes/header.php';
     .about-hero {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
         color: #fff;
-        padding: 160px 0 100px;
+        padding: clamp(110px, 18vw, 160px) 0 clamp(50px, 10vw, 100px);
         text-align: center;
         position: relative;
         overflow: hidden;
@@ -55,21 +55,23 @@ include BASE_PATH . 'includes/header.php';
     .about-hero h1 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
-        letter-spacing: 3px;
+        letter-spacing: clamp(1px, 0.5vw, 3px);
         text-transform: uppercase;
         margin-bottom: 20px;
-        font-size: 3.2rem;
+        font-size: clamp(1.6rem, 5vw, 3.2rem);
         position: relative;
         z-index: 1;
+        padding: 0 16px;
     }
     .about-hero p {
-        font-size: 1.15rem;
+        font-size: clamp(0.9rem, 2vw, 1.15rem);
         max-width: 700px;
         margin: 0 auto;
         color: #94a3b8;
         line-height: 1.7;
         position: relative;
         z-index: 1;
+        padding: 0 16px;
     }
     .hero-divider {
         width: 60px;
@@ -84,56 +86,57 @@ include BASE_PATH . 'includes/header.php';
     /* Stats Section */
     .stats-section {
         background: #1e293b;
-        padding: 50px 0;
+        padding: clamp(30px, 6vw, 50px) 0;
         margin-top: -1px;
     }
     .stat-item {
         text-align: center;
-        padding: 20px;
+        padding: clamp(12px, 3vw, 20px);
     }
     .stat-number {
         font-family: 'Montserrat', sans-serif;
-        font-size: 3rem;
+        font-size: clamp(1.8rem, 5vw, 3rem);
         font-weight: 900;
         color: #fff;
         line-height: 1;
         margin-bottom: 8px;
     }
     .stat-label {
-        font-size: 0.82rem;
+        font-size: clamp(0.68rem, 1.5vw, 0.82rem);
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: clamp(1px, 0.3vw, 2px);
         color: #64748b;
     }
 
     /* Values Section */
     .about-values {
-        padding: 80px 0;
+        padding: clamp(50px, 8vw, 80px) 0;
         background-color: #f1f5f9;
     }
     .section-heading {
         text-align: center;
-        margin-bottom: 50px;
+        margin-bottom: clamp(30px, 6vw, 50px);
     }
     .section-heading h2 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: clamp(1px, 0.3vw, 2px);
         color: #0f172a;
-        font-size: 2.2rem;
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
         margin-bottom: 10px;
     }
     .section-heading p {
         color: #94a3b8;
-        font-size: 1rem;
+        font-size: clamp(0.88rem, 2vw, 1rem);
         max-width: 500px;
         margin: 0 auto;
+        padding: 0 16px;
     }
     .value-box {
         text-align: center;
-        padding: 40px 30px;
+        padding: clamp(25px, 4vw, 40px) clamp(20px, 3vw, 30px);
         background: #fff;
         border-radius: 16px;
         border: 1px solid #e2e8f0;
@@ -141,10 +144,12 @@ include BASE_PATH . 'includes/header.php';
         transition: all 0.4s ease;
         height: 100%;
     }
-    .value-box:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-        border-color: #cbd5e1;
+    @media (hover: hover) {
+        .value-box:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+        }
     }
     .value-icon {
         width: 70px;
@@ -173,7 +178,7 @@ include BASE_PATH . 'includes/header.php';
 
     /* Team Section */
     .team-section {
-        padding: 80px 0;
+        padding: clamp(50px, 8vw, 80px) 0;
         background: #fff;
     }
     .team-member {
@@ -183,23 +188,31 @@ include BASE_PATH . 'includes/header.php';
         overflow: hidden;
         transition: all 0.4s ease;
     }
-    .team-member:hover {
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-        transform: translateY(-6px);
-        border-color: #cbd5e1;
+    @media (hover: hover) {
+        .team-member:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(-6px);
+            border-color: #cbd5e1;
+        }
     }
     .team-img-wrapper {
         position: relative;
         overflow: hidden;
+        aspect-ratio: 1 / 1;
     }
     .team-img-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         transition: transform 0.5s ease;
     }
-    .team-member:hover .team-img-wrapper img {
-        transform: scale(1.05);
+    @media (hover: hover) {
+        .team-member:hover .team-img-wrapper img {
+            transform: scale(1.05);
+        }
     }
     .team-info {
-        padding: 28px;
+        padding: clamp(18px, 4vw, 28px);
         background: #fff;
         text-align: center;
     }
@@ -207,7 +220,7 @@ include BASE_PATH . 'includes/header.php';
         font-weight: 800;
         margin-bottom: 6px;
         text-transform: uppercase;
-        font-size: 1.15rem;
+        font-size: clamp(1rem, 2.5vw, 1.15rem);
         color: #1e293b;
     }
     .team-info p {
@@ -215,12 +228,12 @@ include BASE_PATH . 'includes/header.php';
         font-weight: 700;
         letter-spacing: 1.5px;
         margin-bottom: 16px;
-        font-size: 0.78rem;
+        font-size: clamp(0.7rem, 1.5vw, 0.78rem);
     }
     .social-icons a {
         display: inline-flex;
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
         align-items: center;
         justify-content: center;
         background: #1e293b;
@@ -230,15 +243,17 @@ include BASE_PATH . 'includes/header.php';
         transition: all 0.3s;
         text-decoration: none;
     }
-    .social-icons a:hover {
-        background: #3b82f6;
-        transform: translateY(-3px);
+    @media (hover: hover) {
+        .social-icons a:hover {
+            background: #3b82f6;
+            transform: translateY(-3px);
+        }
     }
 
     /* CTA Section */
     .cta-section {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        padding: 80px 0;
+        padding: clamp(50px, 8vw, 80px) 0;
         text-align: center;
         color: #fff;
         position: relative;
@@ -256,20 +271,22 @@ include BASE_PATH . 'includes/header.php';
     .cta-section h2 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
-        font-size: 2.2rem;
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: clamp(1px, 0.3vw, 2px);
         margin-bottom: 16px;
         position: relative;
         z-index: 1;
+        padding: 0 16px;
     }
     .cta-section p {
         color: #94a3b8;
-        font-size: 1.05rem;
+        font-size: clamp(0.88rem, 2vw, 1.05rem);
         max-width: 500px;
-        margin: 0 auto 30px;
+        margin: 0 auto clamp(20px, 4vw, 30px);
         position: relative;
         z-index: 1;
+        padding: 0 16px;
     }
     .btn-cta {
         display: inline-flex;
@@ -277,23 +294,26 @@ include BASE_PATH . 'includes/header.php';
         gap: 8px;
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: #fff;
-        padding: 14px 36px;
+        padding: clamp(12px, 3vw, 14px) clamp(24px, 5vw, 36px);
         border-radius: 10px;
         text-decoration: none;
         font-weight: 800;
-        font-size: 0.9rem;
+        font-size: clamp(0.82rem, 2vw, 0.9rem);
         text-transform: uppercase;
         letter-spacing: 1px;
         transition: all 0.3s ease;
         position: relative;
         z-index: 1;
+        min-height: 48px;
     }
-    .btn-cta:hover {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: #fff;
-        text-decoration: none;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    @media (hover: hover) {
+        .btn-cta:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
     }
 
     /* Scroll Animations */
@@ -305,12 +325,6 @@ include BASE_PATH . 'includes/header.php';
     .fade-in-up.visible {
         opacity: 1;
         transform: translateY(0);
-    }
-
-    @media (max-width: 768px) {
-        .about-hero { padding: 120px 0 60px; }
-        .about-hero h1 { font-size: 2rem; }
-        .stat-number { font-size: 2rem; }
     }
 </style>
 
@@ -411,7 +425,7 @@ include BASE_PATH . 'includes/header.php';
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
                             <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame2.png"
-                                alt="Nguyễn Văn Kiên" style="height: 350px; object-fit: cover;" />
+                                alt="Nguyễn Văn Kiên" />
                         </div>
                         <div class="team-info">
                             <h4>Nguyễn Văn Kiên</h4>
@@ -428,7 +442,7 @@ include BASE_PATH . 'includes/header.php';
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
                             <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame3.png"
-                                alt="Đỗ Quang Hà" style="height: 350px; object-fit: cover;" />
+                                alt="Đỗ Quang Hà" />
                         </div>
                         <div class="team-info">
                             <h4>Đỗ Quang Hà</h4>
@@ -445,7 +459,7 @@ include BASE_PATH . 'includes/header.php';
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
                             <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/imame1.png"
-                                alt="Nguyễn Bá Nhân" style="height: 350px; object-fit: cover;" />
+                                alt="Nguyễn Bá Nhân" />
                         </div>
                         <div class="team-info">
                             <h4>Nguyễn Bá Nhân</h4>

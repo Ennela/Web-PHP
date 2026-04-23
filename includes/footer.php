@@ -1,7 +1,7 @@
 <footer class="page-footer dark">
     <div class="container">
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-6 col-md-3 mb-4 mb-md-0">
                 <h5>Bắt đầu</h5>
                 <ul>
                     <li><a href="<?php echo BASE_URL; ?>home/trangchu.php">Trang chủ</a></li>
@@ -10,7 +10,7 @@
                     <li><a href="<?php echo BASE_URL; ?>shop/tradonhang.php">Tra cứu đơn hàng</a></li>
                 </ul>
             </div>
-            <div class="col-sm-3">
+            <div class="col-6 col-md-3 mb-4 mb-md-0">
                 <h5>Thông tin</h5>
                 <ul>
                     <li><a href="<?php echo BASE_URL; ?>home/lienhe.php">Liên lạc</a></li>
@@ -18,7 +18,7 @@
                     <li><a href="<?php echo BASE_URL; ?>blog/baiviet.php">Blog</a></li>
                 </ul>
             </div>
-            <div class="col-sm-3">
+            <div class="col-6 col-md-3 mb-4 mb-md-0">
                 <h5>Hỗ trợ</h5>
                 <ul>
                     <li><a href="#">FAQ</a></li>
@@ -26,7 +26,7 @@
                     <li><a href="#">Diễn đàn</a></li>
                 </ul>
             </div>
-            <div class="col-sm-3">
+            <div class="col-6 col-md-3">
                 <h5>Hợp pháp</h5>
                 <ul>
                     <li><a href="#">Điều kiện dịch vụ</a></li>

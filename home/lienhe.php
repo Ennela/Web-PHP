@@ -68,19 +68,19 @@ if (isset($_POST['btn'])) {
 ?>
 
 <style>
-    /* ===== Contact Page ===== */
+    /* ===== Contact Page (MOBILE-FIRST) ===== */
     .contact-page {
-        padding: 120px 0 0;
+        padding: clamp(90px, 14vw, 130px) 0 0;
         background: #f1f5f9;
     }
 
     /* Hero */
     .contact-hero {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-        padding: 60px 0;
+        padding: clamp(40px, 8vw, 60px) 0;
         text-align: center;
         color: #fff;
-        margin-bottom: 60px;
+        margin-bottom: clamp(30px, 6vw, 60px);
         position: relative;
         overflow: hidden;
     }
@@ -103,89 +103,105 @@ if (isset($_POST['btn'])) {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
         text-transform: uppercase;
-        letter-spacing: 3px;
-        font-size: 2.8rem;
+        letter-spacing: clamp(1px, 0.5vw, 3px);
+        font-size: clamp(1.5rem, 5vw, 2.8rem);
         margin-bottom: 10px;
         position: relative;
         z-index: 1;
     }
     .contact-hero p {
         color: #94a3b8;
-        font-size: 1.05rem;
+        font-size: clamp(0.88rem, 2vw, 1.05rem);
         position: relative;
         z-index: 1;
+        padding: 0 16px;
     }
 
-    /* UC2: Info Cards */
+    /* Info Cards — mobile-first grid */
     .info-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-bottom: 50px;
+        grid-template-columns: 1fr;
+        gap: clamp(12px, 3vw, 20px);
+        margin-bottom: clamp(30px, 6vw, 50px);
+    }
+    @media (min-width: 576px) {
+        .info-cards { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 992px) {
+        .info-cards { grid-template-columns: repeat(4, 1fr); }
     }
     .info-card {
         background: #fff;
         border-radius: 16px;
-        padding: 30px;
+        padding: clamp(20px, 4vw, 30px);
         text-align: center;
         box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
-    .info-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-        border-color: #cbd5e1;
+    @media (hover: hover) {
+        .info-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+            border-color: #cbd5e1;
+        }
     }
     .info-card-icon {
-        width: 60px;
-        height: 60px;
+        width: clamp(50px, 10vw, 60px);
+        height: clamp(50px, 10vw, 60px);
         border-radius: 50%;
         background: #1e293b;
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 18px;
-        font-size: 1.3rem;
+        margin: 0 auto clamp(12px, 3vw, 18px);
+        font-size: clamp(1.1rem, 2.5vw, 1.3rem);
     }
     .info-card h5 {
         font-weight: 800;
         color: #1e293b;
         margin-bottom: 8px;
-        font-size: 1rem;
+        font-size: clamp(0.85rem, 2vw, 1rem);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
     .info-card p {
         color: #64748b;
-        font-size: 0.92rem;
+        font-size: clamp(0.82rem, 1.8vw, 0.92rem);
         line-height: 1.6;
         margin: 0;
+        word-break: break-word;
     }
     .info-card a {
         color: #1e293b;
         text-decoration: none;
         font-weight: 600;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
     }
-    .info-card a:hover {
-        color: #3b82f6;
+    @media (hover: hover) {
+        .info-card a:hover { color: #3b82f6; }
     }
 
-    /* Main Content: 2 columns */
+    /* Main Content — mobile-first grid */
     .contact-main {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-        margin-bottom: 60px;
+        grid-template-columns: 1fr;
+        gap: clamp(20px, 4vw, 40px);
+        margin-bottom: clamp(30px, 6vw, 60px);
+    }
+    @media (min-width: 768px) {
+        .contact-main { grid-template-columns: 1fr 1fr; }
     }
 
-    /* UC3: Form */
+    /* Form */
     .form-wrapper {
         background: #fff;
         border-radius: 16px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        padding: 40px;
+        padding: clamp(20px, 4vw, 40px);
         border: 1px solid #e2e8f0;
     }
     .form-wrapper h3 {
@@ -193,57 +209,64 @@ if (isset($_POST['btn'])) {
         font-weight: 900;
         color: #1e293b;
         margin-bottom: 6px;
-        font-size: 1.4rem;
+        font-size: clamp(1.1rem, 3vw, 1.4rem);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
     .form-wrapper .form-subtitle {
         color: #94a3b8;
-        margin-bottom: 30px;
-        font-size: 0.9rem;
+        margin-bottom: clamp(20px, 4vw, 30px);
+        font-size: clamp(0.82rem, 1.8vw, 0.9rem);
     }
-    .form-control {
+    .contact-page .form-control {
         border-radius: 10px;
         border: 2px solid #e2e8f0;
         padding: 12px 16px;
         box-shadow: none;
-        transition: border-color 0.3s;
-        font-size: 0.95rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        font-size: clamp(0.88rem, 2vw, 0.95rem);
+        min-height: 48px;
     }
-    .form-control:focus {
+    .contact-page .form-control:focus {
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-    .form-label {
+    .contact-page .form-label {
         font-weight: 700;
         color: #1e293b;
         margin-bottom: 8px;
-        font-size: 0.88rem;
+        font-size: clamp(0.82rem, 1.8vw, 0.88rem);
     }
     .btn-editorial-solid {
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: #fff;
         border: none;
         border-radius: 10px;
-        padding: 14px 40px;
+        padding: clamp(12px, 3vw, 14px) clamp(24px, 5vw, 40px);
         font-weight: 800;
-        font-size: 0.95rem;
+        font-size: clamp(0.85rem, 2vw, 0.95rem);
         text-transform: uppercase;
         transition: all 0.3s ease;
         text-decoration: none;
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         width: 100%;
         letter-spacing: 1px;
         cursor: pointer;
+        min-height: 48px;
     }
-    .btn-editorial-solid:hover {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: #fff;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+    @media (hover: hover) {
+        .btn-editorial-solid:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
     }
 
-    /* Map wrapper */
+    /* Map */
     .map-wrapper {
         background: #fff;
         border-radius: 16px;
@@ -254,7 +277,7 @@ if (isset($_POST['btn'])) {
         flex-direction: column;
     }
     .map-header {
-        padding: 24px 30px;
+        padding: clamp(16px, 3vw, 24px) clamp(20px, 4vw, 30px);
         border-bottom: 1px solid #e2e8f0;
     }
     .map-header h3 {
@@ -262,18 +285,18 @@ if (isset($_POST['btn'])) {
         font-weight: 900;
         color: #1e293b;
         margin-bottom: 4px;
-        font-size: 1.2rem;
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
     .map-header p {
         color: #94a3b8;
-        font-size: 0.88rem;
+        font-size: clamp(0.78rem, 1.8vw, 0.88rem);
         margin: 0;
     }
     .map-iframe {
         flex: 1;
-        min-height: 380px;
+        min-height: clamp(250px, 40vw, 380px);
     }
     .map-iframe iframe {
         width: 100%;
@@ -282,39 +305,20 @@ if (isset($_POST['btn'])) {
         display: block;
     }
 
-    /* Success/Error messages */
+    /* Alerts */
     .alert-custom {
-        padding: 16px 24px;
+        padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px);
         border-radius: 12px;
         margin-bottom: 24px;
         display: flex;
         align-items: center;
         gap: 12px;
         font-weight: 600;
+        font-size: clamp(0.82rem, 2vw, 0.92rem);
     }
-    .alert-success-custom {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-    }
-    .alert-error-custom {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
-    }
-    .alert-custom i {
-        font-size: 1.3rem;
-    }
-
-    @media (max-width: 768px) {
-        .contact-page { padding: 100px 0 0; }
-        .contact-hero h2 { font-size: 2rem; }
-        .contact-main { grid-template-columns: 1fr; }
-        .info-cards { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 480px) {
-        .info-cards { grid-template-columns: 1fr; }
-    }
+    .alert-success-custom { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .alert-error-custom { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-custom i { font-size: clamp(1.1rem, 2.5vw, 1.3rem); flex-shrink: 0; }
 </style>
 
 <main class="page contact-page">

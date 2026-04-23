@@ -226,16 +226,100 @@ require_once dirname(__DIR__) . '/config.php';
     include BASE_PATH . 'includes/header.php';
 ?>
 
-<main class="page landing-page" style="padding-top: 100px; min-height: 80vh; background: #f8f9fa;">
+<main class="page landing-page">
     <style>
-        @media (max-width: 768px) {
-            .page.landing-page { padding-top: 80px !important; }
-            .block-heading h2 { font-size: 1.4rem; }
+        .page.landing-page {
+            padding-top: clamp(90px, 14vw, 120px);
+            min-height: 80vh;
+            background: #f8f9fa;
+            padding-bottom: clamp(30px, 5vw, 50px);
         }
-        @media (max-width: 576px) {
-            .page.landing-page { padding-top: 70px !important; }
-            .block-heading h2 { font-size: 1.2rem; }
-            .block-heading p { font-size: 0.9rem; }
+        .page.landing-page .block-heading h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: clamp(0.5px, 0.3vw, 1px);
+            font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+            color: #0f172a;
+        }
+        .page.landing-page .block-heading p {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: #64748b;
+        }
+        .page.landing-page .card {
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .page.landing-page .card-header {
+            background: #fff;
+            border-bottom: none;
+        }
+        .page.landing-page .card-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: #0f172a;
+        }
+        .page.landing-page .form-control {
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+            font-size: clamp(0.88rem, 2vw, 0.95rem);
+            min-height: 48px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .page.landing-page .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .page.landing-page .font-weight-bold {
+            font-size: clamp(0.82rem, 1.8vw, 0.9rem);
+        }
+        .page.landing-page .btn-info {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 10px;
+            min-height: 48px;
+            font-size: clamp(0.85rem, 2vw, 1.1rem) !important;
+            padding: 12px 24px !important;
+            font-weight: 700 !important;
+            transition: all 0.3s ease;
+        }
+        @media (hover: hover) {
+            .page.landing-page .btn-info:hover {
+                background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            }
+        }
+        .page.landing-page .btn-outline-secondary {
+            min-height: 48px;
+            border-radius: 10px;
+            font-size: clamp(0.82rem, 2vw, 0.95rem);
+            padding: 10px 20px;
+        }
+        /* Responsive: stack buttons on small screens */
+        @media (max-width: 575.98px) {
+            .page.landing-page .d-flex.justify-content-between {
+                flex-direction: column-reverse;
+                gap: 12px;
+            }
+            .page.landing-page .d-flex.justify-content-between .btn,
+            .page.landing-page .d-flex.justify-content-between button {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+        /* Order summary responsive */
+        .page.landing-page .list-group-item h6 {
+            font-size: clamp(0.82rem, 2vw, 0.95rem);
+            word-break: break-word;
+        }
+        .page.landing-page .list-group-item small {
+            font-size: clamp(0.72rem, 1.5vw, 0.82rem);
         }
     </style>
     <section class="clean-block clean-info dark">

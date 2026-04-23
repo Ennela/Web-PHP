@@ -57,11 +57,89 @@ function getPaymentStatusBadge($status, $orderStatus = '') {
 
 include BASE_PATH . 'includes/header.php';
 ?>
-<main class="page catalog-page" style="padding-top: 100px; min-height: 80vh; background: #f8f9fa;">
+<style>
+    .tracking-page {
+        padding-top: clamp(90px, 14vw, 120px);
+        min-height: 80vh;
+        background: #f8f9fa;
+        padding-bottom: clamp(30px, 5vw, 50px);
+    }
+    .tracking-page .block-heading h2 {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: clamp(0.5px, 0.3vw, 1px);
+        font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+        color: #0f172a;
+    }
+    .tracking-page .block-heading p {
+        font-size: clamp(0.85rem, 2vw, 1rem);
+        color: #64748b;
+    }
+    .tracking-page .card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    .tracking-page .card-header {
+        background: #fff;
+        border-bottom: none;
+    }
+    .tracking-page .card-title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: clamp(1rem, 2.5vw, 1.3rem);
+        color: #0f172a;
+    }
+    .tracking-page .badge {
+        font-size: clamp(0.72rem, 1.5vw, 0.82rem);
+        padding: 0.5em 0.8em;
+        border-radius: 8px;
+    }
+    .tracking-page h5, .tracking-page h6 {
+        font-size: clamp(0.88rem, 2vw, 1rem);
+    }
+    .tracking-page p {
+        font-size: clamp(0.82rem, 1.8vw, 0.95rem);
+    }
+    .tracking-page .text-danger {
+        font-size: clamp(1.1rem, 3vw, 1.5rem) !important;
+    }
+    /* Responsive table for products */
+    .tracking-page .table td {
+        vertical-align: middle;
+        padding: clamp(8px, 2vw, 12px);
+    }
+    .tracking-page .table img {
+        width: clamp(50px, 12vw, 80px);
+        border-radius: 8px;
+    }
+    .tracking-page .table h6 {
+        font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+        word-break: break-word;
+    }
+    .tracking-page .table small {
+        font-size: clamp(0.7rem, 1.5vw, 0.82rem);
+    }
+    /* Alert responsive */
+    .tracking-page .alert {
+        font-size: clamp(0.85rem, 2vw, 1rem);
+        border-radius: 12px;
+        padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px);
+    }
+    /* Mobile: stack info rows */
+    @media (max-width: 575.98px) {
+        .tracking-page .row.mb-4 > .col-sm-6 {
+            margin-bottom: 16px;
+        }
+    }
+</style>
+<main class="page catalog-page tracking-page">
     <section class="clean-block clean-catalog dark">
         <div class="container">
             <div class="block-heading text-center mb-5">
-                <h2 class="text-info font-weight-bold">Tra cứu trạng thái đơn hàng</h2>
+                <h2>Tra cứu trạng thái đơn hàng</h2>
                 <p>Theo dõi tình trạng đơn hàng của bạn</p>
             </div>
 

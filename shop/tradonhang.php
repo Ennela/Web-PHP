@@ -52,7 +52,7 @@ include BASE_PATH . 'includes/header.php';
     /* ===== Order Tracking Page Styles ===== */
     .tracking-hero {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-        padding: 60px 0 40px;
+        padding: clamp(40px, 8vw, 60px) 0 clamp(30px, 5vw, 40px);
         position: relative;
         overflow: hidden;
     }
@@ -75,13 +75,13 @@ include BASE_PATH . 'includes/header.php';
         font-family: 'Montserrat', sans-serif;
         font-weight: 700;
         color: #fff;
-        font-size: 2rem;
+        font-size: clamp(1.3rem, 4vw, 2rem);
         position: relative;
         z-index: 1;
     }
     .tracking-hero p {
         color: #94a3b8;
-        font-size: 1rem;
+        font-size: clamp(0.85rem, 2vw, 1rem);
         position: relative;
         z-index: 1;
     }
@@ -122,12 +122,13 @@ include BASE_PATH . 'includes/header.php';
         background: #fff;
         color: #64748b;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: clamp(0.75rem, 1.8vw, 0.85rem);
         text-decoration: none;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        min-height: 44px;
     }
     .filter-tab:hover {
         border-color: #3b82f6;
@@ -262,13 +263,14 @@ include BASE_PATH . 'includes/header.php';
         border-radius: 10px;
         padding: 10px 20px;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: clamp(0.78rem, 1.8vw, 0.85rem);
         cursor: pointer;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 4px;
         margin-right: 8px;
+        min-height: 44px;
     }
     .btn-receive {
         background: linear-gradient(135deg, #10b981, #059669);
@@ -326,16 +328,17 @@ include BASE_PATH . 'includes/header.php';
 
     /* Responsive */
     @media (max-width: 768px) {
-        .tracking-hero { padding: 40px 0 30px; }
-        .tracking-hero h2 { font-size: 1.5rem; }
         .order-card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
         .order-info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
-        .filter-bar { gap: 6px; }
-        .filter-tab { padding: 6px 14px; font-size: 0.8rem; }
+        .filter-bar { gap: 6px; padding: clamp(12px, 3vw, 16px) clamp(12px, 3vw, 24px); }
+        .filter-tab { padding: 6px 14px; }
+        .order-card-body { padding: clamp(12px, 3vw, 20px) clamp(16px, 3vw, 24px); }
+        .order-card-header { padding: clamp(12px, 3vw, 20px) clamp(16px, 3vw, 24px); }
+        .order-card-footer { padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px); flex-wrap: wrap; gap: 8px; }
     }
 </style>
 
-<main class="page landing-page" style="padding-top: 80px;">
+<main class="page landing-page" style="padding-top: clamp(70px, 12vw, 90px);">
 
     <!-- Hero Section -->
     <div class="tracking-hero">
