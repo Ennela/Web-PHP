@@ -15,7 +15,8 @@ if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
 
 // ── Check authentication ──
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
-    echo "<script>alert('Vui lòng đăng nhập trước!'); window.location.href='" . BASE_URL . "auth/dangnhap.php';</script>";
+    $_SESSION['swal_warning'] = 'Vui lòng đăng nhập trước!';
+    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -33,7 +34,8 @@ if ($orderQuery) {
 }
 
 if (!$user) {
-    echo "<script>alert('Lỗi truy xuất! Vui lòng đăng nhập lại.'); window.location.href='" . BASE_URL . "auth/dangnhap.php';</script>";
+    $_SESSION['swal_error'] = 'Lỗi truy xuất! Vui lòng đăng nhập lại.';
+    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 

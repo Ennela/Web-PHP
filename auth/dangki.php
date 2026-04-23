@@ -3,33 +3,35 @@ require_once dirname(__DIR__) . '/config.php';
 
     include_once BASE_PATH . 'includes/connect.php';
     if (isset($_POST['dangki'])) {
-        // variables for input data
-        $hoten = $_POST['hoten'];
-        $taikhoan = $_POST['taikhoan'];
-        $matkhau = $_POST['matkhau'];
+        session_start();
+        $hoten = trim($_POST['hoten'] ?? '');
+        $taikhoan = trim($_POST['taikhoan'] ?? '');
+        $matkhau = trim($_POST['matkhau'] ?? '');
 
-        // variables for input data
-
-        // sql query for inserting data into database
-        $sql_query = "INSERT INTO tbl_tkkhachhang(hoten,username,password) VALUES('$hoten','$taikhoan','$matkhau') ";
-        // sql query for inserting data into database
-
-        // sql query execution function
-        if (mysqli_query($con, $sql_query)) {
-            ?>
-            <script type="text/javascript">
-                alert('Dữ liệu được chèn thành công ');
-                window.location.href = 'dangnhap.php';
-            </script>
-            <?php
-        } else {
-            ?>
-            <script type="text/javascript">
-                alert('Xảy ra lỗi trong khi chèn dữ liệu của bạn');
-            </script>
-            <?php
+        if ($hoten === '' || $taikhoan === '' || $matkhau === '') {
+            $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
+            header('Location: dangki.php');
+            exit;
         }
-        // sql query execution function
+
+        // Check for duplicate username
+        $check_query = mysqli_query($con, "SELECT * FROM tbl_tkkhachhang WHERE username='$taikhoan' LIMIT 1");
+        if (mysqli_num_rows($check_query) > 0) {
+            $_SESSION['swal_error'] = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!';
+            header('Location: dangki.php');
+            exit;
+        }
+
+        $sql_query = "INSERT INTO tbl_tkkhachhang(hoten,username,password) VALUES('$hoten','$taikhoan','$matkhau')";
+        if (mysqli_query($con, $sql_query)) {
+            $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
+            header('Location: dangnhap.php');
+            exit;
+        } else {
+            $_SESSION['swal_error'] = 'Xảy ra lỗi trong khi đăng ký. Vui lòng thử lại!';
+            header('Location: dangki.php');
+            exit;
+        }
     }
     include BASE_PATH . 'includes/header.php';
 ?>

@@ -17,12 +17,9 @@ require_once dirname(__DIR__) . '/config.php';
         $taikhoan = $_POST['taikhoan'];
         $matkhau = $_POST['matkhau'];
         if($taikhoan=='' || $matkhau ==''){
-            ?>
-            <script type="text/javascript">
-                alert('Mời bạn nhập đủ thông tin');
-                window.location.href = 'dangnhap.php';
-            </script>
-            <?php
+            $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
+            header('Location: dangnhap.php');
+            exit;
         }else{
             $sql_select_admin = mysqli_query($con,"SELECT * FROM tbl_tkkhachhang WHERE username='$taikhoan' AND password='$matkhau' LIMIT 1");
             $count = mysqli_num_rows($sql_select_admin);
@@ -33,12 +30,9 @@ require_once dirname(__DIR__) . '/config.php';
                 header('Location: ' . BASE_URL . 'home/trangchu.php');
 
             }else{
-                ?>
-                <script type="text/javascript">
-                    alert('Sai tài khoản hoặc mật khẩu');
-                    window.location.href = 'dangnhap.php';
-                </script>
-                <?php
+                $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
+                header('Location: dangnhap.php');
+                exit;
             }
         }
     }

@@ -12,7 +12,8 @@ autoCompleteShippingOrders($con);
 
 // ===== BẮT BUỘC ĐĂNG NHẬP =====
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
-    echo "<script>alert('Vui lòng đăng nhập để tra cứu đơn hàng!'); window.location.href='" . BASE_URL . "auth/dangnhap.php';</script>";
+    $_SESSION['swal_warning'] = 'Vui lòng đăng nhập để tra cứu đơn hàng!';
+    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -470,14 +471,37 @@ include BASE_PATH . 'includes/header.php';
 <script>
 function orderAction(orderId, action, btn) {
     let confirmMsg = '';
+    let confirmBtnText = '';
     if (action === 'receive') {
         confirmMsg = 'Xác nhận bạn đã nhận được hàng thành công?';
+        confirmBtnText = 'Đã nhận hàng';
     } else if (action === 'cancel') {
         confirmMsg = 'Bạn chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.';
+        confirmBtnText = 'Hủy đơn hàng';
     }
     
-    if (!confirm(confirmMsg)) return;
-    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Xác nhận',
+            text: confirmMsg,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: action === 'cancel' ? '#ef4444' : '#10b981',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: confirmBtnText,
+            cancelButtonText: 'Đóng'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                processOrderAction(orderId, action, btn);
+            }
+        });
+    } else {
+        if (!confirm(confirmMsg)) return;
+        processOrderAction(orderId, action, btn);
+    }
+}
+
+function processOrderAction(orderId, action, btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang xử lý...';
     
@@ -489,20 +513,40 @@ function orderAction(orderId, action, btn) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
-            location.reload();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            } else {
+                alert(data.message);
+                location.reload();
+            }
         } else {
-            alert(data.message || 'Có lỗi xảy ra');
-            btn.disabled = false;
-            if (action === 'receive') btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Đã nhận hàng';
-            if (action === 'cancel') btn.innerHTML = '<i class="fas fa-times mr-1"></i> Hủy đơn';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra', 'error');
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
+            }
+            resetBtn(btn, action);
         }
     })
     .catch(() => {
-        alert('Lỗi kết nối. Vui lòng thử lại.');
-        btn.disabled = false;
-        if (action === 'receive') btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Đã nhận hàng';
-        if (action === 'cancel') btn.innerHTML = '<i class="fas fa-times mr-1"></i> Hủy đơn';
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('Lỗi', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
+        } else {
+            alert('Lỗi kết nối. Vui lòng thử lại.');
+        }
+        resetBtn(btn, action);
     });
+}
+
+function resetBtn(btn, action) {
+    btn.disabled = false;
+    if (action === 'receive') btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Đã nhận hàng';
+    if (action === 'cancel') btn.innerHTML = '<i class="fas fa-times mr-1"></i> Hủy đơn';
 }
 </script>
