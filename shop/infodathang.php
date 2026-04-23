@@ -31,6 +31,7 @@ require_once dirname(__DIR__) . '/config.php';
             $mail->Password = 'nvui gcgt snxd rpib';  // App Password
             $mail->SMTPSecure = 'ssl';
             $mail->Port = 465;
+            $mail->Timeout = 5; // Fail fast nếu Railway block SMTP port
             $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
             $mail->addAddress('remkyorosi@gmail.com', 'Nguyễn Văn Kiên'); // Thông báo về mail chủ shop
             $mail->isHTML(true);  // Set email format to HTML
@@ -65,6 +66,7 @@ require_once dirname(__DIR__) . '/config.php';
             $mail->Password = 'nvui gcgt snxd rpib';  // App Password
             $mail->SMTPSecure = 'ssl';
             $mail->Port = 465;
+            $mail->Timeout = 5; // Fail fast nếu Railway block SMTP port
             $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
             $mail->addAddress($email, $tenkh);
             $mail->isHTML(true);
