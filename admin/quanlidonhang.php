@@ -15,6 +15,7 @@ if ($dangxuat == 'dangxuat') {
     header('Location: index.php');
 }
 include './connect_db.php';
+require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
 // ===== XỬ LÝ CẬP NHẬT TRẠNG THÁI =====
 if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
@@ -23,7 +24,41 @@ if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
     $valid_statuses = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
     
     if (in_array($new_status, $valid_statuses) && $order_id > 0) {
-        mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' WHERE `id` = $order_id");
+        // Lấy trạng thái hiện tại của đơn hàng
+        $currentOrderResult = mysqli_query($con, "SELECT `status`, `payment_status` FROM `oder` WHERE `id` = $order_id LIMIT 1");
+        $currentOrder = mysqli_fetch_assoc($currentOrderResult);
+        $oldStatus = $currentOrder['status'] ?? '';
+        $paymentStatus = $currentOrder['payment_status'] ?? 'UNPAID';
+        
+        // Nếu chuyển sang CANCELLED → hoàn tồn kho
+        if ($new_status === 'CANCELLED' && $oldStatus !== 'CANCELLED') {
+            restoreStock($con, $order_id);
+            $paymentUpdate = ($paymentStatus === 'PAID') ? ", `payment_status` = 'REFUNDED'" : "";
+            mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
+        }
+        // Nếu chuyển từ CANCELLED sang trạng thái khác → kiểm tra và trừ lại tồn kho
+        elseif ($oldStatus === 'CANCELLED' && $new_status !== 'CANCELLED') {
+            // Lấy danh sách sản phẩm trong đơn
+            $detailResult = mysqli_query($con, "SELECT `masp`, `size`, `quantity` FROM `oder_chitiet` WHERE `madonhang` = $order_id");
+            $items = [];
+            while ($d = mysqli_fetch_assoc($detailResult)) {
+                $items[] = ['masp' => $d['masp'], 'size' => $d['size'], 'quantity' => $d['quantity']];
+            }
+            $stockResult = validateAndDeductStock($con, $items);
+            if ($stockResult['success']) {
+                $paymentUpdate = ($new_status === 'DELIVERED') ? ", `payment_status` = 'PAID'" : "";
+                mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
+            } else {
+                // Không đủ tồn kho, không cho chuyển trạng thái
+                $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
+                $_SESSION['admin_error'] = 'Không đủ tồn kho để khôi phục đơn hàng: ' . implode(', ', $errorMsgs);
+            }
+        }
+        // Chuyển trạng thái bình thường
+        else {
+            $paymentUpdate = ($new_status === 'DELIVERED' && $paymentStatus === 'UNPAID') ? ", `payment_status` = 'PAID'" : "";
+            mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
+        }
     }
     header('Location: quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . $_GET['page'] : ''));
     exit;
@@ -536,6 +571,11 @@ function getAdminStatusInfo($status) {
             <div class="flex flex-wrap">
                 <div class="w-full p-6">
                     <!--Metric Card-->
+                    <?php if (!empty($_SESSION['admin_error'])): ?>
+                    <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; margin-bottom:16px; color:#991b1b; font-weight:600; font-size:0.88rem;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> <?= htmlspecialchars($_SESSION['admin_error']) ?>
+                    </div>
+                    <?php unset($_SESSION['admin_error']); endif; ?>
                     <div
                         class="bg-gradient-to-b from-indigo-200 to-indigo-100 border-b-4 border-indigo-500 rounded-lg shadow-xl p-5">
                         <div class="flex flex-row items-center">

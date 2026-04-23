@@ -17,6 +17,7 @@
 ?>
 <?php
     include './connect_db.php';
+    require_once dirname(__DIR__) . '/includes/inventory_helper.php';
     date_default_timezone_set('Asia/Ho_Chi_Minh');
 
     if (!empty($_GET['action']) && $_GET['action'] == 'search' && !empty($_POST)) {
@@ -71,6 +72,14 @@
     if ($sold_query) {
         while ($s = mysqli_fetch_assoc($sold_query)) {
             $soldMap[$s['masp']] = (int)$s['sold'];
+        }
+    }
+    // Lấy tồn kho tổng từ tbl_tonkho
+    $stock_query = mysqli_query($con, "SELECT masp, SUM(soluong) as total_stock, MIN(soluong) as min_stock FROM `tbl_tonkho` GROUP BY masp");
+    $stockMap = [];
+    if ($stock_query) {
+        while ($st = mysqli_fetch_assoc($stock_query)) {
+            $stockMap[$st['masp']] = ['total' => (int)$st['total_stock'], 'min' => (int)$st['min_stock']];
         }
     }
 ?>
@@ -298,6 +307,7 @@
                         <th class="w-1/12 ">Giá gốc (VND)</th>
                         <th class="w-1/12 ">Nhóm SP</th>
                         <th class="w-1/12 ">Đã bán</th>
+                        <th class="w-1/12 ">Tồn kho</th>
                         <th class="w-1/12 ">Ngày cập nhật</th>
                         <th class="w-1/12 ">Sửa</th>
                         <th class="w-1/12 ">Xoá</th>
@@ -317,6 +327,15 @@
                                 <td class="text-center" style="color:#94a3b8; text-decoration: line-through;"><?= $row['giagoc'] > 0 ? number_format($row['giagoc'], 0, ",", ".") : '--' ?></td>
                                 <td class="text-center"><?= $row['nhomsp'] ?? '--' ?></td>
                                 <td class="text-center font-bold"><?= $soldMap[$row['masp']] ?? 0 ?></td>
+                                <td class="text-center">
+                                    <?php
+                                    $totalStock = $stockMap[$row['masp']]['total'] ?? 0;
+                                    $stockColorClass = $totalStock <= 0 ? 'background:#fee2e2;color:#991b1b;' : ($totalStock <= 20 ? 'background:#fef3c7;color:#92400e;' : 'background:#d1fae5;color:#065f46;');
+                                    ?>
+                                    <span style="<?= $stockColorClass ?> padding:3px 10px; border-radius:50px; font-weight:700; font-size:0.8rem; display:inline-block;">
+                                        <?= $totalStock ?>
+                                    </span>
+                                </td>
                                 <td class="text-center"><?= $row['ngaycapnhat'] ? date('d/m/Y H:i', $row['ngaycapnhat']) : '--' ?></td>
                                 <td class="text-center doimau"><a
                                             href="./edit_qlsanpham.php?masp=<?= $row['masp'] ?>">Sửa</a>

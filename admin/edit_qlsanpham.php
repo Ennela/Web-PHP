@@ -18,11 +18,14 @@
 <?php
     include_once 'connect_db.php';
     include_once 'function.php';
+    require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
     if (isset($_GET['masp'])) {
         $sql_query = "SELECT * FROM tbl_qlsanpham WHERE masp=" . $_GET['masp'];
         $result_set = mysqli_query($con, $sql_query);
         $fetched_row = mysqli_fetch_array($result_set);
+        // Load tồn kho hiện tại
+        $currentStock = getStockByProduct($con, (int)$_GET['masp']);
     }
     if (isset($_POST['btn-save'])) {
         // Biến dữ liệu đầu vào
@@ -82,7 +85,20 @@
         // sql query execution function
 
         if (mysqli_query($con, $sql_query) && !isset($error)) {
-//exit;
+
+            // === CẬP NHẬT TỒN KHO ===
+            if (isset($_POST['stock']) && is_array($_POST['stock'])) {
+                $masp = (int)$_GET['masp'];
+                $now = time();
+                foreach ($_POST['stock'] as $size => $qty) {
+                    $size = (int)$size;
+                    $qty = max(0, (int)$qty);
+                    $sql_stock = "INSERT INTO `tbl_tonkho` (`masp`, `size`, `soluong`, `ngaytao`, `ngaycapnhat`) 
+                                  VALUES ($masp, $size, $qty, $now, $now) 
+                                  ON DUPLICATE KEY UPDATE `soluong` = $qty, `ngaycapnhat` = $now";
+                    mysqli_query($con, $sql_stock);
+                }
+            }
 
             ?>
             <script type="text/javascript">
@@ -92,7 +108,6 @@
             <?php
         } else {
             ?>
-
             <script type="text/javascript">
                 alert('Dữ liệu thay vào không hợp lệ vui lòng kiểm tra lại');
                 window.location.href = 'quanlisanpham.php';
@@ -338,6 +353,32 @@
                                 placeholder="" rows="3"><?= $fetched_row['noidung'] ?>
                         </textarea>
                     </label>
+
+                    <!-- ===== QUẢN LÝ TỒN KHO ===== -->
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                        <h4 class="text-lg font-bold text-gray-700 mb-3">
+                            <i class="fas fa-boxes" style="color:#3b82f6; margin-right:6px;"></i> Tồn kho theo Size
+                        </h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <?php
+                            $sizes = [36, 37, 38, 39, 40, 41, 42, 43, 44];
+                            foreach ($sizes as $s):
+                                $stockQty = $currentStock[$s] ?? 0;
+                                $stockColor = $stockQty <= 0 ? 'border-red-400 bg-red-50' : ($stockQty <= 5 ? 'border-yellow-400 bg-yellow-50' : 'border-green-400 bg-green-50');
+                            ?>
+                            <div class="flex items-center gap-2 p-2 rounded-lg border-2 <?= $stockColor ?>">
+                                <span class="font-bold text-gray-600 w-12">Size <?= $s ?></span>
+                                <input type="number" name="stock[<?= $s ?>]" value="<?= $stockQty ?>" min="0" 
+                                       class="form-input border border-gray-300 rounded px-2 py-1 w-20 text-center font-bold"
+                                       style="-moz-appearance: textfield;">
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i> Đặt số lượng = 0 để đánh dấu hết hàng
+                        </p>
+                    </div>
+
                     <div class="mt-3 text-right">
                         <button class="px-4 py-2 text-white bg-red-500 rounded shadow-xl">
                             <a href="quanlisanpham.php">Quay lại</a>
