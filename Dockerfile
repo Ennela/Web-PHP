@@ -19,9 +19,14 @@ RUN apt-get update && apt-get install -y \
         zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Fix MPM conflict: ensure only prefork is loaded (required by mod_php)
-RUN a2dismod mpm_event mpm_worker 2>/dev/null; \
-    a2enmod mpm_prefork rewrite
+# Fix MPM conflict: forcefully remove event/worker, keep only prefork (required by mod_php)
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
+         /etc/apache2/mods-enabled/mpm_event.conf \
+         /etc/apache2/mods-enabled/mpm_worker.load \
+         /etc/apache2/mods-enabled/mpm_worker.conf \
+    && ln -sf /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load \
+    && ln -sf /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf \
+    && a2enmod rewrite
 
 # Configure Apache: allow .htaccess overrides & set ServerName
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
