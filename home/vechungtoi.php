@@ -16,13 +16,19 @@ $countPosts = 0;
 $countMembers = 0;
 
 $r = mysqli_query($con, "SELECT COUNT(*) as cnt FROM `tbl_qlsanpham`");
-if ($r) { $countProducts = mysqli_fetch_assoc($r)['cnt']; }
+if ($r) {
+    $countProducts = mysqli_fetch_assoc($r)['cnt'];
+}
 
 $r = mysqli_query($con, "SELECT COUNT(*) as cnt FROM `tbl_qlbaidang` WHERE `chedo` = 'Hiện'");
-if ($r) { $countPosts = mysqli_fetch_assoc($r)['cnt']; }
+if ($r) {
+    $countPosts = mysqli_fetch_assoc($r)['cnt'];
+}
 
 $r = mysqli_query($con, "SELECT COUNT(*) as cnt FROM `tbl_qlthanhvien`");
-if ($r) { $countMembers = mysqli_fetch_assoc($r)['cnt']; }
+if ($r) {
+    $countMembers = mysqli_fetch_assoc($r)['cnt'];
+}
 
 include BASE_PATH . 'includes/header.php';
 ?>
@@ -37,6 +43,7 @@ include BASE_PATH . 'includes/header.php';
         position: relative;
         overflow: hidden;
     }
+
     .about-hero::before {
         content: '';
         position: absolute;
@@ -45,13 +52,22 @@ include BASE_PATH . 'includes/header.php';
         width: 200%;
         height: 200%;
         background: radial-gradient(circle at 30% 40%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+            radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
         animation: heroFloat 20s ease-in-out infinite;
     }
+
     @keyframes heroFloat {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(-20px, -10px); }
+
+        0%,
+        100% {
+            transform: translate(0, 0);
+        }
+
+        50% {
+            transform: translate(-20px, -10px);
+        }
     }
+
     .about-hero h1 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
@@ -63,6 +79,7 @@ include BASE_PATH . 'includes/header.php';
         z-index: 1;
         padding: 0 16px;
     }
+
     .about-hero p {
         font-size: clamp(0.9rem, 2vw, 1.15rem);
         max-width: 700px;
@@ -73,6 +90,7 @@ include BASE_PATH . 'includes/header.php';
         z-index: 1;
         padding: 0 16px;
     }
+
     .hero-divider {
         width: 60px;
         height: 4px;
@@ -89,10 +107,12 @@ include BASE_PATH . 'includes/header.php';
         padding: clamp(30px, 6vw, 50px) 0;
         margin-top: -1px;
     }
+
     .stat-item {
         text-align: center;
         padding: clamp(12px, 3vw, 20px);
     }
+
     .stat-number {
         font-family: 'Montserrat', sans-serif;
         font-size: clamp(1.8rem, 5vw, 3rem);
@@ -101,6 +121,7 @@ include BASE_PATH . 'includes/header.php';
         line-height: 1;
         margin-bottom: 8px;
     }
+
     .stat-label {
         font-size: clamp(0.68rem, 1.5vw, 0.82rem);
         font-weight: 700;
@@ -114,10 +135,12 @@ include BASE_PATH . 'includes/header.php';
         padding: clamp(50px, 8vw, 80px) 0;
         background-color: #f1f5f9;
     }
+
     .section-heading {
         text-align: center;
         margin-bottom: clamp(30px, 6vw, 50px);
     }
+
     .section-heading h2 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
@@ -127,6 +150,7 @@ include BASE_PATH . 'includes/header.php';
         font-size: clamp(1.5rem, 4vw, 2.2rem);
         margin-bottom: 10px;
     }
+
     .section-heading p {
         color: #94a3b8;
         font-size: clamp(0.88rem, 2vw, 1rem);
@@ -134,6 +158,7 @@ include BASE_PATH . 'includes/header.php';
         margin: 0 auto;
         padding: 0 16px;
     }
+
     .value-box {
         text-align: center;
         padding: clamp(25px, 4vw, 40px) clamp(20px, 3vw, 30px);
@@ -144,6 +169,7 @@ include BASE_PATH . 'includes/header.php';
         transition: all 0.4s ease;
         height: 100%;
     }
+
     @media (hover: hover) {
         .value-box:hover {
             transform: translateY(-8px);
@@ -151,6 +177,7 @@ include BASE_PATH . 'includes/header.php';
             border-color: #cbd5e1;
         }
     }
+
     .value-icon {
         width: 70px;
         height: 70px;
@@ -164,12 +191,14 @@ include BASE_PATH . 'includes/header.php';
         align-items: center;
         justify-content: center;
     }
+
     .value-box h4 {
         font-weight: 800;
         color: #1e293b;
         margin-bottom: 12px;
         font-size: 1.15rem;
     }
+
     .value-box p {
         color: #64748b;
         line-height: 1.7;
@@ -181,6 +210,7 @@ include BASE_PATH . 'includes/header.php';
         padding: clamp(50px, 8vw, 80px) 0;
         background: #fff;
     }
+
     .team-member {
         border-radius: 16px;
         border: 1px solid #e2e8f0;
@@ -188,6 +218,7 @@ include BASE_PATH . 'includes/header.php';
         overflow: hidden;
         transition: all 0.4s ease;
     }
+
     @media (hover: hover) {
         .team-member:hover {
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
@@ -195,27 +226,32 @@ include BASE_PATH . 'includes/header.php';
             border-color: #cbd5e1;
         }
     }
+
     .team-img-wrapper {
         position: relative;
         overflow: hidden;
         aspect-ratio: 1 / 1;
     }
+
     .team-img-wrapper img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         transition: transform 0.5s ease;
     }
+
     @media (hover: hover) {
         .team-member:hover .team-img-wrapper img {
             transform: scale(1.05);
         }
     }
+
     .team-info {
         padding: clamp(18px, 4vw, 28px);
         background: #fff;
         text-align: center;
     }
+
     .team-info h4 {
         font-weight: 800;
         margin-bottom: 6px;
@@ -223,6 +259,7 @@ include BASE_PATH . 'includes/header.php';
         font-size: clamp(1rem, 2.5vw, 1.15rem);
         color: #1e293b;
     }
+
     .team-info p {
         color: #94a3b8;
         font-weight: 700;
@@ -230,6 +267,7 @@ include BASE_PATH . 'includes/header.php';
         margin-bottom: 16px;
         font-size: clamp(0.7rem, 1.5vw, 0.78rem);
     }
+
     .social-icons a {
         display: inline-flex;
         width: 44px;
@@ -243,6 +281,7 @@ include BASE_PATH . 'includes/header.php';
         transition: all 0.3s;
         text-decoration: none;
     }
+
     @media (hover: hover) {
         .social-icons a:hover {
             background: #3b82f6;
@@ -259,6 +298,7 @@ include BASE_PATH . 'includes/header.php';
         position: relative;
         overflow: hidden;
     }
+
     .cta-section::before {
         content: '';
         position: absolute;
@@ -268,6 +308,7 @@ include BASE_PATH . 'includes/header.php';
         height: 200%;
         background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
     }
+
     .cta-section h2 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
@@ -279,6 +320,7 @@ include BASE_PATH . 'includes/header.php';
         z-index: 1;
         padding: 0 16px;
     }
+
     .cta-section p {
         color: #94a3b8;
         font-size: clamp(0.88rem, 2vw, 1.05rem);
@@ -288,6 +330,7 @@ include BASE_PATH . 'includes/header.php';
         z-index: 1;
         padding: 0 16px;
     }
+
     .btn-cta {
         display: inline-flex;
         align-items: center;
@@ -306,6 +349,7 @@ include BASE_PATH . 'includes/header.php';
         z-index: 1;
         min-height: 48px;
     }
+
     @media (hover: hover) {
         .btn-cta:hover {
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
@@ -322,6 +366,7 @@ include BASE_PATH . 'includes/header.php';
         transform: translateY(30px);
         transition: opacity 0.7s ease, transform 0.7s ease;
     }
+
     .fade-in-up.visible {
         opacity: 1;
         transform: translateY(0);
@@ -431,9 +476,7 @@ include BASE_PATH . 'includes/header.php';
                             <h4>Nguyễn Văn Kiên</h4>
                             <p>CHIEF EXECUTIVE OFFICER</p>
                             <div class="social-icons">
-                                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                                <a href="#"><i class="fab fa-instagram"></i></a>
-                                <a href="#"><i class="fab fa-twitter"></i></a>
+                                <a href="https://www.facebook.com/nguyenkien.sora"><i class="fab fa-facebook-f"></i></a>
                             </div>
                         </div>
                     </div>
@@ -448,9 +491,7 @@ include BASE_PATH . 'includes/header.php';
                             <h4>Đỗ Quang Hà</h4>
                             <p>BRAND MANAGER</p>
                             <div class="social-icons">
-                                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                                <a href="#"><i class="fab fa-instagram"></i></a>
-                                <a href="#"><i class="fab fa-twitter"></i></a>
+                                <a href="https://www.facebook.com/oquangha.840034"><i class="fab fa-facebook-f"></i></a>
                             </div>
                         </div>
                     </div>
@@ -465,9 +506,7 @@ include BASE_PATH . 'includes/header.php';
                             <h4>Nguyễn Bá Nhân</h4>
                             <p>HEAD OF OPERATIONS</p>
                             <div class="social-icons">
-                                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                                <a href="#"><i class="fab fa-instagram"></i></a>
-                                <a href="#"><i class="fab fa-twitter"></i></a>
+                                <a href="https://www.facebook.com/nhan.ba.494017"><i class="fab fa-facebook-f"></i></a>
                             </div>
                         </div>
                     </div>
@@ -489,51 +528,51 @@ include BASE_PATH . 'includes/header.php';
 </main>
 
 <script>
-// === Scroll Animations ===
-(function() {
-    const fadeEls = document.querySelectorAll('.fade-in-up');
-    
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-            }
+    // === Scroll Animations ===
+    (function () {
+        const fadeEls = document.querySelectorAll('.fade-in-up');
+
+        const observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        fadeEls.forEach(function (el) {
+            observer.observe(el);
         });
-    }, { threshold: 0.15 });
 
-    fadeEls.forEach(function(el) {
-        observer.observe(el);
-    });
+        // === Counter Animation ===
+        const counters = document.querySelectorAll('.stat-number[data-count]');
 
-    // === Counter Animation ===
-    const counters = document.querySelectorAll('.stat-number[data-count]');
-    
-    const counterObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                const el = entry.target;
-                const target = parseInt(el.getAttribute('data-count'));
-                let current = 0;
-                const increment = Math.ceil(target / 60);
-                const timer = setInterval(function() {
-                    current += increment;
-                    if (current >= target) {
-                        el.textContent = target + '+';
-                        clearInterval(timer);
-                    } else {
-                        el.textContent = current;
-                    }
-                }, 25);
-                counterObserver.unobserve(el);
-            }
+        const counterObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const target = parseInt(el.getAttribute('data-count'));
+                    let current = 0;
+                    const increment = Math.ceil(target / 60);
+                    const timer = setInterval(function () {
+                        current += increment;
+                        if (current >= target) {
+                            el.textContent = target + '+';
+                            clearInterval(timer);
+                        } else {
+                            el.textContent = current;
+                        }
+                    }, 25);
+                    counterObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        counters.forEach(function (c) {
+            counterObserver.observe(c);
         });
-    }, { threshold: 0.5 });
-
-    counters.forEach(function(c) {
-        counterObserver.observe(c);
-    });
-})();
+    })();
 </script>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>
