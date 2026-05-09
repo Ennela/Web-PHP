@@ -222,7 +222,7 @@
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold text-gray-600 uppercase">Tổng thu nhập tháng</h5>
-                            <h3 class="text-3xl font-bold"><?= number_format($tongdoanhthu['tong'], 0, ",", ".") ?> VND <span class="text-green-500"><i
+                            <h3 class="text-3xl font-bold"><?= number_format($tongdoanhthu['tong'] ?? 0, 0, ",", ".") ?> VND <span class="text-green-500"><i
                                             class="fas fa-caret-up"></i></span></h3>
                         </div>
                     </div>
