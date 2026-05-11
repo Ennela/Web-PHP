@@ -1,8 +1,9 @@
-﻿<?php
+<?php
     
     session_start();
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
+        exit;
     }
     if (isset($_GET['login'])) {
         $dangxuat = $_GET['login'];
@@ -22,7 +23,7 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="ie=edge" http-equiv="X-UA-Compatible">
-    <title>Sửa thành viên</title>
+    <title>S?a th�nh vi�n</title>
     <meta content="name" name="author">
     <meta content="description here" name="description">
     <meta content="keywords,here" name="keywords">
@@ -74,7 +75,7 @@ include_once 'function.php';
         if (mysqli_query($con, $sql_query)) {
             ?>
             <script type="text/javascript">
-                alert('Dữ liệu được chèn thành công ');
+                alert('D? li?u du?c ch�n th�nh c�ng ');
                 window.location.href = 'quanlithanhvien.php';
             </script>
 
@@ -84,7 +85,7 @@ include_once 'function.php';
             {
         ?>
             <script type="text/javascript">
-                alert('Xảy ra lỗi trong khi chèn dữ liệu của bạn');
+                alert('X?y ra l?i trong khi ch�n d? li?u c?a b?n');
             </script>
             <?php
         }
@@ -107,7 +108,7 @@ include_once 'function.php';
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="Tìm kiếm"
+                           placeholder="T�m ki?m"
                            type="search">
                     <div class="absolute search-icon"
                          style="top: 1rem; left: .8rem;">
@@ -129,7 +130,7 @@ include_once 'function.php';
                                 onclick="toggleDD('myDropdown')"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
-                            Xin chào, <?php
+                            Xin ch�o, <?php
                                 echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
@@ -143,14 +144,14 @@ include_once 'function.php';
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> Đăng nhập
+                                        class="fa fa-user fa-fw"></i> �ang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="?login=dangxuat"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                                �ang xu?t</a>
                         </div>
                     </div>
                 </li>
@@ -171,7 +172,7 @@ include_once 'function.php';
                     <a class="block py-1 md:py-3 pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 hover:border-pink-500"
                        href="trangchu.php">
                         <i class="fas fa-tasks pr-0 md:pr-3"></i><span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Trang chủ</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Trang ch?</span>
                     </a>
                 </li>
 
@@ -181,7 +182,7 @@ include_once 'function.php';
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí sản phẩm</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� s?n ph?m</span>
                     </a>
                 </li>
 
@@ -191,7 +192,7 @@ include_once 'function.php';
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí Khách hàng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� Kh�ch h�ng</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -200,7 +201,7 @@ include_once 'function.php';
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí bài đăng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� b�i dang</span>
                     </a>
                 </li>
 
@@ -210,7 +211,7 @@ include_once 'function.php';
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí thành viên</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� th�nh vi�n</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -220,7 +221,7 @@ include_once 'function.php';
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí đơn hàng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� don h�ng</span>
                     </a>
                 </li>
             </ul>
@@ -233,7 +234,7 @@ include_once 'function.php';
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">Thêm thành viên</h3>
+                <h3 class="font-bold pl-2">Th�m th�nh vi�n</h3>
             </div>
         </div>
 
@@ -243,16 +244,16 @@ include_once 'function.php';
                 <form method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                     <label class="block ">
-                        <span class="text-gray-700">Họ và tên:</span>
+                        <span class="text-gray-700">H? v� t�n:</span>
                         <input value="<?php
                             echo $fetched_row['hoten']; ?>" name="hoten"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
                                type="text">
                     </label>
-                    <!--giới tính-->
+                    <!--gi?i t�nh-->
                     <label class="block mt-2">
-                        <span class="text-gray-700">Giới tính:</span>
+                        <span class="text-gray-700">Gi?i t�nh:</span>
                         <div class="mt-2">
                             <label class="inline-flex items-center">
                                 <input  class="form-radio"
@@ -265,15 +266,15 @@ include_once 'function.php';
                             <label class="inline-flex items-center ml-6">
                                 <input  class="form-radio"
                                        name="gioitinh"
-                                       type="radio" value="Nữ"
-                                    <?php echo ( $fetched_row['gioitinh'] == 'Nữ') ? "checked" : "" ?>
+                                       type="radio" value="N?"
+                                    <?php echo ( $fetched_row['gioitinh'] == 'N?') ? "checked" : "" ?>
                                 >
-                                <span class="ml-2">Nữ</span>
+                                <span class="ml-2">N?</span>
                             </label>
                         </div>
                     </label>
                     <label class="block mt-2">
-                        <span class="text-gray-700">Ngày sinh(DD-MM-YYYY): </span>
+                        <span class="text-gray-700">Ng�y sinh(DD-MM-YYYY): </span>
                         <input value="<?= date('d-m-Y ', $fetched_row['ngaysinh']) ?>" name="ngaysinh"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
@@ -281,7 +282,7 @@ include_once 'function.php';
                     </label>
 
                     <label class="block mt-2">
-                        <span class=" text-gray-700">Địa chỉ cụ thể:</span>
+                        <span class=" text-gray-700">�?a ch? c? th?:</span>
                         <input value="<?php
                             echo $fetched_row['diachicuthe']; ?>" type="text"
                                name="diachicuthe"
@@ -293,19 +294,19 @@ include_once 'function.php';
 
 
                     <label class="block mt-2">
-                        <span class="text-gray-700">Chức vụ:</span>
+                        <span class="text-gray-700">Ch?c v?:</span>
                         <select value="1" type="text"
                                 name="chucvu"
                                 class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full">
-                            <option value="Quản lí" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Quản lí') ? 'selected' : '' ?>>Quản lí</option>
-                            <option value="Nhân viên" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Nhân viên') ? 'selected' : '' ?>>Nhân viên</option>
+                            <option value="Qu?n l�" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Qu?n l�') ? 'selected' : '' ?>>Qu?n l�</option>
+                            <option value="Nh�n vi�n" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Nh�n vi�n') ? 'selected' : '' ?>>Nh�n vi�n</option>
                         </select>
                     </label>
 
 
                     <!--                    Textarea-->
                     <label class="block mt-2">
-                        <span class="text-gray-700">Mô tả công việc:</span>
+                        <span class="text-gray-700">M� t? c�ng vi?c:</span>
                         <textarea  type="text"
                                   name="motacongviec"
                                   class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
@@ -315,11 +316,11 @@ include_once 'function.php';
                     <div class="mt-3 text-right">
                         <button name="btn-cancel"
                                 class="px-4 py-2 text-white bg-red-500 rounded shadow-xl">
-                            Quay lại
+                            Quay l?i
                         </button>
                         <button type="submit" name="btn-save"
                                 class="ml-3 mt-3 h-10 w-32 bg-blue-600 rounded text-white hover:bg-blue-700">
-                            Lưu
+                            Luu
                         </button>
                     </div>
                 </form>

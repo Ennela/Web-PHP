@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 
     session_start();
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
+        exit;
     }
     if (isset($_GET['login'])) {
         $dangxuat = $_GET['login'];
@@ -24,7 +25,7 @@
         $fetched_row = mysqli_fetch_array($result_set);
     }
     if (isset($_POST['btn-save'])) {
-        // Biến dữ liệu đầu vào
+        // Bi?n d? li?u d?u v�o
         $nguoiphutrach = $_POST['nguoiphutrach'];
         $tieude = $_POST['tieude'];
         $chedo = $_POST['chedo'];
@@ -72,7 +73,7 @@
         $sql_query
             = "UPDATE tbl_qlbaidang SET nguoiphutrach='$nguoiphutrach',tieude='$tieude',chedo='$chedo',noidung='$noidung',ngaytao='"
             . time() . "',ngaycapnhat='" . time() . "' WHERE id=" . $_GET['id'];
-        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
+        // Truy v?n SQL d? ch�n d? li?u v�o co s? d? li?u'
 
         // sql query execution function
 
@@ -80,14 +81,14 @@
 
             ?>
             <script type="text/javascript">
-                alert('Dữ liệu đã được đưa vào');
+                alert('D? li?u d� du?c dua v�o');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
         } else {
             ?>
             <script type="text/javascript">
-                alert('Dữ liệu đưa vào không hợp lệ vui lòng kiểm tra lại');
+                alert('D? li?u dua v�o kh�ng h?p l? vui l�ng ki?m tra l?i');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
@@ -101,7 +102,7 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="ie=edge" http-equiv="X-UA-Compatible">
-    <title>Trang chủ</title>
+    <title>Trang ch?</title>
     <meta content="name" name="author">
     <meta content="description here" name="description">
     <meta content="keywords,here" name="keywords">
@@ -134,7 +135,7 @@
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="Tìm kiếm"
+                           placeholder="T�m ki?m"
                            type="search">
                     <div class="absolute search-icon"
                          style="top: 1rem; left: .8rem;">
@@ -156,7 +157,7 @@
                                 onclick="toggleDD('myDropdown')"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
-                            Xin chào, <?php
+                            Xin ch�o, <?php
                                 echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
@@ -170,14 +171,14 @@
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> Đăng nhập
+                                        class="fa fa-user fa-fw"></i> �ang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="?login=dangxuat"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                                �ang xu?t</a>
                         </div>
                     </div>
                 </li>
@@ -198,7 +199,7 @@
                     <a class="block py-1 pl-1 text-white no-underline align-middle border-b-2 hover:border-pink-500 border-gray-800 md:py-3 hover:text-white"
                        href="trangchu.php">
                         <i class="pr-0 fas fa-tasks md:pr-3"></i><span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Trang chủ</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Trang ch?</span>
                     </a>
                 </li>
 
@@ -208,7 +209,7 @@
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Quản lí sản phẩm</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n l� s?n ph?m</span>
                     </a>
 
                 </li>
@@ -218,7 +219,7 @@
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Quản lí Khách hàng</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n l� Kh�ch h�ng</span>
                     </a>
                 </li>
                 <li class="flex-1 mr-3">
@@ -227,7 +228,7 @@
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Quản lí bài đăng</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n l� b�i dang</span>
                     </a>
                 </li>
 
@@ -237,7 +238,7 @@
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Quản lí thành viên</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n l� th�nh vi�n</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -247,7 +248,7 @@
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí đơn hàng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� don h�ng</span>
                     </a>
                 </li>
             </ul>
@@ -260,7 +261,7 @@
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">Sửa bài viết</h3>
+                <h3 class="font-bold pl-2">S?a b�i vi?t</h3>
             </div>
         </div>
 
@@ -270,30 +271,30 @@
                 <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
                       enctype="multipart/form-data" method="post">
                     <label class="block">
-                        <span class="text-gray-700">Tên tiêu đề:</span>
+                        <span class="text-gray-700">T�n ti�u d?:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="" value="<?php echo $fetched_row['tieude']; ?>"
                                type="text" name="tieude">
                     </label>
                     <label class="block">
-                        <span class="text-gray-700">Người phụ trách:</span>
+                        <span class="text-gray-700">Ngu?i ph? tr�ch:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="" value="<?php echo $fetched_row['nguoiphutrach']; ?>"
                                type="text" name="nguoiphutrach">
                     </label>
                     <label class="block">
-                        <span class="text-gray-700">Chế độ:</span>
+                        <span class="text-gray-700">Ch? d?:</span>
                         <select name="chedo"
                                 class="form-select border-2 rounded-lg border-blue-400 block w-full mt-1">
-                            <option>Ẩn</option>
-                            <option>Hiện</option>
+                            <option>?n</option>
+                            <option>Hi?n</option>
                         </select>
                     </label>
-                    <!--                    ảnh-->
+                    <!--                    ?nh-->
 
 
                     <div class="mt-5">
-                        <label for="avatar">Chọn ảnh đại diện: </label>
+                        <label for="avatar">Ch?n ?nh d?i di?n: </label>
                         <?php if (!empty($fetched_row['anhdaidien'])) { ?>
                             <img width="200px" height="200px" src="<?= $fetched_row['anhdaidien'] ?>"/><br/>
                         <?php } ?>
@@ -302,7 +303,7 @@
                                accept="image/png, image/jpeg">
                     </div>
                     <div class="mt-5">
-                        <label for="avatar">Chọn ảnh giới thiệu 1: </label>
+                        <label for="avatar">Ch?n ?nh gi?i thi?u 1: </label>
                         <?php if (!empty($fetched_row['anhgiuoithieu1'])) { ?>
                             <img width="200px" height="200px" src="<?= $fetched_row['anhgiuoithieu1'] ?>"/><br/>
                         <?php } ?>
@@ -311,7 +312,7 @@
                                accept="image/png, image/jpeg">
                     </div>
                     <div class="mt-5">
-                        <label for="avatar">Chọn ảnh giới thiệu 2: </label>
+                        <label for="avatar">Ch?n ?nh gi?i thi?u 2: </label>
                         <?php if (!empty($fetched_row['anhgiuoithieu2'])) { ?>
                             <img width="200px" height="200px" src="<?= $fetched_row['anhgiuoithieu2'] ?>"/><br/>
                         <?php } ?>
@@ -321,7 +322,7 @@
                     </div>
                     <!--                    Textarea-->
                     <label class="block mt-2">
-                        <span class="text-gray-700">Nội dung:</span>
+                        <span class="text-gray-700">N?i dung:</span>
                         <textarea name="noidung"
                                   class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
                                   placeholder="" rows="3"
@@ -330,11 +331,11 @@
                     </label>
                     <div class="mt-3 text-right">
                         <button class="px-4 py-2 text-white bg-red-500 rounded shadow-xl">
-                            <a href="quanlibaidang.php">Quay lại</a>
+                            <a href="quanlibaidang.php">Quay l?i</a>
                         </button>
                         <button type="submit" name="btn-save"
                                 class="ml-3 mt-3 h-10 w-32 bg-blue-600 rounded text-white hover:bg-blue-700">
-                            Tạo
+                            T?o
                         </button>
                     </div>
                 </form>

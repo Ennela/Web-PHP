@@ -4,6 +4,7 @@ session_start();
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 if (!isset($_SESSION['dangnhap1'])) {
     header('Location: canhbao.php');
+    exit;
 }
 if (isset($_GET['login'])) {
     $dangxuat = $_GET['login'];

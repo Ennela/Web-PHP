@@ -50,6 +50,8 @@ tests/
 # Tài liệu nội bộ (không push lên remote)
 documents/SRS_USECASE_DIAGRAMS.MD
 images_docx/
+*.docx
+~$*.docx
 
 # Thư mục lưu avatar upload của user (runtime data)
 auth/uploads/

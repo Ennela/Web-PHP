@@ -921,6 +921,296 @@ require_once dirname(__DIR__) . '/config.php';
 }
 .related-stars span { color: #f5a623; font-size: clamp(0.7rem, 1.8vw, 0.75rem); }
 
+/* ===== SIZE GUIDE MODAL ===== */
+.size-guide-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    padding: 20px;
+}
+
+.size-guide-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.size-guide-modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1);
+    transform: scale(0.88) translateY(30px);
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.size-guide-overlay.open .size-guide-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.size-guide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+    border-radius: 20px 20px 0 0;
+}
+
+.size-guide-header h3 {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 900;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.size-guide-header h3 .sg-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.size-guide-close {
+    background: #f1f5f9;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #64748b;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+@media (hover: hover) {
+    .size-guide-close:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        transform: rotate(90deg);
+    }
+}
+
+.size-guide-body {
+    padding: 24px;
+}
+
+/* Size guide image */
+.size-guide-img-wrap {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+    cursor: zoom-in;
+    transition: box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+    .size-guide-img-wrap:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+}
+
+.size-guide-img-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Measure steps */
+.sg-measure-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+@media (min-width: 480px) {
+    .sg-measure-steps {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.sg-step {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .sg-step:hover {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        transform: translateY(-2px);
+    }
+}
+
+.sg-step-num {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.sg-step-text {
+    font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+    color: #475569;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* Size table */
+.sg-table-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.sg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: clamp(0.8rem, 2vw, 0.88rem);
+}
+
+.sg-table thead {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #fff;
+}
+
+.sg-table thead th {
+    padding: 12px 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: clamp(0.7rem, 1.5vw, 0.75rem);
+    text-align: center;
+}
+
+.sg-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.sg-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+@media (hover: hover) {
+    .sg-table tbody tr:hover {
+        background: #eff6ff;
+    }
+}
+
+.sg-table td {
+    padding: 10px 16px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 600;
+    color: #334155;
+}
+
+.sg-table td:first-child {
+    font-weight: 800;
+    color: #1e293b;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
+}
+
+.sg-table .sg-category-label {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    font-weight: 800;
+    color: #2563eb;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: clamp(0.7rem, 1.5vw, 0.75rem);
+}
+
+/* Notes */
+.sg-notes {
+    background: linear-gradient(135deg, #fefce8, #fef9c3);
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 16px 18px;
+}
+
+.sg-notes-title {
+    font-weight: 800;
+    color: #92400e;
+    font-size: clamp(0.78rem, 1.8vw, 0.85rem);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sg-notes ul {
+    margin: 0;
+    padding-left: 18px;
+    list-style: disc;
+}
+
+.sg-notes li {
+    font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+    color: #78350f;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+/* Scrollbar for modal */
+.size-guide-modal::-webkit-scrollbar {
+    width: 6px;
+}
+.size-guide-modal::-webkit-scrollbar-track {
+    background: transparent;
+}
+.size-guide-modal::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+.size-guide-modal::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 </style>
 
 <main class="product-detail-page">
@@ -1030,7 +1320,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="size-selector-block">
                         <div class="size-selector-header">
                             <span class="size-label">Chọn size</span>
-                            <a href="#" class="size-guide-link" onclick="return false;">Hướng dẫn chọn size ↗</a>
+                            <a href="#" class="size-guide-link" id="open-size-guide" onclick="openSizeGuide(); return false;">📏 Hướng dẫn chọn size</a>
                         </div>
                         <div class="size-grid" id="size-grid">
                             <?php
@@ -1209,6 +1499,78 @@ require_once dirname(__DIR__) . '/config.php';
     </div>
 </main>
 
+<!-- ===== SIZE GUIDE MODAL ===== -->
+<div class="size-guide-overlay" id="size-guide-overlay" onclick="closeSizeGuide(event)">
+    <div class="size-guide-modal" onclick="event.stopPropagation()">
+        <div class="size-guide-header">
+            <h3>
+                <span class="sg-icon">👟</span>
+                Hướng dẫn chọn size giày
+            </h3>
+            <button class="size-guide-close" onclick="closeSizeGuide()" title="Đóng">✕</button>
+        </div>
+        <div class="size-guide-body">
+            <!-- Size guide image -->
+            <div class="size-guide-img-wrap" onclick="openLightboxSizeGuide()">
+                <img src="<?php echo BASE_URL; ?>images/size_guide.png" alt="Bảng hướng dẫn chọn size giày" loading="lazy">
+            </div>
+
+            <!-- Measurement steps -->
+            <div class="sg-measure-steps">
+                <div class="sg-step">
+                    <div class="sg-step-num">1</div>
+                    <div class="sg-step-text">Đặt chân lên giấy trắng, giữ chân thẳng</div>
+                </div>
+                <div class="sg-step">
+                    <div class="sg-step-num">2</div>
+                    <div class="sg-step-text">Vẽ viền bàn chân bằng bút chì</div>
+                </div>
+                <div class="sg-step">
+                    <div class="sg-step-num">3</div>
+                    <div class="sg-step-text">Đo chiều dài từ gót đến ngón dài nhất</div>
+                </div>
+            </div>
+
+            <!-- Size table -->
+            <div class="sg-table-wrap">
+                <table class="sg-table">
+                    <thead>
+                        <tr>
+                            <th>Size (EU)</th>
+                            <th>Chiều dài chân (cm)</th>
+                            <th>Đối tượng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="sg-category-label"><td colspan="3">👩 Nữ</td></tr>
+                        <tr><td>36</td><td>22.7 cm</td><td>Nữ</td></tr>
+                        <tr><td>37</td><td>23.3 cm</td><td>Nữ</td></tr>
+                        <tr><td>38</td><td>24.0 cm</td><td>Nữ</td></tr>
+                        <tr><td>39</td><td>25.0 cm</td><td>Nữ / Nam</td></tr>
+                        <tr class="sg-category-label"><td colspan="3">👨 Nam</td></tr>
+                        <tr><td>40</td><td>25.7 cm</td><td>Nam</td></tr>
+                        <tr><td>41</td><td>26.3 cm</td><td>Nam</td></tr>
+                        <tr><td>42</td><td>27.0 cm</td><td>Nam</td></tr>
+                        <tr><td>43</td><td>27.5 cm</td><td>Nam</td></tr>
+                        <tr><td>44</td><td>28.0 cm</td><td>Nam</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Notes -->
+            <div class="sg-notes">
+                <div class="sg-notes-title">💡 Lưu ý khi đo chân</div>
+                <ul>
+                    <li>Nên đo vào <strong>buổi chiều</strong> khi chân ở trạng thái lớn nhất</li>
+                    <li>Nếu size đo nằm giữa 2 size, nên chọn <strong>size lớn hơn</strong></li>
+                    <li>Mỗi thương hiệu có thể lệch 0.5 size, hãy tham khảo bảng trên</li>
+                    <li>Đo cả <strong>2 chân</strong> và lấy kích thước chân lớn hơn</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ===== LIGHTBOX MODAL ===== -->
 <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
     <div class="lightbox-img-wrap" id="lightbox-wrap">
@@ -1369,6 +1731,8 @@ function closeLightbox(e) {
     const overlay = document.getElementById('lightbox');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
+    // Restore nav buttons (may have been hidden by size guide lightbox)
+    document.querySelectorAll('.lightbox-nav').forEach(b => b.style.display = '');
 }
 
 function lbNav(dir, e) {
@@ -1396,6 +1760,13 @@ function lbNav(dir, e) {
 
 // Keyboard controls
 document.addEventListener('keydown', e => {
+    // Size guide modal
+    const sgOverlay = document.getElementById('size-guide-overlay');
+    if (e.key === 'Escape' && sgOverlay.classList.contains('open')) {
+        closeSizeGuide();
+        return;
+    }
+    // Lightbox
     const overlay = document.getElementById('lightbox');
     if (e.key === 'Escape' && overlay.classList.contains('open')) {
         overlay.classList.remove('open');
@@ -1406,6 +1777,35 @@ document.addEventListener('keydown', e => {
         if (e.key === 'ArrowRight') lbNav(1, null);
     }
 });
+
+// ---- Size Guide Modal ----
+function openSizeGuide() {
+    const overlay = document.getElementById('size-guide-overlay');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSizeGuide(e) {
+    if (e && e.target !== document.getElementById('size-guide-overlay')) return;
+    const overlay = document.getElementById('size-guide-overlay');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function openLightboxSizeGuide() {
+    closeSizeGuide();
+    setTimeout(() => {
+        const sgImg = '<?php echo BASE_URL; ?>images/size_guide.png';
+        const overlay = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        // Temporarily set lightbox for single image
+        img.src = sgImg;
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        // Hide nav buttons for single image
+        document.querySelectorAll('.lightbox-nav').forEach(b => b.style.display = 'none');
+    }, 350);
+}
 
 // ---- Size Selector (with stock awareness) ----
 let selectedSize = <?= ($preferredSize && !$preferredSizeOutOfStock) ? $preferredSize : 'null' ?>;

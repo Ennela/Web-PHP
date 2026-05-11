@@ -142,8 +142,7 @@
                            style="background:none;">
                 </div>
             </div>
-            <div class="text-red-400 m-2"><a href="./dangki.php">Bạn chưa có tài
-                    khoản ?</a></div>
+
             <button type="submit" name="dangnhap"
                     class="w-full py-2 rounded-full bg-green-600 text-gray-100  focus:outline-none">
                 Xác nhận

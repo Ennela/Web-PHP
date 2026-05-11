@@ -1,7 +1,8 @@
-﻿<?php
+<?php
 session_start();
 if (!isset($_SESSION['dangnhap'])) {
 	header('Location: canhbao.php');
+	exit;
 }
 if (isset($_GET['login'])) {
 	$dangxuat = $_GET['login'];
@@ -51,7 +52,7 @@ if ($dangxuat == 'dangxuat') {
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="Tìm kiếm"
+                           placeholder="T�m ki?m"
                            type="search">
                     <div class="absolute search-icon" style="top: 1rem; left: .8rem;">
                         <svg class="w-4 h-4 text-white pointer-events-none fill-current"
@@ -68,7 +69,7 @@ if ($dangxuat == 'dangxuat') {
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none" onclick="toggleDD('myDropdown')"><span
-                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo $_SESSION['dangnhap'] ?>
+                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin ch�o, <?php echo $_SESSION['dangnhap'] ?>
                             <svg class="inline h-3 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                             </svg>
@@ -79,12 +80,12 @@ if ($dangxuat == 'dangxuat') {
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> Đăng nhập </a>
+                                        class="fa fa-user fa-fw"></i> �ang nh?p </a>
                             <div class="border border-gray-800"></div>
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="?login=dangxuat"
                                style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất</a>
+                                        class="fas fa-sign-out-alt fa-fw"></i> �ang xu?t</a>
                         </div>
                     </div>
                 </li>
@@ -105,7 +106,7 @@ if ($dangxuat == 'dangxuat') {
                     <a class="block py-1 md:py-3 pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 hover:border-pink-500"
                        href="./trangchu.php">
                         <i class="fas fa-tasks pr-0 md:pr-3"></i><span
-                            class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Trang chủ</span>
+                            class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Trang ch?</span>
                     </a>
                 </li>
 
@@ -115,7 +116,7 @@ if ($dangxuat == 'dangxuat') {
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí sản phẩm</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� s?n ph?m</span>
                     </a>
                 </li>
 
@@ -125,7 +126,7 @@ if ($dangxuat == 'dangxuat') {
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí Khách hàng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� Kh�ch h�ng</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -134,7 +135,7 @@ if ($dangxuat == 'dangxuat') {
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí bài đăng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� b�i dang</span>
                     </a>
                 </li>
 
@@ -144,7 +145,7 @@ if ($dangxuat == 'dangxuat') {
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí thành viên</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� th�nh vi�n</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -154,7 +155,7 @@ if ($dangxuat == 'dangxuat') {
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Quản lí đơn hàng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n l� don h�ng</span>
                     </a>
                 </li>
             </ul>
@@ -167,7 +168,7 @@ if ($dangxuat == 'dangxuat') {
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">Danh sách danh mục</h3>
+                <h3 class="font-bold pl-2">Danh s�ch danh m?c</h3>
             </div>
         </div>
 
@@ -182,8 +183,8 @@ if ($dangxuat == 'dangxuat') {
                             </div>
                         </div>
                         <div class="flex-1 text-right md:text-center">
-                            <h5 class="font-bold uppercase text-gray-600">Danh mục</h5>
-                            <h3 class="font-bold text-3xl">2 danh mục</h3>
+                            <h5 class="font-bold uppercase text-gray-600">Danh m?c</h5>
+                            <h3 class="font-bold text-3xl">2 danh m?c</h3>
                         </div>
                     </div>
                 </div>
@@ -191,16 +192,16 @@ if ($dangxuat == 'dangxuat') {
             </div>
             <div class="w-full p-6 flex flex-row-reverse">
                 <button class=" mr-4 ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"><a
-                        href="./quanlisanpham.html">Quản lí sản phẩm</a>
+                        href="./quanlisanpham.html">Qu?n l� s?n ph?m</a>
                 </button>
                 <button class=" ml-8 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"><a
-                        href="./themdanhmuc.html">Thêm danh mục</a>
+                        href="./themdanhmuc.html">Th�m danh m?c</a>
                 </button>
                 <div class="flex items-center justify-center ">
                     <div class="flex border-2 border-gray-200 rounded">
-                        <input class="px-4 py-2 w-80" placeholder="Nhập ID hoặc tên..." type="text">
+                        <input class="px-4 py-2 w-80" placeholder="Nh?p ID ho?c t�n..." type="text">
                         <button class="px-4 text-white bg-blue-500 border-l  ">
-                            Tìm
+                            T�m
                         </button>
                     </div>
                 </div>
@@ -210,30 +211,30 @@ if ($dangxuat == 'dangxuat') {
                     <thead class="bg-blue-300">
                     <tr class="border-2">
 
-                        <th class="w-6/12 ">Tên danh mục</th>
+                        <th class="w-6/12 ">T�n danh m?c</th>
 
-                        <th class="w-2/12 ">Ngày cập nhật</th>
-                        <th class="w-2/12 ">Ngày tạo</th>
+                        <th class="w-2/12 ">Ng�y c?p nh?t</th>
+                        <th class="w-2/12 ">Ng�y t?o</th>
 
-                        <th class="w-1/12 ">Sửa</th>
-                        <th class="w-1/12 ">Xoá</th>
+                        <th class="w-1/12 ">S?a</th>
+                        <th class="w-1/12 ">Xo�</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
-                        <td class="text-center">Giày thể thao nam</td>
+                        <td class="text-center">Gi�y th? thao nam</td>
                         <td class="text-center">20/09/2021 14:20</td>
                         <td class="text-center">20/09/2021 14:20</td>
 
-                        <td class="text-center doimau"><a href="">Sửa</a></td>
-                        <td class="text-center doimau"><a href="">Xoá</a></td>
+                        <td class="text-center doimau"><a href="">S?a</a></td>
+                        <td class="text-center doimau"><a href="">Xo�</a></td>
                     </tr>
                     <tr>
-                        <td class="text-center">Giày thể thao nữ</td>
+                        <td class="text-center">Gi�y th? thao n?</td>
                         <td class="text-center">20/09/2021 14:20</td>
                         <td class="text-center">20/09/2021 14:20</td>
-                        <td class="text-center doimau"><a href="">Sửa</a></td>
-                        <td class="text-center doimau"><a href="">Xoá</a></td>
+                        <td class="text-center doimau"><a href="">S?a</a></td>
+                        <td class="text-center doimau"><a href="">Xo�</a></td>
                     </tr>
 
                     </tbody>

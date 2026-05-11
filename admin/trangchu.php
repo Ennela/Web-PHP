@@ -3,6 +3,7 @@
 
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
+        exit;
     }
     if (isset($_GET['login'])) {
         $dangxuat = $_GET['login'];

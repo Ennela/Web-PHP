@@ -19,14 +19,13 @@
             }
         }
         // kết quả quy ra rõ ràng hơn từng thuộc tính và từng giá trị
-        $uploadPath = "uploads";
+        $uploadPath = __DIR__ . "/uploads";
 
 
         //kiểm tra tồn tại folder
-//        if (!is_dir($uploadPath)) {
-//            mkdir($uploadPath, 0777, true);
-//            //chưa có sẽ dùng hàm này tạo
-//        }
+        if (!is_dir($uploadPath)) {
+            @mkdir($uploadPath, 0775, true);
+        }
 
 
 
@@ -64,7 +63,7 @@
             if(move_uploaded_file($file["tmp_name"], $uploadPath . '/' . $file["name"])){
                 return array(
                     'error'=>false,
-                    'path' =>  $uploadPath . '/' . $file["name"]
+                    'path' =>  'uploads/' . $file["name"]
                 );
             }
         }else{

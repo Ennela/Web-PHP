@@ -1,7 +1,8 @@
-﻿<?php
+<?php
     session_start();
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
+        exit;
     }else{
         if (isset($_GET['login'])) {
             $dangxuat = $_GET['login'];
@@ -30,7 +31,7 @@
                 <script type="text/javascript">
                     alert('vui lòng nhập đúng định dạng của ngày sinh');
                     window.location.href='themthanhvien.php';
-                </script>tbl_qlbaidang
+                </script>
                 <?php
             }
         

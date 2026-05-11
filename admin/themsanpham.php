@@ -1,8 +1,9 @@
-﻿<?php
+<?php
     
     session_start();
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
+        exit;
     }
     if (isset($_GET['login'])) {
         $dangxuat = $_GET['login'];
@@ -66,11 +67,19 @@
         
 
         if ($kiemtra) {
-            move_uploaded_file($_FILES['anhdaidien']['tmp_name'], 'uploads/'.$_FILES['anhdaidien']['name']);
-            move_uploaded_file($_FILES['anhgiuoithieu1']['tmp_name'],
-                'uploads/'.$_FILES['anhgiuoithieu1']['name']);
-            move_uploaded_file($_FILES['anhgiuoithieu2']['tmp_name'],
-                'uploads/'.$_FILES['anhgiuoithieu2']['name']);
+            // Đảm bảo thư mục uploads tồn tại và có quyền ghi
+            $uploadDir = __DIR__ . '/uploads/';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+            
+            if (is_writable($uploadDir)) {
+                move_uploaded_file($_FILES['anhdaidien']['tmp_name'], $uploadDir . $_FILES['anhdaidien']['name']);
+                move_uploaded_file($_FILES['anhgiuoithieu1']['tmp_name'],
+                    $uploadDir . $_FILES['anhgiuoithieu1']['name']);
+                move_uploaded_file($_FILES['anhgiuoithieu2']['tmp_name'],
+                    $uploadDir . $_FILES['anhgiuoithieu2']['name']);
+            }
         } else {
 
         }
