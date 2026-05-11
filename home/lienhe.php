@@ -15,42 +15,53 @@ $mailSent = false;
 $mailError = false;
 
 function GuiMail() {
-    require BASE_PATH . 'PHPMailer-master/src/PHPMailer.php';
-    require BASE_PATH . 'PHPMailer-master/src/SMTP.php';
-    require BASE_PATH . 'PHPMailer-master/src/Exception.php';
-    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-    try {
-        $mail->SMTPDebug = 0;
-        $mail->isSMTP();
-        $mail->CharSet = "utf-8";
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'remkyorosi@gmail.com';
-        $mail->Password = 'nvui gcgt snxd rpib';
-        $mail->SMTPSecure = 'ssl';
-        $mail->Port = 465;
-        $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
-        $mail->addAddress('remkyorosi@gmail.com', 'Nguyễn Văn Kiên');
-        $mail->isHTML(true);
-        $mail->Subject = 'Liên hệ từ khách hàng';
-        $noidungthu = "
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-                <h2 style='color: #111; border-bottom: 2px solid #111; padding-bottom: 10px;'>📩 Thư liên hệ từ khách hàng</h2>
-                <table style='width: 100%; border-collapse: collapse;'>
-                    <tr><td style='padding: 12px; border-bottom: 1px solid #eee; color: #888; width: 120px;'>Họ tên:</td><td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>" . htmlspecialchars($_POST['name']) . "</td></tr>
-                    <tr><td style='padding: 12px; border-bottom: 1px solid #eee; color: #888;'>Email:</td><td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>" . htmlspecialchars($_POST['email']) . "</td></tr>
-                    <tr><td style='padding: 12px; color: #888; vertical-align: top;'>Nội dung:</td><td style='padding: 12px; line-height: 1.6;'>" . nl2br(htmlspecialchars($_POST['message'])) . "</td></tr>
-                </table>
-                <p style='color: #aaa; font-size: 12px; margin-top: 20px;'>Gửi lúc: " . date('d/m/Y H:i:s') . "</p>
-            </div>";
-        $mail->Body = $noidungthu;
-        $mail->smtpConnect(array("ssl" => array("verify_peer" => false, "verify_peer_name" => false,
-            "allow_self_signed" => true)));
-        $mail->send();
-        return true;
-    } catch (Exception $e) {
+    $apiKey = getenv('RESEND_API_KEY');
+    if (empty($apiKey)) {
+        // Không có API key → không gửi được mail
         return false;
     }
+
+    $name = htmlspecialchars($_POST['name']);
+    $email = htmlspecialchars($_POST['email']);
+    $message = nl2br(htmlspecialchars($_POST['message']));
+    $time = date('d/m/Y H:i:s');
+
+    $body = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <h2 style='color: #111; border-bottom: 2px solid #111; padding-bottom: 10px;'>📩 Thư liên hệ từ khách hàng</h2>
+            <table style='width: 100%; border-collapse: collapse;'>
+                <tr><td style='padding: 12px; border-bottom: 1px solid #eee; color: #888; width: 120px;'>Họ tên:</td><td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>$name</td></tr>
+                <tr><td style='padding: 12px; border-bottom: 1px solid #eee; color: #888;'>Email:</td><td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>$email</td></tr>
+                <tr><td style='padding: 12px; color: #888; vertical-align: top;'>Nội dung:</td><td style='padding: 12px; line-height: 1.6;'>$message</td></tr>
+            </table>
+            <p style='color: #aaa; font-size: 12px; margin-top: 20px;'>Gửi lúc: $time</p>
+        </div>";
+
+    $payload = json_encode([
+        'from'    => 'Shop Sneakers <onboarding@resend.dev>',
+        'to'      => ['remkyorosi@gmail.com'],
+        'subject' => '📩 Liên hệ từ khách hàng - ' . $name,
+        'html'    => $body,
+        'reply_to' => $_POST['email'], // Khi reply sẽ gửi về email khách
+    ]);
+
+    $ch = curl_init('https://api.resend.com/emails');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_TIMEOUT        => 8, // Tối đa 8 giây, tránh loading mãi
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json',
+        ],
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return ($httpCode >= 200 && $httpCode < 300);
 }
 
 if (isset($_POST['btn'])) {
