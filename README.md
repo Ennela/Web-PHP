@@ -52,7 +52,7 @@ Vừa qua, dự án đã được cập nhật lớn về mặt giao diện thi�
 | **Frontend**    | HTML5, Vanilla JS, CSS/Bootstrap | Áp dụng xu hướng thiết kế "Editorial/Brutalist" tân tiến trên các trang shop/cart/thanh toán, kết hợp tuỳ biến linh hoạt hiệu ứng micro-animations. |
 | **Font & Icon** | Montserrat, FontAwesome | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện. |
 | **Thanh toán**  | VNPAY (IPN) | API thanh toán uy tín và sát thực tế, giúp làm quen với luồng thanh toán bảo mật, webhook xác thực giao dịch chuẩn e-Commerce. |
-| **Email**       | Resend HTTP API | Tích hợp gửi email bằng API HTTP thay vì SMTP truyền thống (PHPMailer), giải quyết triệt để lỗi block cổng outbound (Port 25/465/587) trên các nền tảng Cloud (Railway), giúp luồng thanh toán không bị treo. |
+| **Email**       | Brevo (Sendinblue) HTTP API | Gửi email giao dịch (xác nhận đơn hàng, liên hệ) qua REST API. Free tier 300 email/ngày, gửi được đến **mọi địa chỉ email** mà không cần verify domain. Thay thế Resend (giới hạn chỉ gửi được đến email chủ tài khoản) và PHPMailer SMTP (bị block port trên Cloud). |
 | **Thông báo UI**| SweetAlert2 | Hiển thị thông báo (Toast Notifications) không chặn màn hình, thay thế hoàn toàn `alert()` mặc định của trình duyệt, nâng cao trải nghiệm người dùng (UX). |
 | **Triển khai**  | Docker & Railway | Đóng gói ứng dụng linh hoạt, tự động bind cổng và biến môi trường, tối ưu hoá quá trình CI/CD và đưa website lên mạng chạy trực tuyến (Cloud Serverless). |
 | **Thư viện Ảnh**| Custom Image Zoom | Thay thế các thư viện rườm rà bằng hiệu ứng di chuột (hover/mousemove zoom gallery) chính xác, tương thích mượt mà cho ảnh SP. |
@@ -65,7 +65,10 @@ Vừa qua, dự án đã được cập nhật lớn về mặt giao diện thi�
 WEB-PHP/
 ├── config.php                 # Cấu hình BASE_URL, BASE_PATH
 ├── includes/                  # Shared components
-│   └── connect.php            # Kết nối MySQLi đến DB giaythethao2
+│   ├── connect.php            # Kết nối MySQLi đến DB giaythethao2
+│   ├── inventory_helper.php   # Quản lý tồn kho: validateAndDeductStock(), restoreStock()
+│   ├── order_helper.php       # Sinh mã đơn hàng: generateOrderCode()
+│   └── mail_helper.php        # [MỚI] Helper gửi email qua Brevo API (sendMailBrevo())
 │
 ├── home/                      # Trang đánh giới thiệu (Khách hàng)
 │   ├── trangchu.php           # Landing Page hiện đại, Carousel Banner, Sản phẩm Highlights
@@ -87,8 +90,9 @@ WEB-PHP/
 │   ├── quanlisanpham.php      # Thêm mặt hàng kèm mảng Sizes/Biến thể.
 │
 ├── vnpay_php/                 # API tích hợp cổng thanh toán Sandbox VNPAY
-├── vendor/                    # Các thư viện Composer (bao gồm Resend API)
+├── vendor/                    # Các thư viện Composer
 ├── Dockerfile                 # File cấu hình container triển khai Railway
+├── docker-entrypoint.sh       # Script khởi động: fix MPM, bind PORT động
 └── documents/                 # 📄 Tài liệu SRS & kiến trúc đề cương yêu cầu
 ```
 
@@ -132,7 +136,7 @@ WEB-PHP/
 
 ### 💻 Môi trường Local (XAMPP)
 1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`.
-2. Chạy lệnh `composer install` để cài đặt các thư viện phụ thuộc (Resend API).
+2. Chạy lệnh `composer install` để cài đặt các thư viện phụ thuộc.
 3. **Khởi động XAMPP (Apache + MySQL)**.
 4. **Database:** Import CSDL từ file `railway_migration_v2.sql`.
 5. Cấu hình biến môi trường (mã nguồn ưu tiên đọc file `.env` nếu có) hoặc sửa trực tiếp trong `includes/connect.php` và `config.php`.
@@ -141,14 +145,16 @@ WEB-PHP/
    - 🔐 Trang quản trị: `http://localhost/WEB-PHP/admin/` (Tài khoản Admin: `noah2005` / `kudo-kun`)
 
 ### ☁️ Triển khai lên Railway (Cloud)
-Dự án đã được cấu hình sẵn `Dockerfile` để triển khai tự động lên Railway:
+Dự án đã được cấu hình sẵn `Dockerfile` + `docker-entrypoint.sh` để triển khai tự động:
 1. Khởi tạo dự án trên Railway.
 2. Thêm dịch vụ MySQL, thực thi file `railway_migration_v2.sql` để khởi tạo cấu trúc dữ liệu.
 3. Liên kết kho lưu trữ GitHub chứa dự án vào dịch vụ Web trên Railway.
 4. Cấu hình các biến môi trường (Environment Variables) trên Web service:
    - `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT`
-   - `RESEND_API_KEY`
+   - `BREVO_API_KEY` — API key từ [Brevo](https://www.brevo.com) (miễn phí 300 email/ngày)
+   - `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` (nếu dùng VNPAY production)
 5. Railway sẽ tự động build từ `Dockerfile` và cấp phát tên miền.
+6. **CI/CD:** Mỗi lần `git push`, Railway tự động build & deploy trong 2-3 phút.
 
 ---
 
@@ -161,9 +167,29 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 | [`De_cuong_chuc_nang.md`](./documents/De_cuong_chuc_nang.md) | Đề cương chức năng kiến trúc |
 | [`SRS_ADMIN_DASHBOARD.MD`](./documents/SRS_ADMIN_DASHBOARD.MD) | Đặc tả Dashboard & Báo cáo doanh thu thời gian thực |
 | [`SRS_ADMIN_QL_SAN_PHAM.MD`](./documents/SRS_ADMIN_QL_SAN_PHAM.MD) | Đặc tả Quản lý Sản phẩm / Kích cỡ Size |
+| [`SRS_ADMIN_QL_DON_HANG.MD`](./documents/SRS_ADMIN_QL_DON_HANG.MD) | Đặc tả Quản lý Đơn hàng (Admin) |
 | [`SRS_CHI_TIET_SAN_PHAM.MD`](./documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả Giao diện View SP, Chọn Cỡ & Hover Zoom |
-| [`SRS_DAT_HANG.MD`](./documents/SRS_DAT_HANG.MD) | Đặc tả Khâu Đặt hàng liên kết tài khoản KH ẩn danh/cá nhân hoá |
-| [`SRS_TRA_CUU_DON_HANG.MD`](./documents/SRS_TRA_CUU_DON_HANG.MD) | (MỚI) Đặc tả Tracking hành trình kiên hàng |
-| Và các tài liệu khác... | ... (Tồn tại trong `/documents`) |
+| [`SRS_GIO_HANG.MD`](./documents/SRS_GIO_HANG.MD) | Đặc tả Giỏ hàng AJAX, Stock Guard, Debounce |
+| [`SRS_DAT_HANG.MD`](./documents/SRS_DAT_HANG.MD) | Đặc tả Khâu Đặt hàng (COD) liên kết tài khoản KH |
+| [`SRS_THANH_TOAN.MD`](./documents/SRS_THANH_TOAN.MD) | Đặc tả Thanh toán COD + VNPAY, Race Condition, Brevo Email |
+| [`SRS_TIM_KIEM_SAN_PHAM.MD`](./documents/SRS_TIM_KIEM_SAN_PHAM.MD) | Đặc tả Tìm kiếm & Lọc sản phẩm (Dynamic SQL) |
+| [`SRS_LIEN_HE.MD`](./documents/SRS_LIEN_HE.MD) | Đặc tả Trang liên hệ (Brevo API) |
+| [`SRS_TRA_CUU_DON_HANG.MD`](./documents/SRS_TRA_CUU_DON_HANG.MD) | Đặc tả Tracking hành trình đơn hàng |
+| [`SRS_USECASE_DIAGRAMS.MD`](./documents/SRS_USECASE_DIAGRAMS.MD) | Sơ đồ Use Case tổng hợp (Mermaid) |
 
-*Website bán giày được củng cố theo tiêu chuẩn Web Responsive - Cung cấp định nghĩa bảo mật hiện vật an toàn, trải nghiệm người dùng tuyệt hảo.*
+---
+
+## 📧 Kiến trúc Email
+
+| Thành phần | Chi tiết |
+|---|---|
+| **Service** | Brevo (Sendinblue) — HTTP REST API |
+| **Free tier** | 300 email/ngày, gửi đến mọi email |
+| **Helper** | `includes/mail_helper.php` → `sendMailBrevo()` |
+| **Nơi sử dụng** | `infodathang.php` (COD), `vnpay_return.php` (VNPAY), `lienhe.php` (Liên hệ) |
+| **Env variable** | `BREVO_API_KEY` |
+| **Timeout** | 10 giây (tránh treo trang) |
+
+---
+
+*Website bán giày được xây dựng theo tiêu chuẩn Web Responsive, Mobile-First, với hệ thống bảo mật chống Race Condition và trải nghiệm người dùng chuyên nghiệp.*
