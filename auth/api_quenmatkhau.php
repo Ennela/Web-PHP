@@ -67,7 +67,7 @@ $htmlBody = '
 <div style="max-width:520px; margin:40px auto; background:#fff; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 20px rgba(0,0,0,0.06); overflow:hidden;">
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#3b82f6,#2563eb); padding:32px 24px; text-align:center;">
-        <h1 style="color:#fff; margin:0; font-size:22px; font-weight:800; letter-spacing:1px;">🔐 ĐẶT LẠI MẬT KHẨU</h1>
+        <h1 style="color:#fff; margin:0; font-size:22px; font-weight:800; letter-spacing:1px;"> ĐẶT LẠI MẬT KHẨU</h1>
     </div>
     <!-- Body -->
     <div style="padding:32px 24px;">
@@ -77,7 +77,7 @@ $htmlBody = '
         <div style="text-align:center; margin:28px 0;">
             <a href="' . $resetLink . '" style="display:inline-block; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; text-decoration:none; padding:14px 36px; border-radius:10px; font-weight:700; font-size:15px; letter-spacing:0.5px;">Đặt lại mật khẩu</a>
         </div>
-        <p style="color:#888; font-size:13px; line-height:1.6;">⏰ Link này có hiệu lực trong <strong>30 phút</strong>. Sau thời gian này, bạn cần yêu cầu đặt lại mật khẩu mới.</p>
+        <p style="color:#888; font-size:13px; line-height:1.6;"> Link này có hiệu lực trong <strong>30 phút</strong>. Sau thời gian này, bạn cần yêu cầu đặt lại mật khẩu mới.</p>
         <p style="color:#888; font-size:13px; line-height:1.6;">Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này. Tài khoản của bạn vẫn an toàn.</p>
         <hr style="border:none; border-top:1px solid #e2e8f0; margin:24px 0;">
         <p style="color:#aaa; font-size:12px; text-align:center;">Nếu nút không hoạt động, copy đường link sau vào trình duyệt:<br>
@@ -92,7 +92,7 @@ $htmlBody = '
 </html>';
 
 // Gửi email qua Brevo
-$sent = sendMailBrevo($user['email'], $hoTen, '🔐 Đặt lại mật khẩu — Shop Sneakers', $htmlBody);
+$sent = sendMailBrevo($user['email'], $hoTen, 'Đặt lại mật khẩu — Shop Sneakers', $htmlBody);
 
 if (!$sent) {
     // Vẫn trả success để không leak thông tin, nhưng log lỗi
