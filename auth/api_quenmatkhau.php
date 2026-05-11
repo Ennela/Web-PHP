@@ -31,8 +31,7 @@ $query = mysqli_query($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `t
 $user = mysqli_fetch_assoc($query);
 
 if (!$user) {
-    // Bảo mật: không tiết lộ tài khoản có tồn tại hay không
-    echo json_encode(['success' => true, 'message' => 'Nếu tài khoản tồn tại, chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu.']);
+    echo json_encode(['success' => false, 'message' => 'Email hoặc tên đăng nhập không tồn tại trong hệ thống. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.']);
     exit;
 }
 
@@ -99,5 +98,5 @@ if (!$sent) {
     error_log("FORGOT_PASSWORD: Failed to send email to {$user['email']} for makh=$makh");
 }
 
-echo json_encode(['success' => true, 'message' => 'Nếu tài khoản tồn tại, chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (bao gồm thư mục Spam).']);
+echo json_encode(['success' => true, 'message' => 'Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến ' . substr($user['email'], 0, 3) . '***. Vui lòng kiểm tra hộp thư (bao gồm thư mục Spam).']);
 mysqli_close($con);

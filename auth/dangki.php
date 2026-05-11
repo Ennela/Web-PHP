@@ -5,11 +5,19 @@ session_start();
     include_once BASE_PATH . 'includes/connect.php';
     if (isset($_POST['dangki'])) {
         $hoten = trim($_POST['hoten'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $taikhoan = trim($_POST['taikhoan'] ?? '');
         $matkhau = trim($_POST['matkhau'] ?? '');
 
-        if ($hoten === '' || $taikhoan === '' || $matkhau === '') {
+        if ($hoten === '' || $email === '' || $taikhoan === '' || $matkhau === '') {
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
+            header('Location: dangki.php');
+            exit;
+        }
+
+        // Validate email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['swal_error'] = 'Địa chỉ email không hợp lệ!';
             header('Location: dangki.php');
             exit;
         }
@@ -22,7 +30,15 @@ session_start();
             exit;
         }
 
-        $sql_query = "INSERT INTO tbl_tkkhachhang(hoten,username,password) VALUES('$hoten','$taikhoan','$matkhau')";
+        // Check for duplicate email
+        $check_email = mysqli_query($con, "SELECT * FROM tbl_tkkhachhang WHERE email='$email' LIMIT 1");
+        if (mysqli_num_rows($check_email) > 0) {
+            $_SESSION['swal_error'] = 'Email đã được sử dụng. Vui lòng dùng email khác!';
+            header('Location: dangki.php');
+            exit;
+        }
+
+        $sql_query = "INSERT INTO tbl_tkkhachhang(hoten,email,username,password) VALUES('$hoten','$email','$taikhoan','$matkhau')";
         if (mysqli_query($con, $sql_query)) {
             $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
             header('Location: dangnhap.php');
@@ -127,9 +143,10 @@ session_start();
                 <h2 class="auth-title">Đăng ký</h2>
                 <p class="auth-subtitle">Tạo tài khoản để mua sắm dễ dàng hơn</p>
                 <form method="post">
-                    <div class="mb-3"><label class="form-label">Họ và tên</label><input class="form-control" name="hoten" type="text" placeholder="Nhập họ và tên"></div>
-                    <div class="mb-3"><label class="form-label">Tên đăng nhập</label><input class="form-control" type="text" name="taikhoan" placeholder="Nhập tên đăng nhập"></div>
-                    <div class="mb-4"><label class="form-label">Mật khẩu</label><input class="form-control" name="matkhau" type="password" placeholder="Nhập mật khẩu"></div>
+                    <div class="mb-3"><label class="form-label">Họ và tên</label><input class="form-control" name="hoten" type="text" placeholder="Nhập họ và tên" required></div>
+                    <div class="mb-3"><label class="form-label">Email</label><input class="form-control" name="email" type="email" placeholder="Nhập địa chỉ email" required></div>
+                    <div class="mb-3"><label class="form-label">Tên đăng nhập</label><input class="form-control" type="text" name="taikhoan" placeholder="Nhập tên đăng nhập" required></div>
+                    <div class="mb-4"><label class="form-label">Mật khẩu</label><input class="form-control" name="matkhau" type="password" placeholder="Nhập mật khẩu" required></div>
                     <button name="dangki" class="btn-auth" type="submit">Đăng ký</button>
                 </form>
                 <div class="auth-link">Đã có tài khoản? <a href="<?php echo BASE_URL; ?>auth/dangnhap.php">Đăng nhập</a></div>
