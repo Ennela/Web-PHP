@@ -53,46 +53,106 @@ require_once dirname(__DIR__) . '/config.php';
 
     /**
      * Gửi mail xác nhận đơn hàng cho khách hàng
-     * Dùng Resend HTTP API (không cần SMTP port — hoạt động trên Railway)
+     * Ưu tiên Resend API → Fallback sang Gmail SMTP nếu Resend không gửi được
+     * (Resend free tier chỉ gửi được đến email chủ tài khoản)
      */
     function GuiMailKhachHang($email, $tenkh, $orderCode, $token, $total)
     {
-        $apiKey = getenv('RESEND_API_KEY');
-        if (empty($apiKey) || empty($email)) return;
+        if (empty($email)) return;
 
         $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCode . "&token=" . $token;
         $totalFmt     = number_format($total, 0, ',', '.');
 
         $body = "
-            <h3>Xin chào " . htmlspecialchars($tenkh) . ",</h3>
-            <p>Cảm ơn bạn đã đặt hàng tại <strong>Shop Sneakers</strong>.</p>
-            <p>Đơn hàng <strong>#$orderCode</strong> của bạn đã được ghi nhận.</p>
-            <p>Tổng giá trị: <strong>{$totalFmt}&nbsp;đ</strong></p>
-            <p>Theo dõi đơn hàng tại:</p>
-            <p><a href='$trackingLink'>$trackingLink</a></p>
-            <br><p>Trân trọng,<br>Shop Sneakers</p>
-        ";
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
+                <div style='background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 24px; text-align: center;'>
+                    <h2 style='color: white; margin: 0;'>✅ Đơn hàng đã được ghi nhận!</h2>
+                </div>
+                <div style='padding: 24px;'>
+                    <p>Xin chào <strong>" . htmlspecialchars($tenkh) . "</strong>,</p>
+                    <p>Cảm ơn bạn đã đặt hàng tại <strong>Shop Sneakers</strong>.</p>
+                    <table style='width: 100%; border-collapse: collapse; margin: 16px 0;'>
+                        <tr style='background: #f8f9fa;'>
+                            <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Mã đơn hàng</strong></td>
+                            <td style='padding: 10px; border: 1px solid #dee2e6;'>#$orderCode</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Tổng tiền</strong></td>
+                            <td style='padding: 10px; border: 1px solid #dee2e6; color: #2563eb; font-weight: bold;'>{$totalFmt}&nbsp;đ</td>
+                        </tr>
+                        <tr style='background: #f8f9fa;'>
+                            <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Hình thức</strong></td>
+                            <td style='padding: 10px; border: 1px solid #dee2e6;'>Thanh toán khi nhận hàng (COD)</td>
+                        </tr>
+                    </table>
+                    <p>Theo dõi đơn hàng tại: <a href='$trackingLink'>Xem trạng thái đơn hàng</a></p>
+                    <p style='color: #6c757d; font-size: 12px;'>Email này được gửi tự động, vui lòng không reply.</p>
+                </div>
+            </div>";
 
-        $payload = json_encode([
-            'from'    => 'Shop Sneakers <onboarding@resend.dev>',
-            'to'      => [$email],
-            'subject' => "Xác nhận đơn hàng #$orderCode",
-            'html'    => $body,
-        ]);
+        $sent = false;
 
-        $ch = curl_init('https://api.resend.com/emails');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $payload,
-            CURLOPT_TIMEOUT        => 8,
-            CURLOPT_HTTPHEADER     => [
-                'Authorization: Bearer ' . $apiKey,
-                'Content-Type: application/json',
-            ],
-        ]);
-        curl_exec($ch);
-        curl_close($ch);
+        // === Cách 1: Resend API ===
+        $apiKey = getenv('RESEND_API_KEY');
+        if (!empty($apiKey)) {
+            $payload = json_encode([
+                'from'    => 'Shop Sneakers <onboarding@resend.dev>',
+                'to'      => [$email],
+                'subject' => "Xác nhận đơn hàng #$orderCode - Shop Sneakers",
+                'html'    => $body,
+            ]);
+
+            $ch = curl_init('https://api.resend.com/emails');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_TIMEOUT        => 8,
+                CURLOPT_HTTPHEADER     => [
+                    'Authorization: Bearer ' . $apiKey,
+                    'Content-Type: application/json',
+                ],
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode >= 200 && $httpCode < 300) {
+                $sent = true;
+            }
+        }
+
+        // === Cách 2: Fallback Gmail SMTP (nếu Resend không gửi được) ===
+        if (!$sent) {
+            $phpmailerPath = BASE_PATH . 'PHPMailer-master/src/PHPMailer.php';
+            if (file_exists($phpmailerPath)) {
+                require_once $phpmailerPath;
+                require_once BASE_PATH . 'PHPMailer-master/src/SMTP.php';
+                require_once BASE_PATH . 'PHPMailer-master/src/Exception.php';
+                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                try {
+                    $mail->SMTPDebug = 0;
+                    $mail->isSMTP();
+                    $mail->CharSet = "utf-8";
+                    $mail->Host = 'smtp.gmail.com';
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'remkyorosi@gmail.com';
+                    $mail->Password = getenv('GMAIL_APP_PASSWORD') ?: 'nvui gcgt snxd rpib';
+                    $mail->SMTPSecure = 'ssl';
+                    $mail->Port = 465;
+                    $mail->Timeout = 10; // Timeout 10 giây tránh treo
+                    $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
+                    $mail->addAddress($email, $tenkh);
+                    $mail->isHTML(true);
+                    $mail->Subject = "Xác nhận đơn hàng #$orderCode - Shop Sneakers";
+                    $mail->Body = $body;
+                    $mail->smtpConnect(["ssl" => ["verify_peer" => false, "verify_peer_name" => false, "allow_self_signed" => true]]);
+                    $mail->send();
+                } catch (Exception $e) {
+                    // Gửi thất bại — không làm gì, đơn hàng vẫn được lưu
+                }
+            }
+        }
     }
 
 
