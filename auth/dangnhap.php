@@ -151,11 +151,12 @@ require_once dirname(__DIR__) . '/config.php';
                     <label class="form-label" for="password">Mật khẩu</label>
                     <input name="matkhau" class="form-control" type="password" id="password" placeholder="Nhập mật khẩu">
                 </div>
-                <div class="mb-4">
-                    <div class="form-check">
+                <div class="mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div class="form-check" style="margin:0;">
                         <input class="form-check-input" type="checkbox" id="checkbox">
                         <label class="form-check-label" for="checkbox">Ghi nhớ đăng nhập</label>
                     </div>
+                    <a href="<?php echo BASE_URL; ?>auth/quenmatkhau.php" style="color:#3b82f6; font-weight:600; font-size:clamp(0.8rem,1.8vw,0.85rem); text-decoration:none;">Quên mật khẩu?</a>
                 </div>
                 <button class="btn-auth" name="dangnhap" type="submit">Đăng nhập</button>
             </form>
