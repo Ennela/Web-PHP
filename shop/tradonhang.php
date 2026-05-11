@@ -4,6 +4,13 @@ session_start();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
+// Xử lý đăng xuất
+if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+    session_destroy();
+    header('Location: ' . BASE_URL . 'home/trangchu.php');
+    exit;
+}
+
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
