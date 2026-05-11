@@ -14,47 +14,24 @@ require_once dirname(__DIR__) . '/config.php';
         session_destroy();
         header('Location: ' . BASE_URL . 'home/trangchu.php');
     }
+    require_once BASE_PATH . 'includes/mail_helper.php';
 
     /**
-     * Gửi mail thông báo đơn hàng mới cho shop owner
-     * Dùng Resend HTTP API (không cần SMTP port — hoạt động trên Railway)
+     * Gửi mail thông báo đơn hàng mới cho shop owner (qua Brevo API)
      */
     function GuiMail()
     {
-        $apiKey = getenv('RESEND_API_KEY');
-        if (empty($apiKey)) return; // Bỏ qua nếu chưa cấu hình
-
         $body = "<h3>Thông báo có đơn hàng mới</h3>"
               . "<p>Tên khách hàng: <strong>" . htmlspecialchars($_POST['tenkh'] ?? '') . "</strong></p>"
               . "<p>SĐT: " . htmlspecialchars($_POST['sdt'] ?? '') . "</p>"
               . "<p>Địa chỉ: " . htmlspecialchars($_POST['diachi'] ?? '') . "</p>";
 
-        $payload = json_encode([
-            'from'    => 'Shop Sneakers <onboarding@resend.dev>',
-            'to'      => ['remkyorosi@gmail.com'],
-            'subject' => 'Có đơn hàng mới từ Shop Sneakers',
-            'html'    => $body,
-        ]);
-
-        $ch = curl_init('https://api.resend.com/emails');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $payload,
-            CURLOPT_TIMEOUT        => 8,
-            CURLOPT_HTTPHEADER     => [
-                'Authorization: Bearer ' . $apiKey,
-                'Content-Type: application/json',
-            ],
-        ]);
-        curl_exec($ch);
-        curl_close($ch);
+        sendMailBrevo('remkyorosi@gmail.com', 'Shop Admin', 'Có đơn hàng mới từ Shop Sneakers', $body);
     }
 
     /**
-     * Gửi mail xác nhận đơn hàng cho khách hàng
-     * Ưu tiên Resend API → Fallback sang Gmail SMTP nếu Resend không gửi được
-     * (Resend free tier chỉ gửi được đến email chủ tài khoản)
+     * Gửi mail xác nhận đơn hàng cho khách hàng (qua Brevo API)
+     * Brevo free tier: 300 email/ngày, gửi được đến MỌI địa chỉ email
      */
     function GuiMailKhachHang($email, $tenkh, $orderCode, $token, $total)
     {
@@ -90,69 +67,7 @@ require_once dirname(__DIR__) . '/config.php';
                 </div>
             </div>";
 
-        $sent = false;
-
-        // === Cách 1: Resend API ===
-        $apiKey = getenv('RESEND_API_KEY');
-        if (!empty($apiKey)) {
-            $payload = json_encode([
-                'from'    => 'Shop Sneakers <onboarding@resend.dev>',
-                'to'      => [$email],
-                'subject' => "Xác nhận đơn hàng #$orderCode - Shop Sneakers",
-                'html'    => $body,
-            ]);
-
-            $ch = curl_init('https://api.resend.com/emails');
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => $payload,
-                CURLOPT_TIMEOUT        => 8,
-                CURLOPT_HTTPHEADER     => [
-                    'Authorization: Bearer ' . $apiKey,
-                    'Content-Type: application/json',
-                ],
-            ]);
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            if ($httpCode >= 200 && $httpCode < 300) {
-                $sent = true;
-            }
-        }
-
-        // === Cách 2: Fallback Gmail SMTP (nếu Resend không gửi được) ===
-        if (!$sent) {
-            $phpmailerPath = BASE_PATH . 'PHPMailer-master/src/PHPMailer.php';
-            if (file_exists($phpmailerPath)) {
-                require_once $phpmailerPath;
-                require_once BASE_PATH . 'PHPMailer-master/src/SMTP.php';
-                require_once BASE_PATH . 'PHPMailer-master/src/Exception.php';
-                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-                try {
-                    $mail->SMTPDebug = 0;
-                    $mail->isSMTP();
-                    $mail->CharSet = "utf-8";
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'remkyorosi@gmail.com';
-                    $mail->Password = getenv('GMAIL_APP_PASSWORD') ?: 'nvui gcgt snxd rpib';
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->Port = 465;
-                    $mail->Timeout = 10; // Timeout 10 giây tránh treo
-                    $mail->setFrom('remkyorosi@gmail.com', 'Shop Sneakers');
-                    $mail->addAddress($email, $tenkh);
-                    $mail->isHTML(true);
-                    $mail->Subject = "Xác nhận đơn hàng #$orderCode - Shop Sneakers";
-                    $mail->Body = $body;
-                    $mail->smtpConnect(["ssl" => ["verify_peer" => false, "verify_peer_name" => false, "allow_self_signed" => true]]);
-                    $mail->send();
-                } catch (Exception $e) {
-                    // Gửi thất bại — không làm gì, đơn hàng vẫn được lưu
-                }
-            }
-        }
+        sendMailBrevo($email, $tenkh, "Xác nhận đơn hàng #$orderCode - Shop Sneakers", $body);
     }
 
 

@@ -15,11 +15,7 @@ $mailSent = false;
 $mailError = false;
 
 function GuiMail() {
-    $apiKey = getenv('RESEND_API_KEY');
-    if (empty($apiKey)) {
-        // Không có API key → không gửi được mail
-        return false;
-    }
+    require_once BASE_PATH . 'includes/mail_helper.php';
 
     $name = htmlspecialchars($_POST['name']);
     $email = htmlspecialchars($_POST['email']);
@@ -37,31 +33,7 @@ function GuiMail() {
             <p style='color: #aaa; font-size: 12px; margin-top: 20px;'>Gửi lúc: $time</p>
         </div>";
 
-    $payload = json_encode([
-        'from'    => 'Shop Sneakers <onboarding@resend.dev>',
-        'to'      => ['remkyorosi@gmail.com'],
-        'subject' => '📩 Liên hệ từ khách hàng - ' . $name,
-        'html'    => $body,
-        'reply_to' => $_POST['email'], // Khi reply sẽ gửi về email khách
-    ]);
-
-    $ch = curl_init('https://api.resend.com/emails');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $payload,
-        CURLOPT_TIMEOUT        => 8, // Tối đa 8 giây, tránh loading mãi
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_HTTPHEADER     => [
-            'Authorization: Bearer ' . $apiKey,
-            'Content-Type: application/json',
-        ],
-    ]);
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    return ($httpCode >= 200 && $httpCode < 300);
+    return sendMailBrevo('remkyorosi@gmail.com', 'Shop Admin', '📩 Liên hệ từ khách hàng - ' . $name, $body);
 }
 
 if (isset($_POST['btn'])) {

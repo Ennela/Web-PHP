@@ -81,16 +81,15 @@ if ($order) {
             $cardColor = 'text-success';
             $iconClass = 'fa-check-circle';
             
-            // Gửi email xác nhận
+            // Gửi email xác nhận qua Brevo API
             if (!empty($_SESSION['email_kh'])) {
+                require_once BASE_PATH . 'includes/mail_helper.php';
                 $email = $_SESSION['email_kh'];
                 $tenkh = $_SESSION['tenkh_order'] ?? 'Quý khách';
                 $amount = number_format(($_GET['vnp_Amount'] ?? 0) / 100, 0, ',', '.');
                 $bank = $_GET['vnp_BankCode'] ?? 'N/A';
                 
-                $apiKey = getenv('RESEND_API_KEY');
-                if (!empty($apiKey)) {
-                    $body = "
+                $body = "
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
                         <div style='background: #17a2b8; padding: 24px; text-align: center;'>
                             <h2 style='color: white; margin: 0;'>✅ Đơn hàng đã được xác nhận!</h2>
@@ -121,27 +120,7 @@ if ($order) {
                         </div>
                     </div>";
 
-                    $payload = json_encode([
-                        'from'    => 'Shop Sneakers <onboarding@resend.dev>',
-                        'to'      => [$email],
-                        'subject' => '✅ Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao',
-                        'html'    => $body,
-                    ]);
-
-                    $ch = curl_init('https://api.resend.com/emails');
-                    curl_setopt_array($ch, [
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_POST           => true,
-                        CURLOPT_POSTFIELDS     => $payload,
-                        CURLOPT_TIMEOUT        => 8,
-                        CURLOPT_HTTPHEADER     => [
-                            'Authorization: Bearer ' . $apiKey,
-                            'Content-Type: application/json',
-                        ],
-                    ]);
-                    curl_exec($ch);
-                    curl_close($ch);
-                }
+                sendMailBrevo($email, $tenkh, '✅ Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao', $body);
                 unset($_SESSION['email_kh']);
                 unset($_SESSION['tenkh_order']);
             }
