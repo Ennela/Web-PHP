@@ -114,9 +114,16 @@ require_once dirname(__DIR__) . '/config.php';
                 header('Location:./giohang.php');// cho đẹp đường dẫn
                 break;
             case "submit":
+                // Kiểm tra giỏ hàng trống
+                if (empty($_SESSION['giohang'])) {
+                    $_SESSION['swal_warning'] = 'Giỏ hàng đang trống! Vui lòng thêm sản phẩm trước khi thanh toán.';
+                    header('Location: ./giohang.php');
+                    exit;
+                }
                 if (isset($_POST['capnhat'])) { //Cập nhật số lượng và size sản phẩm
                     update_cart();
                     header('Location: ./giohang.php');
+                    exit;
                 } elseif (isset($_POST['dathang'])) { //Đặt hàng sản phẩm
                     $chuyen = $_POST['quantity'];
                     $_SESSION['chuyen'] = $chuyen;
@@ -124,16 +131,18 @@ require_once dirname(__DIR__) . '/config.php';
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
 
                     header('Location: ./infodathang.php');
+                    exit;
                 } elseif (isset($_POST['thanhtoanonline'])) { //Đặt hàng sản phẩm
                     $chuyen = $_POST['quantity'];
                     $_SESSION['chuyen'] = $chuyen;
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
 
                     header('Location: ./dathangonline.php');
+                    exit;
                 }
-
-
-                break;
+                // Fallback: nếu không khớp action nào
+                header('Location: ./giohang.php');
+                exit;
         }
     }
     if (!empty($_SESSION["giohang"])) {
