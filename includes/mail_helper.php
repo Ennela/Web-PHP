@@ -43,7 +43,14 @@ function sendMailBrevo($toEmail, $toName, $subject, $htmlBody) {
     ]);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
     curl_close($ch);
 
-    return ($httpCode >= 200 && $httpCode < 300);
+    $success = ($httpCode >= 200 && $httpCode < 300);
+
+    if (!$success) {
+        error_log("BREVO_MAIL_ERROR: HTTP=$httpCode | Response=$response | CurlError=$curlError | To=$toEmail | Subject=$subject");
+    }
+
+    return $success;
 }
