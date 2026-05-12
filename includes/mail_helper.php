@@ -17,7 +17,12 @@
  */
 function sendMailBrevo($toEmail, $toName, $subject, $htmlBody) {
     $apiKey = getenv('BREVO_API_KEY');
-    if (empty($apiKey) || empty($toEmail)) {
+    if (empty($apiKey)) {
+        error_log("BREVO_MAIL_ERROR: BREVO_API_KEY is NOT set! Email will not be sent. To=$toEmail | Subject=$subject");
+        return false;
+    }
+    if (empty($toEmail)) {
+        error_log("BREVO_MAIL_ERROR: toEmail is empty! Subject=$subject");
         return false;
     }
 
