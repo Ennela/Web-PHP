@@ -4,7 +4,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 
 > **Deploy:** [https://kienhanhan.up.railway.app](https://kienhanhan.up.railway.app)
 >
-> **Video demo:** [Google Drive](https://drive.google.com/file/d/1xMf6IKoZDmsuKMfod_VPoGd91lLvs5_q/view)
+> **Video demo:** [Google Drive](https://drive.google.com/file/d/1mTghDKv56LL5k4NK5nB94DnBf2Vlk73s/view)
 
 ---
 
