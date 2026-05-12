@@ -43,7 +43,7 @@ require_once dirname(__DIR__) . '/config.php';
         $body = "
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
                 <div style='background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 24px; text-align: center;'>
-                    <h2 style='color: white; margin: 0;'>✅ Đơn hàng đã được ghi nhận!</h2>
+                    <h2 style='color: white; margin: 0;'>Đơn hàng đã được ghi nhận!</h2>
                 </div>
                 <div style='padding: 24px;'>
                     <p>Xin chào <strong>" . htmlspecialchars($tenkh) . "</strong>,</p>

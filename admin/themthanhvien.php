@@ -19,44 +19,88 @@ if (!isset($_SESSION['dangnhap1'])) {
         // Biến dữ liệu đầu vào
         $hoten = $_POST['hoten'];
         $chucvu = $_POST['chucvu'];
-
         $diachicuthe = $_POST['diachicuthe'];
         $ngaysinh = $_POST['ngaysinh'];
         $gioitinh = $_POST['gioitinh'];
         $motacongviec = $_POST['motacongviec'];
+        $taikhoan = trim($_POST['taikhoan'] ?? '');
+        $matkhau_raw = $_POST['matkhau'] ?? '';
+
+        // Validate tài khoản & mật khẩu
+        if (empty($taikhoan) || empty($matkhau_raw)) {
+            ?>
+            <script type="text/javascript">
+                alert('Vui lòng nhập Tài khoản và Mật khẩu!');
+                window.location.href = 'themthanhvien.php';
+            </script>
+            <?php
+            exit;
+        }
+
+        if (strlen($matkhau_raw) < 6) {
+            ?>
+            <script type="text/javascript">
+                alert('Mật khẩu phải có ít nhất 6 ký tự!');
+                window.location.href = 'themthanhvien.php';
+            </script>
+            <?php
+            exit;
+        }
+
+        // Kiểm tra tài khoản đã tồn tại chưa
+        $checkStmt = mysqli_prepare($con, "SELECT id FROM tbl_qlthanhvien WHERE taikhoan = ? LIMIT 1");
+        mysqli_stmt_bind_param($checkStmt, "s", $taikhoan);
+        mysqli_stmt_execute($checkStmt);
+        mysqli_stmt_store_result($checkStmt);
+        if (mysqli_stmt_num_rows($checkStmt) > 0) {
+            mysqli_stmt_close($checkStmt);
+            ?>
+            <script type="text/javascript">
+                alert('Tài khoản này đã tồn tại! Vui lòng chọn tên khác.');
+                window.location.href = 'themthanhvien.php';
+            </script>
+            <?php
+            exit;
+        }
+        mysqli_stmt_close($checkStmt);
+
         $check = validateDateTime($ngaysinh);
         $ngaysinh = strtotime($ngaysinh);
         if (!$check) {
             ?>
             <script type="text/javascript">
-                alert('vui lòng nhập đúng định dạng của ngày sinh');
+                alert('Vui lòng nhập đúng định dạng của ngày sinh');
                 window.location.href = 'themthanhvien.php';
             </script>
             <?php
+            exit;
         }
 
-        $sql_query = "INSERT INTO tbl_qlthanhvien(hoten,chucvu,ngaytao,diachicuthe,ngaysinh,gioitinh,motacongviec) VALUES('$hoten','$chucvu','" . time() . "','$diachicuthe','$ngaysinh','$gioitinh','$motacongviec')";
-        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
+        // Hash mật khẩu bằng bcrypt
+        $matkhau_hash = password_hash($matkhau_raw, PASSWORD_BCRYPT);
 
-        // sql query execution function
+        // Insert bằng prepared statement
+        $stmt = mysqli_prepare($con, "INSERT INTO tbl_qlthanhvien(hoten, chucvu, ngaytao, ngaycapnhat, diachicuthe, ngaysinh, gioitinh, motacongviec, taikhoan, matkhau) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $now = time();
+        mysqli_stmt_bind_param($stmt, "ssiisisiss", $hoten, $chucvu, $now, $now, $diachicuthe, $ngaysinh, $gioitinh, $motacongviec, $taikhoan, $matkhau_hash);
 
-        if (mysqli_query($con, $sql_query)) {
-
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
             ?>
             <script type="text/javascript">
-                alert('Dữ liệu đã được đưa vào');
+                alert('Tạo thành viên thành công!');
                 window.location.href = 'quanlithanhvien.php';
             </script>
             <?php
         } else {
+            mysqli_stmt_close($stmt);
             ?>
             <script type="text/javascript">
-                alert('Dữ liệu đưa vào không hợp lệ vui lòng kiểm tra lại');
+                alert('Dữ liệu đưa vào không hợp lệ, vui lòng kiểm tra lại');
                 window.location.href = 'themthanhvien.php';
             </script>
             <?php
         }
-        // sql query execution function
     }
 
 
@@ -295,6 +339,23 @@ if (!isset($_SESSION['dangnhap1'])) {
                                 class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
                                 placeholder="" rows="3"></textarea>
                         </label>
+
+                        <!-- Thông tin đăng nhập -->
+                        <div class="mt-6 pt-4 border-t-2 border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-700 mb-3"><i class="fas fa-key mr-2"></i>Thông tin đăng nhập</h3>
+                            <label class="block mt-2">
+                                <span class="text-gray-700">Tài khoản: <span class="text-red-500">*</span></span>
+                                <input name="taikhoan" required
+                                    class="form-input border-2 border-blue-400 rounded-lg mt-1 block w-full"
+                                    placeholder="Nhập tên đăng nhập" type="text" autocomplete="off">
+                            </label>
+                            <label class="block mt-2">
+                                <span class="text-gray-700">Mật khẩu: <span class="text-red-500">*</span></span>
+                                <input name="matkhau" required minlength="6"
+                                    class="form-input border-2 border-blue-400 rounded-lg mt-1 block w-full"
+                                    placeholder="Tối thiểu 6 ký tự" type="password" autocomplete="new-password">
+                            </label>
+                        </div>
                         <div class="mt-3 text-right">
                             <button class="px-4 py-2 text-white bg-red-500 rounded shadow-xl">
                                 <a href="quanlithanhvien.php">Quay lại</a>

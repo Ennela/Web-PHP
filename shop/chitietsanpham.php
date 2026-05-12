@@ -1385,18 +1385,17 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                     </form>
 
-                    <!-- Trust Badges -->
                     <div class="trust-badges">
                         <div class="trust-badge">
-                            <span class="trust-badge-icon">🛡️</span>
+                            <i class="fas fa-shield-alt text-primary trust-badge-icon"></i>
                             Bảo hành 12 tháng
                         </div>
                         <div class="trust-badge">
-                            <span class="trust-badge-icon">⚡</span>
+                            <i class="fas fa-bolt text-warning trust-badge-icon" style="color: #f59e0b;"></i>
                             Giao trong 2-3 ngày
                         </div>
                         <div class="trust-badge">
-                            <span class="trust-badge-icon">💳</span>
+                            <i class="fas fa-credit-card text-success trust-badge-icon" style="color: #10b981;"></i>
                             Hỗ trợ trả góp
                         </div>
                     </div>

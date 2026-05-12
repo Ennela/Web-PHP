@@ -17,16 +17,32 @@
             </script>
             <?php
         } else {
-            $sql_select_admin = mysqli_query($con,
-                "SELECT * FROM tbl_qlthanhvien WHERE taikhoan='$taikhoan' AND matkhau='$matkhau' LIMIT 1");
-            $count = mysqli_num_rows($sql_select_admin);
+            // Prepared statement chống SQL injection
+            $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlthanhvien WHERE taikhoan = ? LIMIT 1");
+            mysqli_stmt_bind_param($stmt, "s", $taikhoan);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row_dangnhap = mysqli_fetch_assoc($result);
+            mysqli_stmt_close($stmt);
 
-            $row_dangnhap = mysqli_fetch_array($sql_select_admin);
-
-            if ($count > 0) {
+            if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
+                // Đăng nhập thành công với bcrypt hash
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
                 header('Location: trangchu.php');
+                exit;
+            } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
+                // Fallback: mật khẩu cũ chưa hash — đăng nhập OK + tự động hash lại
+                $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
+                $updateStmt = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET matkhau = ? WHERE id = ?");
+                mysqli_stmt_bind_param($updateStmt, "si", $hashedPassword, $row_dangnhap['id']);
+                mysqli_stmt_execute($updateStmt);
+                mysqli_stmt_close($updateStmt);
+
+                $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
+                $_SESSION['manv'] = $row_dangnhap['id'];
+                header('Location: trangchu.php');
+                exit;
             } else {
                 ?>
                 <script type="text/javascript">

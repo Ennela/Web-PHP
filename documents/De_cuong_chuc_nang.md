@@ -91,7 +91,9 @@
 - SRS_TIM_KIEM_SAN_PHAM.MD
 - SRS_CHI_TIET_SAN_PHAM.MD
 - SRS_GIO_HANG.MD
-- SRS_THANH_TOAN.MD (Bao gồm tach hợp VNPAY/COD)
+- SRS_DAT_HANG_ONLINE.MD
+- SRS_TRA_CUU_DON_HANG_CA_NHAN.MD
+- SRS_THANH_TOAN.MD (Bao gồm tích hợp VNPAY/COD)
 
 ## Chức năng Hỗ trợ & Thông tin bổ sung - Nhân :
 - SRS_TRANG_CHU.MD

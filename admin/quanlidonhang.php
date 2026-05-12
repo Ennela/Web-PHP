@@ -667,11 +667,11 @@ function getAdminStatusInfo($status) {
                                             <input type="hidden" name="action" value="update_status">
                                             <input type="hidden" name="order_id" value="<?= $row['id'] ?>">
                                             <select name="new_status" class="status-select" onchange="this.form.submit()">
-                                                <option value="PENDING"   <?= ($row['status'] ?? '') == 'PENDING'   ? 'selected' : '' ?>>⏳ Chờ xử lý</option>
-                                                <option value="CONFIRMED" <?= ($row['status'] ?? '') == 'CONFIRMED' ? 'selected' : '' ?>>✅ Đã xác nhận</option>
-                                                <option value="SHIPPING"  <?= ($row['status'] ?? '') == 'SHIPPING'  ? 'selected' : '' ?>>🚚 Đang giao</option>
-                                                <option value="DELIVERED" <?= ($row['status'] ?? '') == 'DELIVERED' ? 'selected' : '' ?>>📦 Đã giao</option>
-                                                <option value="CANCELLED" <?= ($row['status'] ?? '') == 'CANCELLED' ? 'selected' : '' ?>>❌ Đã hủy</option>
+                                                <option value="PENDING"   <?= ($row['status'] ?? '') == 'PENDING'   ? 'selected' : '' ?>>Chờ xử lý</option>
+                                                <option value="CONFIRMED" <?= ($row['status'] ?? '') == 'CONFIRMED' ? 'selected' : '' ?>>Đã xác nhận</option>
+                                                <option value="SHIPPING"  <?= ($row['status'] ?? '') == 'SHIPPING'  ? 'selected' : '' ?>>Đang giao</option>
+                                                <option value="DELIVERED" <?= ($row['status'] ?? '') == 'DELIVERED' ? 'selected' : '' ?>>Đã giao</option>
+                                                <option value="CANCELLED" <?= ($row['status'] ?? '') == 'CANCELLED' ? 'selected' : '' ?>>Đã hủy</option>
                                             </select>
                                         </form>
                                     </td>

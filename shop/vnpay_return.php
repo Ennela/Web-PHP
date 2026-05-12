@@ -92,7 +92,7 @@ if ($order) {
                 $body = "
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
                         <div style='background: #17a2b8; padding: 24px; text-align: center;'>
-                            <h2 style='color: white; margin: 0;'>✅ Đơn hàng đã được xác nhận!</h2>
+                            <h2 style='color: white; margin: 0;'>Đơn hàng đã được xác nhận!</h2>
                         </div>
                         <div style='padding: 24px;'>
                             <p>Xin chào <strong>{$tenkh}</strong>,</p>
@@ -120,7 +120,7 @@ if ($order) {
                         </div>
                     </div>";
 
-                sendMailBrevo($email, $tenkh, '✅ Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao', $body);
+                sendMailBrevo($email, $tenkh, 'Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao', $body);
                 unset($_SESSION['email_kh']);
                 unset($_SESSION['tenkh_order']);
             }
