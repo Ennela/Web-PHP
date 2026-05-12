@@ -2,9 +2,6 @@
 
 Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai trên XAMPP và Railway. Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
 
-> **Deploy:** [https://kienhanhan.up.railway.app](https://kienhanhan.up.railway.app)
->
-> **Video demo:** [Google Drive](https://drive.google.com/file/d/1mTghDKv56LL5k4NK5nB94DnBf2Vlk73s/view)
 
 ---
 
@@ -274,5 +271,8 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 | [SRS_USECASE_DIAGRAMS.MD](./documents/SRS_USECASE_DIAGRAMS.MD) | Sơ đồ Use Case tổng hợp (Mermaid) |
 
 ---
+> **Deploy:** [https://kienhanhan.up.railway.app](https://kienhanhan.up.railway.app)
+>
+> **Video demo:** [Google Drive](https://drive.google.com/file/d/1UZFdJLBt1ztZObS_CWFB_YAro2ERURke/view)
 
 *Website bán giày thể thao được xây dựng theo tiêu chuẩn Web Responsive, Mobile-First, với hệ thống bảo mật bcrypt, chống Race Condition và SQL Injection.*
