@@ -2,6 +2,10 @@
 
 Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai trên XAMPP và Railway. Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
 
+> **Deploy:** [https://kienhanhan.up.railway.app](https://kienhanhan.up.railway.app)
+>
+> **Video demo:** [Google Drive](https://drive.google.com/file/d/1xMf6IKoZDmsuKMfod_VPoGd91lLvs5_q/view)
+
 ---
 
 ## Thành viên
@@ -50,7 +54,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 | **Frontend** | HTML5, Vanilla JS, CSS/Bootstrap | Áp dụng thiết kế Mobile-First hiện đại trên các trang shop/cart/thanh toán, kết hợp tùy biến linh hoạt hiệu ứng micro-animations. |
 | **Font & Icon** | Montserrat, FontAwesome 5.3.1 | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện. |
 | **Thanh toán** | VNPAY Sandbox | API thanh toán uy tín và sát thực tế, giúp làm quen với luồng thanh toán bảo mật, xác thực giao dịch chuẩn e-Commerce (HMAC-SHA512). |
-| **Email** | Brevo (Sendinblue) HTTP API | Gửi email giao dịch (xác nhận đơn hàng, đặt lại mật khẩu, liên hệ) qua REST API. Free tier 300 email/ngày, gửi được đến mọi địa chỉ email mà không cần verify domain. |
+| **Email** | Mailjet HTTP API v3.1 | Gửi email giao dịch (xác nhận đơn hàng, đặt lại mật khẩu, liên hệ) qua REST API. Free tier 200 email/ngày, gửi được đến mọi địa chỉ email mà không cần verify domain. |
 | **Thông báo UI** | SweetAlert2 | Hiển thị thông báo (Toast Notifications) không chặn màn hình, thay thế hoàn toàn `alert()` mặc định của trình duyệt. |
 | **Bảo mật** | bcrypt (password_hash/password_verify) | Mã hóa mật khẩu người dùng và admin bằng bcrypt, chống SQL injection bằng prepared statements. |
 | **Triển khai** | Docker & Railway | Đóng gói ứng dụng linh hoạt, tự động bind cổng và biến môi trường, tối ưu hóa quá trình CI/CD. |
@@ -72,11 +76,11 @@ WEB-PHP/
 │   ├── pagination.php         # Helper phân trang
 │   ├── inventory_helper.php   # Quản lý tồn kho: validateAndDeductStock(), restoreStock()
 │   ├── order_helper.php       # Sinh mã đơn hàng: generateOrderCode()
-│   └── mail_helper.php        # Gửi email qua Brevo API: sendMailBrevo()
+│   └── mail_helper.php        # Gửi email qua Mailjet API: sendMailBrevo()
 │
 ├── home/                      # Trang giới thiệu (Khách hàng)
 │   ├── trangchu.php           # Landing Page, Carousel Banner, Sản phẩm Highlights
-│   ├── lienhe.php             # Trang liên hệ (gửi email qua Brevo)
+│   ├── lienhe.php             # Trang liên hệ (gửi email qua Mailjet)
 │   └── vechungtoi.php         # Trang giới thiệu về shop
 │
 ├── auth/                      # Xác thực người dùng
@@ -170,13 +174,13 @@ WEB-PHP/
 
 - **Giao diện Mobile-First:** Toàn bộ trang shop, giỏ hàng, thanh toán được tối ưu hóa hiển thị trên mọi thiết bị với Responsive Grid và Clamp Typography.
 - **Đăng ký / Đăng nhập:** Tài khoản khách hàng với mật khẩu mã hóa bcrypt. Đăng ký yêu cầu email để nhận thông báo đơn hàng.
-- **Quên mật khẩu:** Gửi link đặt lại mật khẩu qua email (Brevo API), token có thời hạn 1 giờ.
+- **Quên mật khẩu:** Gửi link đặt lại mật khẩu qua email (Mailjet API), token có thời hạn 30 phút.
 - **Quản lý tài khoản:** Cập nhật thông tin cá nhân, đổi mật khẩu, upload avatar, quản lý sổ địa chỉ (CRUD nhiều địa chỉ, chọn mặc định), lưu size giày yêu thích.
 - **Chi tiết sản phẩm:** Gallery nhiều ảnh, Image Zoom theo tọa độ chuột, lightbox xem ảnh lớn, chọn size với hiển thị tồn kho realtime, tự động chọn size yêu thích.
 - **Giỏ hàng AJAX:** Thêm/xóa/cập nhật số lượng không tải lại trang, kiểm tra tồn kho realtime, debounce tránh spam.
 - **Tự động điền thông tin (Auto-fill Checkout):** Hệ thống nhận diện người dùng đã đăng nhập để điền trước Tên, SĐT, Địa chỉ, Email từ sổ địa chỉ mặc định.
 - **Thanh toán COD & VNPAY:** 2 hình thức thanh toán. VNPAY sử dụng HMAC-SHA512 để bảo mật, xử lý duplicate tab, đơn đã hủy, chống race condition bằng MySQL Transaction.
-- **Email xác nhận:** Gửi email xác nhận đơn hàng tự động qua Brevo API cho cả COD và VNPAY.
+- **Email xác nhận:** Gửi email xác nhận đơn hàng tự động qua Mailjet API cho cả COD và VNPAY.
 - **Tra cứu đơn hàng:** Xem danh sách đơn hàng cá nhân (theo tài khoản), hoặc tra cứu bằng mã đơn + token (không cần đăng nhập) qua link trong email.
 - **Timeline trạng thái:** Theo dõi hành trình đơn hàng qua các trạng thái: Chờ xử lý > Đã xác nhận > Đang giao > Đã giao.
 - **Hủy đơn hàng:** Khách hàng có thể tự hủy đơn khi trạng thái còn là "Chờ xử lý".
@@ -218,7 +222,8 @@ Dự án đã được cấu hình sẵn `Dockerfile` + `docker-entrypoint.sh` �
 3. Liên kết kho GitHub chứa dự án vào dịch vụ Web trên Railway.
 4. Cấu hình các biến môi trường (Environment Variables):
    - `MYSQLHOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`, `MYSQLPORT` (tự động khi liên kết MySQL service)
-   - `BREVO_API_KEY` — API key từ [Brevo](https://www.brevo.com) (miễn phí 300 email/ngày)
+   - `MAILJET_API_KEY` — API Key (Public) từ [Mailjet](https://www.mailjet.com) (miễn phí 200 email/ngày)
+   - `MAILJET_SECRET_KEY` — Secret Key (Private) từ Mailjet
    - `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` (nếu dùng VNPAY production)
 5. Railway sẽ tự động build từ `Dockerfile` và cấp phát tên miền.
 6. **CI/CD:** Mỗi lần `git push`, Railway tự động build & deploy.
@@ -229,11 +234,12 @@ Dự án đã được cấu hình sẵn `Dockerfile` + `docker-entrypoint.sh` �
 
 | Thành phần | Chi tiết |
 |-----------|---------|
-| **Service** | Brevo (Sendinblue) — HTTP REST API |
-| **Free tier** | 300 email/ngày, gửi đến mọi email |
+| **Service** | Mailjet — HTTP REST API v3.1 |
+| **Free tier** | 200 email/ngày, gửi đến mọi email |
 | **Helper** | `includes/mail_helper.php` — hàm `sendMailBrevo()` |
 | **Nơi sử dụng** | Xác nhận đơn hàng (COD + VNPAY), Quên mật khẩu, Liên hệ |
-| **Env variable** | `BREVO_API_KEY` |
+| **Env variables** | `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` |
+| **Auth** | HTTP Basic Auth (API Key : Secret Key) |
 | **Timeout** | 10 giây (tránh treo trang) |
 
 ---
