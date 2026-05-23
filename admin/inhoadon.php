@@ -66,7 +66,7 @@ and open the template in the editor.
 <body>
     <?php if ($statusUpdated): ?>
     <div style="background:#d1fae5; border:1px solid #6ee7b7; border-radius:8px; padding:10px 16px; margin:10px auto; max-width:700px; color:#065f46; font-size:14px; font-family:sans-serif;">
-        ✓ Đơn hàng đã tự động chuyển sang trạng thái <strong>"Đang giao hàng"</strong>
+        &check; Đơn hàng đã tự động chuyển sang trạng thái <strong>"Đang giao hàng"</strong>
     </div>
     <?php endif; ?>
     <div id="order-detail-wrapper">

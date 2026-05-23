@@ -1286,11 +1286,11 @@ require_once dirname(__DIR__) . '/config.php';
 
                     <!-- Star Rating -->
                     <div class="star-rating">
-                        <span class="star">★</span>
-                        <span class="star">★</span>
-                        <span class="star">★</span>
-                        <span class="star">★</span>
-                        <span class="star empty">★</span>
+                        <span class="star">&starf;</span>
+                        <span class="star">&starf;</span>
+                        <span class="star">&starf;</span>
+                        <span class="star">&starf;</span>
+                        <span class="star empty">&starf;</span>
                         <span class="rating-text">(12 đánh giá)</span>
                     </div>
 
@@ -1320,7 +1320,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="size-selector-block">
                         <div class="size-selector-header">
                             <span class="size-label">Chọn size</span>
-                            <a href="#" class="size-guide-link" id="open-size-guide" onclick="openSizeGuide(); return false;">📏 Hướng dẫn chọn size</a>
+                            <a href="#" class="size-guide-link" id="open-size-guide" onclick="openSizeGuide(); return false;"><i class="fas fa-ruler" style="margin-right:4px;"></i> Hướng dẫn chọn size</a>
                         </div>
                         <div class="size-grid" id="size-grid">
                             <?php
@@ -1349,11 +1349,11 @@ require_once dirname(__DIR__) . '/config.php';
                         
                         <?php if ($preferredSize && $preferredSizeOutOfStock): ?>
                         <div class="size-preferred-notice warning">
-                            ⚠ Size yêu thích của bạn (<?= $preferredSize ?>) hiện đang hết hàng. Vui lòng chọn size khác.
+                            <i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i> Size yêu thích của bạn (<?= $preferredSize ?>) hiện đang hết hàng. Vui lòng chọn size khác.
                         </div>
                         <?php elseif ($preferredSize && !$preferredSizeOutOfStock): ?>
                         <div class="size-preferred-notice info">
-                            ✓ Đã tự động chọn size yêu thích của bạn: <?= $preferredSize ?>
+                            <i class="fas fa-check" style="margin-right:4px;"></i> Đã tự động chọn size yêu thích của bạn: <?= $preferredSize ?>
                         </div>
                         <?php endif; ?>
                         
@@ -1361,7 +1361,7 @@ require_once dirname(__DIR__) . '/config.php';
                             Kho: <span class="stock-count" id="stock-count"><?= ($preferredSize && !$preferredSizeOutOfStock) ? ($productStock[$preferredSize] ?? 0) : '' ?></span> sản phẩm
                         </div>
                         
-                        <p class="size-error" id="size-error" style="display:none;">⚠ Vui lòng chọn size trước khi thêm vào giỏ</p>
+                        <p class="size-error" id="size-error" style="display:none;"><i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i> Vui lòng chọn size trước khi thêm vào giỏ</p>
                     </div>
 
                     <!-- Add to Cart -->
@@ -1452,7 +1452,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="star-rating ms-auto">
                             <?php for($s=1;$s<=5;$s++): ?>
-                            <span class="star <?= $s > $rv['stars'] ? 'empty' : '' ?>">★</span>
+                            <span class="star <?= $s > $rv['stars'] ? 'empty' : '' ?>">&starf;</span>
                             <?php endfor; ?>
                         </div>
                     </div>
@@ -1481,7 +1481,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="related-info">
                             <div class="related-stars">
-                                <span>★</span><span>★</span><span>★</span><span>★</span><span style="color:#ddd;">★</span>
+                                <span>&starf;</span><span>&starf;</span><span>&starf;</span><span>&starf;</span><span style="color:#ddd;">&starf;</span>
                             </div>
                             <div class="related-name"><?= htmlspecialchars($related['tensp']) ?></div>
                             <div class="related-price"><?= number_format($related['giasanpham'], 0, ',', '.') ?>&nbsp;đ</div>
@@ -1503,10 +1503,10 @@ require_once dirname(__DIR__) . '/config.php';
     <div class="size-guide-modal" onclick="event.stopPropagation()">
         <div class="size-guide-header">
             <h3>
-                <span class="sg-icon">👟</span>
+                <span class="sg-icon"><i class="fas fa-shoe-prints"></i></span>
                 Hướng dẫn chọn size giày
             </h3>
-            <button class="size-guide-close" onclick="closeSizeGuide()" title="Đóng">✕</button>
+            <button class="size-guide-close" onclick="closeSizeGuide()" title="Đóng">&times;</button>
         </div>
         <div class="size-guide-body">
             <!-- Size guide image -->
@@ -1541,12 +1541,12 @@ require_once dirname(__DIR__) . '/config.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="sg-category-label"><td colspan="3">👩 Nữ</td></tr>
+                        <tr class="sg-category-label"><td colspan="3"><i class="fas fa-female" style="margin-right:4px;"></i> Nữ</td></tr>
                         <tr><td>36</td><td>22.7 cm</td><td>Nữ</td></tr>
                         <tr><td>37</td><td>23.3 cm</td><td>Nữ</td></tr>
                         <tr><td>38</td><td>24.0 cm</td><td>Nữ</td></tr>
                         <tr><td>39</td><td>25.0 cm</td><td>Nữ / Nam</td></tr>
-                        <tr class="sg-category-label"><td colspan="3">👨 Nam</td></tr>
+                        <tr class="sg-category-label"><td colspan="3"><i class="fas fa-male" style="margin-right:4px;"></i> Nam</td></tr>
                         <tr><td>40</td><td>25.7 cm</td><td>Nam</td></tr>
                         <tr><td>41</td><td>26.3 cm</td><td>Nam</td></tr>
                         <tr><td>42</td><td>27.0 cm</td><td>Nam</td></tr>
@@ -1558,7 +1558,7 @@ require_once dirname(__DIR__) . '/config.php';
 
             <!-- Notes -->
             <div class="sg-notes">
-                <div class="sg-notes-title">💡 Lưu ý khi đo chân</div>
+                <div class="sg-notes-title"><i class="fas fa-lightbulb" style="margin-right:4px;"></i> Lưu ý khi đo chân</div>
                 <ul>
                     <li>Nên đo vào <strong>buổi chiều</strong> khi chân ở trạng thái lớn nhất</li>
                     <li>Nếu size đo nằm giữa 2 size, nên chọn <strong>size lớn hơn</strong></li>

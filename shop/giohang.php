@@ -632,11 +632,11 @@ require_once dirname(__DIR__) . '/config.php';
                                                             <?php endforeach; ?>
                                                         </select>
                                                         <?php if (empty($itemSize)): ?>
-                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Chọn size</div>
+                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Chọn size</div>
                                                         <?php elseif ($sizeOutOfStock): ?>
-                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Hết hàng</div>
+                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Hết hàng</div>
                                                         <?php elseif ($sizeOverQty): ?>
-                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>">⚠ Còn <?= $selectedSizeStock ?></div>
+                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Còn <?= $selectedSizeStock ?></div>
                                                         <?php endif; ?>
                                                     </div>
                                                     <div class="cart-item-qty">
@@ -722,7 +722,7 @@ function showStatus(text, type = 'saving') {
         spinner.style.display = 'block';
     } else if (type === 'saved') {
         spinner.style.display = 'none';
-        textEl.textContent = '✓ ' + text;
+        textEl.textContent = '\u2713 ' + text;
     } else if (type === 'error') {
         spinner.style.display = 'none';
         el.classList.add('error');
@@ -1000,7 +1000,7 @@ function recheckStockIssues(res) {
             const w = document.createElement('div');
             w.className = 'cart-size-warning';
             w.setAttribute('data-masp', masp);
-            w.textContent = '⚠ Chọn size';
+            w.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Chọn size';
             if (sizeSelect) sizeSelect.parentElement.appendChild(w);
         } else {
             // Check stock for selected size
@@ -1010,14 +1010,14 @@ function recheckStockIssues(res) {
                 const w = document.createElement('div');
                 w.className = 'cart-size-warning';
                 w.setAttribute('data-masp', masp);
-                w.textContent = '⚠ Hết hàng';
+                w.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Hết hàng';
                 if (sizeSelect) sizeSelect.parentElement.appendChild(w);
             } else if (qty > sizeStock) {
                 hasIssues = true;
                 const w = document.createElement('div');
                 w.className = 'cart-size-warning';
                 w.setAttribute('data-masp', masp);
-                w.textContent = '⚠ Còn ' + sizeStock;
+                w.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Còn ' + sizeStock;
                 if (sizeSelect) sizeSelect.parentElement.appendChild(w);
             }
         }

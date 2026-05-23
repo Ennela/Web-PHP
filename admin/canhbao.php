@@ -282,7 +282,7 @@ if (isset($_POST['dangnhap'])) {
                 '<div class="toast-title">' + title + '</div>' +
                 '<div class="toast-message">' + message + '</div>' +
             '</div>' +
-            '<button class="toast-close" onclick="dismissToast(this)">✕</button>';
+            '<button class="toast-close" onclick="dismissToast(this)">&times;</button>';
 
         container.appendChild(toast);
         setTimeout(function() { dismissToast(toast.querySelector('.toast-close')); }, 4000);
