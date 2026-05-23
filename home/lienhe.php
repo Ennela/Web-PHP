@@ -16,24 +16,17 @@ $mailError = false;
 
 function GuiMail() {
     require_once BASE_PATH . 'includes/mail_helper.php';
+    require_once BASE_PATH . 'includes/email_templates.php';
 
-    $name = htmlspecialchars($_POST['name']);
-    $email = htmlspecialchars($_POST['email']);
-    $message = nl2br(htmlspecialchars($_POST['message']));
-    $time = date('d/m/Y H:i:s');
+    $template = getContactNotificationTemplate([
+        'customerName'  => $_POST['name'],
+        'customerEmail' => $_POST['email'],
+        'message'       => $_POST['message'],
+        'sentAt'        => date('d/m/Y H:i:s'),
+    ]);
 
-    $body = "
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-            <h2 style='color: #111; border-bottom: 2px solid #111; padding-bottom: 10px;'>📩 Thư liên hệ từ khách hàng</h2>
-            <table style='width: 100%; border-collapse: collapse;'>
-                <tr><td style='padding: 12px; border-bottom: 1px solid #eee; color: #888; width: 120px;'>Họ tên:</td><td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>$name</td></tr>
-                <tr><td style='padding: 12px; border-bottom: 1px solid #eee; color: #888;'>Email:</td><td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>$email</td></tr>
-                <tr><td style='padding: 12px; color: #888; vertical-align: top;'>Nội dung:</td><td style='padding: 12px; line-height: 1.6;'>$message</td></tr>
-            </table>
-            <p style='color: #aaa; font-size: 12px; margin-top: 20px;'>Gửi lúc: $time</p>
-        </div>";
-
-    return sendMailBrevo('remkyorosi@gmail.com', 'Shop Admin', '📩 Liên hệ từ khách hàng - ' . $name, $body);
+    $result = sendAdminNotification($template['subject'], $template['html']);
+    return $result['success'];
 }
 
 if (isset($_POST['btn'])) {

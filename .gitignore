@@ -65,3 +65,6 @@ scratch/
 scratch_*
 new_*_style.css
 new_style.css
+
+# Test files (không push)
+test_email.php
