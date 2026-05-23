@@ -12,6 +12,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 include_once BASE_PATH . 'includes/mail_helper.php';
+include_once BASE_PATH . 'includes/email_templates.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
@@ -56,47 +57,20 @@ if (!mysqli_query($con, $sql)) {
 // Tạo link reset
 $resetLink = BASE_URL . 'auth/datlamatkhau.php?token=' . $token;
 
-// Tạo nội dung email HTML
-$hoTen = htmlspecialchars($user['hoten'] ?? $user['username']);
-$htmlBody = '
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="margin:0; padding:0; background:#f1f5f9; font-family: Arial, sans-serif;">
-<div style="max-width:520px; margin:40px auto; background:#fff; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 20px rgba(0,0,0,0.06); overflow:hidden;">
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#3b82f6,#2563eb); padding:32px 24px; text-align:center;">
-        <h1 style="color:#fff; margin:0; font-size:22px; font-weight:800; letter-spacing:1px;"> ĐẶT LẠI MẬT KHẨU</h1>
-    </div>
-    <!-- Body -->
-    <div style="padding:32px 24px;">
-        <p style="color:#333; font-size:15px; line-height:1.6;">Xin chào <strong>' . $hoTen . '</strong>,</p>
-        <p style="color:#555; font-size:14px; line-height:1.6;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn tại <strong>Shop Sneakers</strong>.</p>
-        <p style="color:#555; font-size:14px; line-height:1.6;">Nhấn vào nút bên dưới để đặt mật khẩu mới:</p>
-        <div style="text-align:center; margin:28px 0;">
-            <a href="' . $resetLink . '" style="display:inline-block; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; text-decoration:none; padding:14px 36px; border-radius:10px; font-weight:700; font-size:15px; letter-spacing:0.5px;">Đặt lại mật khẩu</a>
-        </div>
-        <p style="color:#888; font-size:13px; line-height:1.6;"> Link này có hiệu lực trong <strong>30 phút</strong>. Sau thời gian này, bạn cần yêu cầu đặt lại mật khẩu mới.</p>
-        <p style="color:#888; font-size:13px; line-height:1.6;">Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này. Tài khoản của bạn vẫn an toàn.</p>
-        <hr style="border:none; border-top:1px solid #e2e8f0; margin:24px 0;">
-        <p style="color:#aaa; font-size:12px; text-align:center;">Nếu nút không hoạt động, copy đường link sau vào trình duyệt:<br>
-        <a href="' . $resetLink . '" style="color:#3b82f6; word-break:break-all; font-size:11px;">' . $resetLink . '</a></p>
-    </div>
-    <!-- Footer -->
-    <div style="background:#f8fafc; padding:16px 24px; text-align:center; border-top:1px solid #e2e8f0;">
-        <p style="color:#999; font-size:12px; margin:0;">© ' . date('Y') . ' Shop Sneakers — Tất cả quyền được bảo lưu</p>
-    </div>
-</div>
-</body>
-</html>';
+// Dùng template chuẩn từ email_templates.php
+$hoTen = $user['hoten'] ?? $user['username'];
+$emailData = getPasswordResetTemplate([
+    'customerName'  => $hoTen,
+    'resetLink'     => $resetLink,
+    'expiryMinutes' => 30,
+]);
 
-// Gửi email qua Brevo
-$sent = sendMailBrevo($user['email'], $hoTen, 'Đặt lại mật khẩu — Shop Sneakers', $htmlBody);
+// Gửi email qua Mailjet
+$result = sendTransactionalEmail($user['email'], $hoTen, $emailData['subject'], $emailData['html']);
 
-if (!$sent) {
-    // Vẫn trả success để không leak thông tin, nhưng log lỗi
-    error_log("FORGOT_PASSWORD: Failed to send email to {$user['email']} for makh=$makh");
+if (!$result['success']) {
+    error_log("FORGOT_PASSWORD: Failed to send email to {$user['email']} for makh=$makh. Error: " . ($result['error'] ?? 'unknown'));
 }
 
-echo json_encode(['success' => true, 'message' => 'Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến ' . substr($user['email'], 0, 3) . '***. Vui lòng kiểm tra hộp thư (bao gồm thư mục Spam).']);
+echo json_encode(['success' => true, 'message' => 'Mình đã gửi link đặt lại mật khẩu đến ' . substr($user['email'], 0, 3) . '***. Kiểm tra hộp thư (kể cả Spam) nhé.']);
 mysqli_close($con);
