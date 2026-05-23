@@ -118,7 +118,7 @@ function getOrderConfirmationTemplate($data)
     $preheader = _emailPreheader("Đơn #$orderCode đã chốt — tổng {$totalFmt}đ. Xem chi tiết bên trong.");
 
     $body = $preheader
-        . _emailHeader('Đơn hàng đã chốt ✓')
+        . _emailHeader('Đơn hàng đã chốt')
         . '
     <div style="padding:28px 24px;">
         <p style="color:#334155;font-size:15px;line-height:1.6;"><strong>' . $customerName . '</strong> ơi,</p>
@@ -200,7 +200,8 @@ function getOTPTemplate($data)
         </div>
 
         <p style="color:#dc2626;font-size:13px;font-weight:700;">
-            🔒 Mã này chỉ dành cho bạn — không chia sẻ với ai
+            <span style="display:inline-block;width:16px;height:16px;background:#dc2626;color:#fff;border-radius:4px;text-align:center;line-height:16px;font-size:10px;margin-right:4px;vertical-align:middle;">&#10033;</span>
+            Mã này chỉ dành cho bạn &mdash; không chia sẻ với ai
         </p>
         <p style="color:#94a3b8;font-size:13px;">Mã hết hạn sau <strong>' . $expiry . ' phút</strong>.</p>
         <p style="color:#94a3b8;font-size:12px;margin-top:20px;">Không phải bạn? Bỏ qua email này, tài khoản vẫn an toàn.</p>
