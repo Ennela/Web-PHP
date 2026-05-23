@@ -81,46 +81,40 @@ if ($order) {
             $cardColor = 'text-success';
             $iconClass = 'fa-check-circle';
             
-            // Gửi email xác nhận qua Brevo API
-            if (!empty($_SESSION['email_kh'])) {
+            // Gửi email xác nhận qua Mailjet
+            $orderEmail = $order['email'] ?? ($_SESSION['email_kh'] ?? '');
+            $orderTenkh = $order['tenkh'] ?? ($_SESSION['tenkh_order'] ?? 'Quý khách');
+            if (!empty($orderEmail)) {
                 require_once BASE_PATH . 'includes/mail_helper.php';
-                $email = $_SESSION['email_kh'];
-                $tenkh = $_SESSION['tenkh_order'] ?? 'Quý khách';
-                $amount = number_format(($_GET['vnp_Amount'] ?? 0) / 100, 0, ',', '.');
-                $bank = $_GET['vnp_BankCode'] ?? 'N/A';
-                
-                $body = "
-                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
-                        <div style='background: #17a2b8; padding: 24px; text-align: center;'>
-                            <h2 style='color: white; margin: 0;'>Đơn hàng đã được xác nhận!</h2>
-                        </div>
-                        <div style='padding: 24px;'>
-                            <p>Xin chào <strong>{$tenkh}</strong>,</p>
-                            <p>Đơn hàng của bạn đã được thanh toán thành công qua VNPAY!</p>
-                            <table style='width: 100%; border-collapse: collapse; margin: 16px 0;'>
-                                <tr style='background: #f8f9fa;'>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Mã đơn hàng</strong></td>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'>#{$orderId}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Mã giao dịch</strong></td>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'>{$transNo}</td>
-                                </tr>
-                                <tr style='background: #f8f9fa;'>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Ngân hàng</strong></td>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'>{$bank}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Số tiền</strong></td>
-                                    <td style='padding: 10px; border: 1px solid #dee2e6; color: #17a2b8; font-weight: bold;'>{$amount} VND</td>
-                                </tr>
-                            </table>
-                            <p>Chúng tôi sẽ xử lý và giao hàng sớm nhất có thể.</p>
-                            <p style='color: #6c757d; font-size: 12px;'>Email này được gửi tự động, vui lòng không reply.</p>
-                        </div>
-                    </div>";
+                require_once BASE_PATH . 'includes/email_templates.php';
 
-                sendMailBrevo($email, $tenkh, 'Xác nhận đơn hàng #' . $orderId . ' - Shop Giày Thể Thao', $body);
+                // Lấy chi tiết sản phẩm từ DB
+                $detailQuery = mysqli_query($con, "SELECT oc.*, sp.tensp FROM `oder_chitiet` oc LEFT JOIN `tbl_qlsanpham` sp ON oc.masp = sp.masp WHERE oc.madonhang = $orderId");
+                $emailProducts = [];
+                while ($d = mysqli_fetch_assoc($detailQuery)) {
+                    $emailProducts[] = [
+                        'name'  => $d['tensp'] ?? '',
+                        'qty'   => $d['quantity'],
+                        'price' => $d['price'],
+                        'size'  => $d['size'] ?? '',
+                    ];
+                }
+
+                $orderCodeDisplay = !empty($order['order_code']) ? $order['order_code'] : $orderId;
+                $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCodeDisplay . "&token=" . ($order['token'] ?? '');
+
+                $emailData = getOrderConfirmationTemplate([
+                    'customerName'  => $orderTenkh,
+                    'phone'         => $order['sdt'] ?? '',
+                    'address'       => $order['diachi'] ?? '',
+                    'orderCode'     => $orderCodeDisplay,
+                    'products'      => $emailProducts,
+                    'total'         => $order['tongtien'] ?? 0,
+                    'paymentMethod' => 'VNPAY (đã thanh toán)',
+                    'trackingLink'  => $trackingLink,
+                ]);
+
+                sendTransactionalEmail($orderEmail, $orderTenkh, $emailData['subject'], $emailData['html']);
                 unset($_SESSION['email_kh']);
                 unset($_SESSION['tenkh_order']);
             }

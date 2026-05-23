@@ -75,7 +75,13 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
     require_once BASE_PATH . 'includes/order_helper.php';
     $orderCode = generateOrderCode($con);
-    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `tenkh`, `sdt`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$tenkh', '$sdt', '$diachi', '$note', '$total', '" . time() . "', 'PENDING', 'UNPAID', $makh_val)");
+    $email_safe = mysqli_real_escape_string($con, $email_kh);
+    $token = bin2hex(random_bytes(16));
+    $tenkh_safe = mysqli_real_escape_string($con, $tenkh);
+    $sdt_safe = mysqli_real_escape_string($con, $sdt);
+    $diachi_safe = mysqli_real_escape_string($con, $diachi);
+    $note_safe = mysqli_real_escape_string($con, $note);
+    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$token', '$tenkh_safe', '$sdt_safe', '$email_safe', '$diachi_safe', '$note_safe', '$total', '" . time() . "', 'PENDING', 'UNPAID', $makh_val)");
     $orderID = $con->insert_id;
 
     $insertString = "";

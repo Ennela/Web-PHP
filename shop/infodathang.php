@@ -15,59 +15,44 @@ require_once dirname(__DIR__) . '/config.php';
         header('Location: ' . BASE_URL . 'home/trangchu.php');
     }
     require_once BASE_PATH . 'includes/mail_helper.php';
+    require_once BASE_PATH . 'includes/email_templates.php';
 
     /**
-     * Gửi mail thông báo đơn hàng mới cho shop owner (qua Brevo API)
+     * Gửi mail thông báo đơn hàng mới cho admin
      */
     function GuiMail()
     {
-        $body = "<h3>Thông báo có đơn hàng mới</h3>"
-              . "<p>Tên khách hàng: <strong>" . htmlspecialchars($_POST['tenkh'] ?? '') . "</strong></p>"
+        $body = "<h3>Đơn hàng COD mới</h3>"
+              . "<p><strong>" . htmlspecialchars($_POST['tenkh'] ?? '') . "</strong></p>"
               . "<p>SĐT: " . htmlspecialchars($_POST['sdt'] ?? '') . "</p>"
-              . "<p>Địa chỉ: " . htmlspecialchars($_POST['diachi'] ?? '') . "</p>";
+              . "<p>Địa chỉ: " . htmlspecialchars($_POST['diachi'] ?? '') . "</p>"
+              . "<p>Email: " . htmlspecialchars($_POST['email'] ?? '') . "</p>";
 
-        sendMailBrevo('remkyorosi@gmail.com', 'Shop Admin', 'Có đơn hàng mới từ Shop Sneakers', $body);
+        sendAdminNotification('Đơn hàng COD mới — ' . BRAND_NAME, $body);
     }
 
     /**
-     * Gửi mail xác nhận đơn hàng cho khách hàng (qua Brevo API)
-     * Brevo free tier: 300 email/ngày, gửi được đến MỌI địa chỉ email
+     * Gửi mail xác nhận đơn hàng cho khách hàng (dùng template chuẩn)
      */
-    function GuiMailKhachHang($email, $tenkh, $orderCode, $token, $total)
+    function GuiMailKhachHang($email, $tenkh, $orderCode, $token, $total, $products = [])
     {
         if (empty($email)) return;
 
         $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCode . "&token=" . $token;
-        $totalFmt     = number_format($total, 0, ',', '.');
 
-        $body = "
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;'>
-                <div style='background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 24px; text-align: center;'>
-                    <h2 style='color: white; margin: 0;'>Đơn hàng đã được ghi nhận!</h2>
-                </div>
-                <div style='padding: 24px;'>
-                    <p>Xin chào <strong>" . htmlspecialchars($tenkh) . "</strong>,</p>
-                    <p>Cảm ơn bạn đã đặt hàng tại <strong>Shop Sneakers</strong>.</p>
-                    <table style='width: 100%; border-collapse: collapse; margin: 16px 0;'>
-                        <tr style='background: #f8f9fa;'>
-                            <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Mã đơn hàng</strong></td>
-                            <td style='padding: 10px; border: 1px solid #dee2e6;'>#$orderCode</td>
-                        </tr>
-                        <tr>
-                            <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Tổng tiền</strong></td>
-                            <td style='padding: 10px; border: 1px solid #dee2e6; color: #2563eb; font-weight: bold;'>{$totalFmt}&nbsp;đ</td>
-                        </tr>
-                        <tr style='background: #f8f9fa;'>
-                            <td style='padding: 10px; border: 1px solid #dee2e6;'><strong>Hình thức</strong></td>
-                            <td style='padding: 10px; border: 1px solid #dee2e6;'>Thanh toán khi nhận hàng (COD)</td>
-                        </tr>
-                    </table>
-                    <p>Theo dõi đơn hàng tại: <a href='$trackingLink'>Xem trạng thái đơn hàng</a></p>
-                    <p style='color: #6c757d; font-size: 12px;'>Email này được gửi tự động, vui lòng không reply.</p>
-                </div>
-            </div>";
+        $templateData = [
+            'customerName'  => $tenkh,
+            'phone'         => $_POST['sdt'] ?? '',
+            'address'       => $_POST['diachi'] ?? '',
+            'orderCode'     => $orderCode,
+            'products'      => $products,
+            'total'         => $total,
+            'paymentMethod' => 'Thanh toán khi nhận hàng (COD)',
+            'trackingLink'  => $trackingLink,
+        ];
 
-        sendMailBrevo($email, $tenkh, "Xác nhận đơn hàng #$orderCode - Shop Sneakers", $body);
+        $emailData = getOrderConfirmationTemplate($templateData);
+        sendTransactionalEmail($email, $tenkh, $emailData['subject'], $emailData['html']);
     }
 
 
@@ -160,7 +145,17 @@ require_once dirname(__DIR__) . '/config.php';
         unset($_SESSION['chuyen_size']);
         GuiMail();
         if (!empty($email)) {
-            GuiMailKhachHang($email, $_POST['tenkh'], $orderCode, $token, $total);
+            // Build product list for email
+            $emailProducts = [];
+            foreach ($submitProducts as $sp) {
+                $emailProducts[] = [
+                    'name'  => $sp['tensp'],
+                    'qty'   => $_POST['quantity'][$sp['masp']],
+                    'price' => $sp['giasanpham'],
+                    'size'  => $sp['order_size'] ?? '',
+                ];
+            }
+            GuiMailKhachHang($email, $_POST['tenkh'], $orderCode, $token, $total, $emailProducts);
         }
         
         $_SESSION['swal_success'] = 'Đơn hàng đã đặt thành công!';
