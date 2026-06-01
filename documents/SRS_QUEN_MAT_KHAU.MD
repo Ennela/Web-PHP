@@ -7,65 +7,55 @@
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Hệ thống cho phép khách hàng **khôi phục mật khẩu** khi quên thông qua email. Quy trình sử dụng **token bảo mật** (hex 64 ký tự) có thời hạn 30 phút, gửi link reset qua **Brevo API**. Bao gồm 4 file chính: `quenmatkhau.php` (form nhập), `api_quenmatkhau.php` (tạo token & gửi mail), `datlamatkhau.php` (form đặt mật khẩu mới), `api_datlamatkhau.php` (cập nhật password).
+Hệ thống cho phép khách hàng **khôi phục mật khẩu** khi quên thông qua email. Quy trình sử dụng **token bảo mật** (hex 64 ký tự, 256-bit entropy) có thời hạn 30 phút, gửi link reset qua **Mailjet API v3.1** (backward compatible qua hàm `sendMailBrevo()`). Bao gồm 4 file chính: `quenmatkhau.php`, `api_quenmatkhau.php`, `datlamatkhau.php`, `api_datlamatkhau.php`.
 
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động người dùng | Phản hồi hệ thống |
 | :--- | :--- | :--- |
-| 1 | Tại trang Đăng nhập, click **"Quên mật khẩu?"** | Chuyển hướng đến `auth/quenmatkhau.php`. |
-| 2 | Nhập **email hoặc tên đăng nhập** → Bấm "Gửi yêu cầu" | AJAX POST đến `api_quenmatkhau.php`. Hệ thống tìm user trong `tbl_tkkhachhang` (WHERE email = ? OR username = ?). |
-| 3 | (Hệ thống) Tạo token & gửi email | Tạo `bin2hex(random_bytes(32))` → 64 ký tự hex. Lưu `reset_token` + `reset_token_expiry` (30 phút) vào DB. Gửi email HTML chứa link reset qua `sendMailBrevo()`. |
-| 4 | Hiển thị **thông báo thành công** (animation) | "Nếu tài khoản tồn tại, chúng tôi đã gửi email..." (bảo mật — không leak tài khoản có tồn tại hay không). |
-| 5 | Mở email → click link **"Đặt lại mật khẩu"** | Truy cập `auth/datlamatkhau.php?token=xxx`. Server validate token tồn tại + chưa hết hạn. |
-| 6 | Nhập **mật khẩu mới** + xác nhận → Bấm "Đặt lại mật khẩu" | AJAX POST đến `api_datlamatkhau.php`. Validate mật khẩu (≥ 6 ký tự, khớp xác nhận). UPDATE `password`, xoá `reset_token`. |
-| 7 | Hiển thị **SweetAlert thành công** → Redirect đăng nhập | `$_SESSION['swal_success']` hiển thị toast "Đặt lại mật khẩu thành công!" trên trang đăng nhập. |
+| 1 | Click "Quên mật khẩu?" tại trang Đăng nhập | Chuyển hướng đến `auth/quenmatkhau.php`. |
+| 2 | Nhập email/username → "Gửi yêu cầu" | AJAX POST đến `api_quenmatkhau.php`. Tìm user WHERE email=? OR username=?. |
+| 3 | Hệ thống tạo token & gửi email | `bin2hex(random_bytes(32))` → 64 hex chars. Lưu `reset_token` + `reset_token_expiry` (30 phút). Gửi email HTML qua `sendMailBrevo()` → `sendMailjet()`. |
+| 4 | Hiển thị thông báo chung | "Nếu tài khoản tồn tại, chúng tôi đã gửi email..." (bảo mật). |
+| 5 | Click link trong email | `auth/datlamatkhau.php?token=xxx`. Validate token + chưa hết hạn. |
+| 6 | Nhập mật khẩu mới + xác nhận | AJAX POST `api_datlamatkhau.php`. Validate ≥ 6 ký tự. UPDATE password (`password_hash(BCRYPT)`), xoá token. |
+| 7 | SweetAlert thành công → Redirect đăng nhập | Toast "Đặt lại mật khẩu thành công!" |
 
-### 3. Yêu cầu dữ liệu (Data Requirements)
-* **Bảng:** `tbl_tkkhachhang`
-* **Cột mới (migration):**
-  - `reset_token` VARCHAR(64) DEFAULT NULL — token hex ngẫu nhiên
-  - `reset_token_expiry` INT(11) DEFAULT NULL — Unix timestamp hết hạn
-* **File migration:** `migration_quenmatkhau.sql` (idempotent, kiểm tra cột trước khi thêm)
+### 3. Yêu cầu dữ liệu
+* **Bảng:** `tbl_tkkhachhang` — cột `reset_token` VARCHAR(64), `reset_token_expiry` INT(11)
+* **Migration:** `migration_quenmatkhau.sql` (idempotent)
 
-### 4. Kiến trúc Email Reset (Brevo API)
-* **Template:** Email HTML responsive với gradient header xanh, nút CTA "Đặt lại mật khẩu", link backup text, thông tin hết hạn.
-* **Sender:** `Shop Sneakers <remkyorosi@gmail.com>` (qua Brevo).
-* **Thời hạn:** Link có hiệu lực **30 phút** (`time() + 1800`).
-* **Bảo mật response:** API luôn trả thông báo chung ("Nếu tài khoản tồn tại...") để không leak thông tin tài khoản.
+### 4. Kiến trúc Email (Mailjet API)
+* **Hàm:** `sendMailBrevo()` → `sendMailjet()` (backward compatible)
+* **Endpoint:** `https://api.mailjet.com/v3.1/send`, Basic Auth
+* **Retry:** Exponential Backoff 3 lần cho 5xx/429
+* **Template:** HTML responsive, gradient header, nút CTA, link backup text
 
-### 5. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)
-* **Token bảo mật:** `bin2hex(random_bytes(32))` → 64 ký tự hex, entropy 256-bit, không đoán được.
-* **Hết hạn tự động:** Token chỉ valid trong 30 phút (`reset_token_expiry >= time()`).
-* **Sử dụng 1 lần:** Sau khi đặt lại mật khẩu, token bị xoá (SET NULL).
-* **Bảo mật response:** Không tiết lộ tài khoản có tồn tại hay không (tránh enumeration attack).
-* **Tài khoản không có email:** Hiển thị thông báo "Tài khoản chưa cập nhật email. Vui lòng liên hệ admin."
-* **Token validation:** Kiểm tra độ dài = 64 ký tự trước khi query DB.
-* **SQL injection:** Sử dụng `mysqli_real_escape_string()` cho tất cả input.
+### 5. Bảo mật
+* Token 256-bit entropy, hết hạn 30 phút, sử dụng 1 lần
+* Response chung (không leak tài khoản)
+* Password hash: `password_hash(PASSWORD_BCRYPT)`
+* SQL: `mysqli_real_escape_string()`
 
-### 6. Trường hợp ngoại lệ & Xử lý lỗi (Edge Cases)
+### 6. Edge Cases
 | Trường hợp | Xử lý |
 | :--- | :--- |
-| Email/username không tồn tại | Trả thông báo chung (bảo mật) |
-| Tài khoản không có email | Báo lỗi rõ ràng — liên hệ admin |
-| Token hết hạn (> 30 phút) | Hiển thị trang "Link không hợp lệ" + nút "Yêu cầu lại" |
-| Token đã sử dụng | Hiển thị trang "Link không hợp lệ" (token đã bị xoá) |
-| Mật khẩu < 6 ký tự | Validate client-side + server-side |
-| Mật khẩu xác nhận không khớp | Validate client-side + server-side |
-| Brevo API gửi mail thất bại | Log lỗi server, vẫn trả success (bảo mật) |
-| Spam yêu cầu liên tục | Token mới ghi đè token cũ (chỉ token cuối cùng valid) |
+| Email/username không tồn tại | Thông báo chung (bảo mật) |
+| Tài khoản không có email | Báo lỗi — liên hệ admin |
+| Token hết hạn/đã dùng | Trang "Link không hợp lệ" + nút yêu cầu lại |
+| Mật khẩu < 6 ký tự / không khớp | Validate client + server |
+| Mailjet thất bại | Log lỗi, retry, vẫn trả success |
 
 ### 7. Giao diện (UI/UX)
-* **Trang quên mật khẩu:** Auth card đồng bộ style với trang Đăng nhập/Đăng ký (Montserrat, gradient button, rounded input). Icon key trên đầu form. Info box hướng dẫn. Animation chuyển sang trạng thái thành công (envelope icon pulse).
-* **Trang đặt mật khẩu mới:** Password strength indicator (4 mức: Yếu/Trung bình/Khá/Mạnh). Toggle hiện/ẩn mật khẩu. Token hết hạn → hiển thị error state với icon cảnh báo đỏ + nút "Yêu cầu lại".
-* **Trang đăng nhập:** Link "Quên mật khẩu?" nằm cùng dòng với checkbox "Ghi nhớ đăng nhập" (flex, space-between).
-* **SweetAlert2:** Toast notification cho lỗi/cảnh báo, full dialog cho thành công (redirect về đăng nhập).
+* Auth card style đồng bộ Đăng nhập/Đăng ký (Montserrat, gradient)
+* Password strength indicator 4 mức, toggle hiện/ẩn
+* SweetAlert2 toast cho lỗi, full dialog cho thành công
 
-### 8. Danh sách file liên quan
-| File | Loại | Mô tả |
-| :--- | :--- | :--- |
-| `auth/quenmatkhau.php` | Page | Form nhập email/username, AJAX, success animation |
-| `auth/api_quenmatkhau.php` | API | Tạo token, lưu DB, gửi email Brevo |
-| `auth/datlamatkhau.php` | Page | Form đặt mật khẩu mới, validate token |
-| `auth/api_datlamatkhau.php` | API | Validate token, update password, xoá token |
-| `auth/dangnhap.php` | Page (sửa) | Thêm link "Quên mật khẩu?" |
-| `migration_quenmatkhau.sql` | Migration | Thêm cột `reset_token`, `reset_token_expiry` |
+### 8. File liên quan
+| File | Mô tả |
+| :--- | :--- |
+| `auth/quenmatkhau.php` | Form nhập email, AJAX, success animation |
+| `auth/api_quenmatkhau.php` | Tạo token, gửi email Mailjet |
+| `auth/datlamatkhau.php` | Form mật khẩu mới, validate token |
+| `auth/api_datlamatkhau.php` | Update password Bcrypt, xoá token |
+| `includes/mail_helper.php` | sendMailBrevo → sendMailjet |
+| `includes/mail_config.php` | Mailjet API config |

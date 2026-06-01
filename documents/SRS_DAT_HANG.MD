@@ -1,62 +1,58 @@
 # Software Requirement Specification (SRS)
-## Chức năng: Hệ thống Đặt hàng và Thanh toán (Checkout & Payment)
-**Mã chức năng:** CHECKOUT-01  
-**Trạng thái:** Draft / Review  
+## Chức năng: Đặt hàng (Checkout)
+**Mã chức năng:** ORDER-CHECKOUT-01  
+**Trạng thái:** Implemented  
 **Người soạn thảo:** Đội ngũ phát triển
-**Vai trò:** Lead Developer
 
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Cung cấp luồng quy trình cho phép khách hàng chuyển đổi các sản phẩm đã chọn trong Giỏ hàng (Cart) thành một Đơn hàng (Order) hoàn chỉnh. Quá trình bao gồm việc thu thập thông tin người nhận, hiển thị chi phí tổng, và tích hợp các phương thức thanh toán an toàn (thanh toán khi nhận hàng - COD và thanh toán trực tuyến qua VNPAY).
+Hệ thống cung cấp quy trình Checkout gồm 2 luồng:
+- **COD** (`infodathang.php`): Thanh toán khi nhận hàng.
+- **VNPAY Online** (`dathangonline.php`): Thanh toán trực tuyến qua VNPAY Sandbox.
 
-### 2. Luồng nghiệp vụ (User Workflow)
+Cả 2 đều tích hợp: auto-fill từ tài khoản/sổ địa chỉ, trừ tồn kho bằng MySQL Transaction, gửi email xác nhận qua Mailjet API, tạo mã đơn 9 chữ số + tracking token.
+
+### 2. Luồng nghiệp vụ — COD (Checkout tiền mặt)
 | Bước | Hành động người dùng | Phản hồi hệ thống |
 | :--- | :--- | :--- |
-| 1 | Truy cập trang Giỏ hàng và nhấn "Thanh toán/Đặt hàng" | Hệ thống điều hướng người dùng tới trang Thanh toán (Checkout). |
-| 2 | Điền thông tin giao nhận hàng | Kiểm tra tính hợp lệ và sự tồn tại của dữ liệu (điện thoại, địa chỉ). |
-| 3 | Lựa chọn phương thức thanh toán (COD hoặc VNPAY) | Hệ thống tự động tính toán và báo cáo tổng số tiền cuối cùng. |
-| 4 | Nhấn nút "Xác nhận đặt hàng" | Sinh mã đơn hàng 9 chữ số ngẫu nhiên duy nhất (`order_code`), lưu thông tin vào cơ sở dữ liệu. Xử lý logic theo phương thức đã chọn. |
-| 5a | *Đối với COD:* Hoàn tất hành động | Hiển thị Toast thông báo thành công (SweetAlert2), hệ thống gửi Email xác nhận hóa đơn qua Resend API và chuyển hướng về trang chủ. |
-| 5b | *Đối với VNPAY:* Xác nhận chuyển hướng thanh toán | Khởi tạo yêu cầu thanh toán với chữ ký bảo mật và chuyển hướng sang cổng thanh toán. |
-| 6 | Thực hiện thanh toán trên cổng VNPAY | VNPAY xử lý yêu cầu, trừ tiền khách và đồng thời gọi lại API trả kết quả. |
-| 7 | Cập nhật kết quả thanh toán | Hệ thống đối soát trạng thái tức thời; Cập nhật tình trạng "Đã thanh toán", làm rỗng giỏ hàng cá nhân. |
+| 1 | Từ Giỏ hàng, bấm "Thanh toán tiền mặt" | Session `$_SESSION['chuyen']` + `$_SESSION['chuyen_size']` lưu giỏ. Redirect `infodathang.php`. |
+| 2 | Điền form (auto-fill nếu đã login) | Tự động điền Tên, SĐT, Email, Địa chỉ từ `tbl_tkkhachhang` + `tbl_diachi` (mặc định). |
+| 3 | Xác nhận đặt hàng (Submit) | Validate server-side → `validateAndDeductStock()` → INSERT `oder` + `oder_chitiet`. |
+| 4 | Gửi email xác nhận | `sendMailBrevo()` → Mailjet: admin notification + customer confirmation (link tracking). |
+| 5 | Dọn dẹp + thông báo | Xóa giỏ hàng session. Redirect với SweetAlert success. |
 
-### 3. Yêu cầu dữ liệu (Data Requirements)
-#### 3.1. Dữ liệu đầu vào (Input Fields - Checkout Form)
-* **Họ và tên:** Yêu cầu nhập tên đầy đủ bằng văn bản, bắt buộc.
-* **Số điện thoại:** Yêu cầu đúng tiêu chuẩn định dạng (10 chữ số), bắt buộc.
-* **Địa chỉ giao hàng:** Chi tiết số nhà, đường, xã/phường, quận/huyện, bắt buộc.
-* **Phương thức thanh toán:** Lựa chọn một trong các phương thức (thường là thiết kế Radio button), mặc định chọn Thanh toán khi nhận hàng (COD).
-* **Ghi chú đơn hàng:** Văn bản tự do, tùy chọn.
+### 3. Luồng nghiệp vụ — VNPAY
+| Bước | Hành động | Chi tiết |
+| :--- | :--- | :--- |
+| 1 | Từ Giỏ hàng, bấm "Thanh toán VNPAY" | Tương tự COD, redirect `dathangonline.php`. |
+| 2 | Điền form + Submit | Tạo đơn `oder` (PENDING/UNPAID), trừ tồn kho, tạo URL VNPAY (SHA512 HMAC), redirect. |
+| 3 | Thanh toán trên VNPAY Sandbox | Nhập thẻ ATM/QR. |
+| 4 | VNPAY callback `vnpay_return.php` | Verify hash → thành công: UPDATE CONFIRMED/PAID + email. Thất bại: restoreStock() + CANCELLED/FAILED. |
 
-#### 3.2. Dữ liệu lưu trữ thông tin
-* **Lưu trữ thông tin Đơn Hàng**: 
-  * Mã đơn hàng 9 chữ số ngẫu nhiên duy nhất (`order_code`, VD: 805659294). Được sinh bằng hàm `generateOrderCode()` trong `includes/order_helper.php`, kiểm tra trùng lặp trước khi lưu vào cột `order_code` (UNIQUE INDEX) của bảng `oder`.
-  * Liên kết với thông tin tài khoản (nếu khách mua đã đăng nhập trên hệ thống) qua cột `makh`.
-  * Thông tin giao nhận hàng: Họ tên, số điện thoại, địa chỉ nhận hàng đích, ghi chú cho tài xế/người đóng gói.
-  * Thông tin giao dịch: Tổng thành tiền, phương thức thanh toán được áp dụng, trạng thái hiện tại (Chờ xử lý, Đang giao, Đã thanh toán, Đã hủy).
-* **Lưu trữ thông tin Chi Tiết Đơn Hàng**: 
-  * Danh sách chi tiết các món đồ đã mua trong đơn: Mã sản phẩm/Sku, kích cỡ, số lượng, và đặc biệt là mức giá được chốt tại thời điểm lập hóa đơn, đảm bảo không thay đổi dù giá gốc sau này có cập nhật.
+### 4. Mã đơn hàng & Token
+* **order_code:** 9 chữ số ngẫu nhiên, unique. Generated bởi `generateOrderCode()`.
+* **token:** hex string ngẫu nhiên dùng cho link tracking email.
 
-### 4. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)
-* **Xác thực Đơn Hàng:** Người dùng bắt buộc phải đăng nhập thì mới có thể tiến hành đặt mua hàng (`makh` phải tồn tại). Hệ thống sẽ gắn ID người dùng vào bản lưu Đơn Hàng trực tiếp trên CSDL để thiết lập danh tính khách.
-* **Đồng bộ tồn kho:** Sau khi duyệt đơn thành công (chờ xử lý hoặc đã thanh toán trực tuyến), hệ thống phải trừ ngay lập tức số lượng hàng hóa nằm trong kho để nhường slot.
-* **Tích Hợp Thanh Toán Mạng:** Mọi dữ liệu chuyển dịch sang cổng thanh toán cần phải được mã hóa thành chữ ký điện tử an toàn kết hợp với mã bí mật của đối tác, tránh rò rỉ dữ liệu thẻ hay nguy cơ bị bên thứ ba sửa giá trên trình duyệt.
-* **Cập nhật trạng thái Độc lập:** Trạng thái của đơn hàng thanh toán online luôn luôn phải được định đoạt hoàn toàn bởi các kịch bản đối soát ngầm gửi từ máy chủ đối tác tới máy chủ cửa hàng (server-to-server connection).
-
-### 5. Trường hợp ngoại lệ & Xử lý lỗi (Edge Cases)
-* **Trường hợp:** Số lượng khách muốn mua lại nhiều hơn tổng số lượng hiện đang còn trong kho.
-  * **Xử lý:** Tải lại trang Thanh toán và bắt thông báo lỗi: *"Sản phẩm [Tên sản phẩm] hiện phần chỉ còn [X] mẩu. Vui lòng quay trở lại giỏ hàng và điều chỉnh số lượng"*.
-* **Trường hợp:** Người dùng chủ động chuyển Hủy Bỏ (Cancel) thanh toán trên trải nghiệm màn hình của ứng dụng thanh toán online.
-  * **Xử lý:** Đối tác sẽ trả về mã lỗi đặc biệt. Hệ thống chuyển đổi tình trạng là "Thanh toán thất bại", và bảo lưu toàn bộ các món đồ đã chọn trong giỏ hàng để khách trải nghiệm thử lại một cách dễ dàng.
-* **Trường hợp:** Chữ ký điện tử đối soát trạng thái từ nhà cung cấp dịch vụ không trùng khớp.
-  * **Xử lý:** Hệ thống tự động từ chối hoàn toàn việc phê duyệt tiếp, cảnh báo dòng chữ *"Chữ ký giao dịch không hợp pháp"*, ghi nhận vào Log Audit sự cố nguy hiểm nhằm phòng ngừa hành vi Hack URL.
+### 5. Ràng buộc kỹ thuật
+* **Chống Race Condition:** `validateAndDeductStock()` — Transaction + SELECT...FOR UPDATE.
+* **Hoàn tồn kho:** `restoreStock()` khi VNPAY fail hoặc admin hủy.
+* **Chống double submit:** Kiểm tra `payment_status = 'UNPAID'` trước khi cập nhật.
+* **Giỏ hàng trống:** Redirect lại giỏ hàng với SweetAlert warning.
 
 ### 6. Giao diện (UI/UX)
-* Giao diện Responsive: Tối ưu hóa hiển thị Mobile-First, sử dụng CSS Grid để bố trí Khung biểu mẫu và Khung hiển thị tổng kết chi phí linh hoạt theo kích thước thiết bị.
-* Trải nghiệm thông báo mượt mà: Sử dụng SweetAlert2 thay thế các hộp thoại `alert()` truyền thống để thông báo lỗi hoặc xác nhận thành công một cách chuyên nghiệp.
-* Khi nhấn nút "Xác nhận", nút bấm lập tức bị khóa lại (Disable state) và hiển thị biểu tượng tải vòng tròn (Loading spinner) nhằm ngăn việc nhấn đúp liên tục gây hệ quả trùng lặp đơn hàng (Double submit).
-* Tự động điền dữ liệu (Auto-fill): Nhận diện tài khoản đăng nhập để tự động điền chính xác Tên, SĐT, Địa chỉ và Email vào form Thanh toán, tăng tốc độ chốt đơn.
+* Layout 2 cột: Form thông tin (trái) + Tóm tắt đơn hàng (phải).
+* Auto-fill từ sổ địa chỉ mặc định.
+* Loading spinner + disable button khi đang xử lý.
+* Trang VNPAY return: Card kết quả với mã giao dịch, số tiền, trạng thái.
 
----
+### 7. File liên quan
+| File | Mô tả |
+| :--- | :--- |
+| `shop/infodathang.php` | Checkout COD |
+| `shop/dathangonline.php` | Checkout VNPAY |
+| `shop/vnpay_return.php` | Callback VNPAY |
+| `vnpay_php/config.php` | Cấu hình VNPAY Sandbox |
+| `includes/inventory_helper.php` | Tồn kho (Transaction) |
+| `includes/mail_helper.php` | Gửi email Mailjet |
+| `includes/order_helper.php` | generateOrderCode() |

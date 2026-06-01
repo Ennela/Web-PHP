@@ -1,40 +1,41 @@
 # Software Requirement Specification (SRS)
-## Chức năng: Xem Chi tiết Sản phẩm
-**Mã chức năng:** PROD-DETAIL-01  
-**Trạng thái:** Draft / Review  
+## Chức năng: Chi tiết Sản phẩm
+**Mã chức năng:** PRODUCT-DETAIL-01  
+**Trạng thái:** Implemented  
 **Người soạn thảo:** Đội ngũ phát triển
 
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Trang chi tiết cung cấp mọi thông số về thiết kế, mức giá cũng như hình ảnh thực tế của một mẫu đôi giày (`chitietsanpham.php`). Tại đây, khách hàng có thể quyết định tuỳ chọn **Kích Cỡ/Size** và số lượng đôi cần mua để tống vào hộp Giỏ Hàng chung nhằm chuyển sang pha thanh toán. Tính năng này được bổ trợ thêm giao diện Zoom Cận Cảnh Mượt được viết thuần không sử dụng lib lạ, nâng cao chất lượng editorial.
+Trang chi tiết sản phẩm (`chitietsanpham.php?masp=X`) hiển thị thông tin đầy đủ của 1 đôi giày: bộ sưu tập ảnh, mô tả chi tiết, bảng giá, và hệ thống chọn size với **tồn kho real-time** từ bảng `tbl_tonkho`. Tích hợp nút "Thêm vào giỏ" với gợi ý size yêu thích.
 
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động người dùng | Phản hồi hệ thống |
 | :--- | :--- | :--- |
-| 1 | Bấm chọn một sản phẩm tại giao diện Shop | Chuyển hướng tới `chitietsanpham.php?id=(masp)`. Hệ thống lấy thông tin từ kho với truy vấn đối chiếu. |
-| 2 | Rê trỏ chuột vào Ảnh Lớn bề mặt sản phẩm | Kích hoạt hiệu ứng Custom Image Tracker Zoom để soi cận cảnh chất liệu vải/da. |
-| 3 | Bắt buộc chọn Kích Cỡ (Size) | Nếu ấn Add to Cart mà bỏ quên chọn Size, hệ thống phát cảnh báo `Vui lòng chọn size` và chặn tác vụ gửi form. |
-| 4 | Nhấn "Thêm vào Giỏ Hàng" | Điều hướng `action=add` sang tệp xử lý logic `giohang.php` bằng phương thức POST để ghi nhận thông số sản phẩm kèm thêm Size lên biến `$_SESSION`. |
+| 1 | Click sản phẩm từ Shop/Bestseller/Carousel | Chuyển đến `chitietsanpham.php?masp=X`. SELECT sản phẩm + ảnh phụ + tồn kho tất cả size. |
+| 2 | Xem ảnh sản phẩm | Gallery ảnh: ảnh đại diện lớn + album ảnh phụ thu nhỏ. Click thumbnail → đổi ảnh chính. |
+| 3 | Chọn size | Grid các nút size (36-44). Hiển thị tồn kho: xanh (còn hàng), xám disabled (hết). Nếu đã đăng nhập và lưu size yêu thích → tự động highlight. |
+| 4 | Chọn số lượng + "Thêm vào giỏ" | Validate: size đã chọn? stock >= quantity? AJAX thêm vào `$_SESSION['giohang']` với size. SweetAlert success toast. |
 
-### 3. Yêu cầu dữ liệu (Data Requirements)
-#### 3.1. Dữ liệu Hiển thị Nội dung (Data Output)
-* Dữ liệu bóc tách từ `tbl_qlsanpham` bằng điều kiện `masp = ?`.
-* Tên sản phẩm, Giá Bán (`giasanpham`), Giá Gốc (`giagoc` cho gạch bỏ).
-* Các bức ảnh kèm theo: `anhdaidien`, `anhgiuoithieu1`, `anhgiuoithieu2`.
+### 3. Yêu cầu dữ liệu
+* **Sản phẩm:** `tbl_qlsanpham` (tensp, giasanpham, mota, anhdaidien, masp, madm).
+* **Ảnh phụ:** `tbl_hinhanh` (masp, hinhanh) — nhiều ảnh cho 1 sản phẩm.
+* **Tồn kho:** `tbl_tonkho` (masp, size, soluong) — real-time stock per size.
+* **Size yêu thích:** `tbl_sizegiay` (makh, he_size='EU', size_value) — gợi ý cho user đã login.
 
-#### 3.2. Dữ liệu Điều phối Tương tác (Interaction Input)
-* **Parameter `$id`:** Lưu trữ dưới dạng ID (số integer) độc nhất để giữ mối liên kết vào phiên Session.
-* **Kích cỡ Size (`size`):** Nút Radio Button chọn Size (Ví dụ từ 36 - 44). Đây là giá trị bắt buộc truyền đi `required`.
-* **Số lượng:** Do khách tự gõ quyết định (mặc định lấy 1).
+### 4. Ràng buộc kỹ thuật & Bảo mật
+* **masp Validation:** `intval()` cho parameter.
+* **Tồn kho real-time:** Query `tbl_tonkho` mỗi lần load trang, hiển thị chính xác stock per size.
+* **XSS:** `htmlspecialchars()` cho tất cả output.
 
-### 4. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)
-* **Phiên không ràng buộc đăng nhập:** Người dùng không cần phải Đăng nhập (no authentication require) để thêm một mặt hàng vào phiên Giỏ Hàng. Hệ thống sử dụng phiên ẩn danh PHP Header Session.
-
-### 5. Trường hợp ngoại lệ & Xử lý lỗi (Edge Cases)
-* **Trường hợp:** Không truyền `$id` trên trang, truy cập thẳng URL thô `chitietsanpham.php`.
-  * **Xử lý:** Trang sẽ không hiển thị được nội dung sản phẩm. Nền tảng PHP tự vứt lỗi Null hoặc cảnh báo biến không chạm tới kết quả.
+### 5. Trường hợp ngoại lệ
+* **masp không tồn tại:** Hiển thị thông báo "Sản phẩm không tồn tại".
+* **Tất cả size hết hàng:** Nút "Thêm vào giỏ" disable.
+* **Chưa chọn size:** SweetAlert warning "Vui lòng chọn size trước khi thêm vào giỏ".
+* **Vượt tồn kho:** Giới hạn max quantity = stock của size đã chọn.
 
 ### 6. Giao diện (UI/UX)
-* Áp dụng bố cục Brutalist-Minimalist Editorials: Chiết xuất ra 2 cột hiển thị lớn, cột trái đính chặt hình ảnh cho phép cuộn cố định, cột phải thiết kế tinh gọn bảng tuỳ biến thanh toán.
-* Thay thế library Vanilla Zoom bằng cơ chế Tracker trực tiếp: Tối giản rườm rà HTML, chuột khách hàng lướt đến đâu trên ảnh, Javascript phóng to và pan ảnh theo đúng toạ độ không độ trễ.
+* 2 cột: Gallery ảnh (trái) + Thông tin (phải). Stacked trên mobile.
+* Size grid: Nút bo tròn, border active = primary blue, disabled = xám.
+* Quantity +/- controls, min-height 44px touch target.
+* Nút "Thêm vào giỏ" gradient blue, uppercase, icon shopping bag.

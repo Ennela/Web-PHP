@@ -1,38 +1,34 @@
 # Software Requirement Specification (SRS)
-## Chức năng: Quản lý Sản phẩm
-**Mã chức năng:** ADMIN-PROD-01  
-**Trạng thái:** Draft / Review  
+## Chức năng: Admin Quản lý Sản phẩm
+**Mã chức năng:** ADMIN-PRODUCT-01  
+**Trạng thái:** Implemented  
 **Người soạn thảo:** Đội ngũ phát triển
 
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Hệ thống cho phép Quản trị viên (Admin) tạo mới, chỉnh sửa thông tin hoặc xóa bỏ các sản phẩm giày dép (`quanlisanpham.php`). Chức năng yêu cầu nạp hình ảnh chính và ảnh phụ, định giá sản phẩm (giá bán/giá gốc) và điền trực tiếp tên Nhóm sản phẩm (nhomsp). Cấu trúc hiện đã yêu cầu và cho phép quản lý và định nghĩa các kích cỡ chân (Sizes), tăng tính phong phú biến thể sản phẩm phục vụ chính xác người dùng.
+Quản trị viên có toàn quyền thao tác CRUD (Create, Read, Update, Delete) trên sản phẩm giày dép: thêm mới, sửa thông tin, quản lý ảnh, và **quản lý tồn kho chi tiết theo từng size**. Hệ thống sử dụng Rich Text Editor cho mô tả sản phẩm, upload ảnh vào thư mục `admin/uploads/`.
 
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động Admin | Phản hồi hệ thống |
 | :--- | :--- | :--- |
-| 1 | Truy cập "Quản lý Sản phẩm" | Hệ thống Load bảng kê hàng hóa (`tbl_qlsanpham`). |
-| 2 | Nhấn "Thêm sản phẩm mới" (`themsanpham.php`) | Màn hình Form nhập liệu với các trường (Tên, Thư viện Ản, Giá gốc, Giá bán, Mô tả, Nhóm SP, Sizes). |
-| 3 | Khai báo và ấn Lưu | Ứng dụng tải 3 hình ảnh lên thư mục `uploads/` trên máy chủ sử dụng hàm `move_uploaded_file()`. |
-| 4 | *Trường hợp thành công:* Lưu vào kho | Chèn thông số bao gồm đường dẫn ảnh và thiết lập Size vào CSDL. |
+| 1 | Xem danh sách sản phẩm | `quanlisanpham.php`: bảng HTML Table + phân trang + lọc. |
+| 2 | Thêm sản phẩm mới | Form: tên, giá, giá KM, danh mục, mô tả (CKEditor), ảnh đại diện, album ảnh phụ. Upload vào `admin/uploads/`. |
+| 3 | Quản lý tồn kho | Form nhập số lượng cho từng size (36-44). INSERT/UPDATE `tbl_tonkho`. |
+| 4 | Sửa sản phẩm | Load dữ liệu hiện tại → form edit. UPDATE `tbl_qlsanpham`. |
+| 5 | Xóa sản phẩm | DELETE FROM `tbl_qlsanpham` WHERE masp = ?. |
 
-### 3. Yêu cầu dữ liệu (Data Requirements)
-#### 3.1. Dữ liệu Đầu vào (Input Fields)
-* **Tên sản phẩm (`tensp`):** Tên định danh hiển thị.
-* **Nhóm Sản Phẩm (`nhomsp`):** Danh mục cấu trúc SP.
-* **Thuộc tính Sizes (`size`):** Hệ thống có thể gắn thêm thuộc tính cho phép khách lựa size trong phần chi tiết.
-* **Tài nguyên ảnh:** Hỗ trợ cứng đúng 03 ô upload ảnh (Ảnh đại diện, Ảnh phụ 1, Ảnh phụ 2). 
-* **Giá cả:** `giasanpham` (Giá thanh toán) và `giagoc` (Giá ảo gạch ngang đối chứng hiển thị). 
-* **Nội dung (`noidung`):** Thẻ đoạn văn mô tả dạng Text/HTML.
+### 3. Yêu cầu dữ liệu
+* **Bảng `tbl_qlsanpham`:** masp, tensp, giasanpham, giakhuyenmai, madm, mota, anhdaidien, ngaytao.
+* **Bảng `tbl_hinhanh`:** id, masp, hinhanh — nhiều ảnh cho 1 sản phẩm.
+* **Bảng `tbl_tonkho`:** id, masp, size, soluong, ngaytao, ngaycapnhat — tồn kho chi tiết per size.
 
-### 4. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)
-* **Xử lý thư mục Uploads:** Các tệp hình ảnh tải lên sẽ trực tiếp lưu hành vào thư mục gốc `admin/uploads/`.
-* **Xóa Ràng Buộc Liên Kết:** Trong SQL, bảng `oder_chitiet` có khóa ngoại trỏ tới `tbl_qlsanpham(masp) ON DELETE CASCADE`. Do đó việc xóa một sản phẩm trong kho (`delete_qlsanpham.php`) cũng sẽ tự động xóa sạch các dòng lịch sử mua món hàng này ở các đơn cũ.
+### 4. Ràng buộc kỹ thuật & Bảo mật
+* **Session Admin:** `$_SESSION['dangnhap1']` bắt buộc.
+* **File Upload:** `move_uploaded_file()` vào `admin/uploads/`. Kiểm tra extension.
+* **Tồn kho:** Liên kết chặt với `inventory_helper.php` — stock biến động tự động khi có đơn hàng/hủy đơn.
 
-### 5. Trường hợp ngoại lệ & Xử lý lỗi (Edge Cases)
-* **Trường hợp:** Admin không nhập đủ 3 bức ảnh mà chỉ nhập ảnh Đại diện.
-  * **Xử lý:** Hệ thống chấp nhận thông qua, biến lưu trữ đường dẫn ảnh phụ bằng mảng trống. Ở phía giao diện người dùng nếu ảnh rỗng thì sẽ tự bỏ mảng (hoặc báo lỗi vỡ nhỏ).
-
-### 6. Giao diện (UI/UX)
-* Phân chia chia màn hình Form rõ ràng hỗ trợ các thẻ `<input type="file">` riêng lẻ. Không áp dụng kéo/thả.
+### 5. Giao diện (UI/UX)
+* Bảng sản phẩm: ảnh thumbnail, tên, giá, danh mục, tồn kho, nút Sửa/Xóa.
+* Form thêm/sửa: Tabs thông tin + ảnh + tồn kho.
+* Tồn kho: Grid input cho từng size (36-44) hiển thị trực quan.

@@ -1,34 +1,38 @@
 # Software Requirement Specification (SRS)
 ## Chức năng: Admin Dashboard (Tổng quan)
 **Mã chức năng:** ADMIN-DASH-01  
-**Trạng thái:** Draft / Review  
+**Trạng thái:** Implemented  
 **Người soạn thảo:** Đội ngũ phát triển
 
 ---
 
 ### 1. Mô tả tổng quan (Description)
-Hệ thống cung cấp một bảng điều khiển trung tâm (Dashboard) dành riêng cho Quản trị viên tại đường dẫn `admin/trangchu.php`. Chức năng này giúp Admin theo dõi các chỉ số cơ bản như số lượng đơn hàng đã đặt, số lượng sản phẩm đang bán, tổng số thành viên và báo cáo tổng Doanh Thu theo tháng dựa trên thời gian thực.
+Hệ thống cung cấp một bảng điều khiển trung tâm (Dashboard) dành riêng cho Quản trị viên tại đường dẫn `admin/trangchu.php`. Chức năng này giúp Admin theo dõi các chỉ số cơ bản như số lượng đơn hàng đã đặt, số lượng sản phẩm đang bán, tổng số thành viên và báo cáo tổng Doanh Thu theo tháng dựa trên thời gian thực. Đăng nhập admin sử dụng **Bcrypt** với auto-migration từ mật khẩu plaintext.
 
 ### 2. Luồng nghiệp vụ (User Workflow)
 | Bước | Hành động Admin | Phản hồi hệ thống |
 | :--- | :--- | :--- |
-| 1 | Truy cập vào `admin/index.php` hoặc `admin/trangchu.php` | Hệ thống kiểm tra session đăng nhập admin (`$_SESSION['admin']`). |
-| 2 | Đăng nhập thành công | Hiển thị giao diện trang chủ Admin. |
-| 3 | Xem các thẻ tóm tắt số liệu (Cards) | Hệ thống thực thi các câu truy vấn `COUNT` từ các bảng `oder`, `tbl_qlsanpham`, `tbl_tkkhachhang` để in con số. Các hàm `SUM` trích xuất thu nhập cho hoá đơn hợp lệ. |
+| 1 | Truy cập `admin/index.php` hoặc `admin/trangchu.php` | Kiểm tra `$_SESSION['dangnhap1']`. Nếu chưa đăng nhập → redirect `canhbao.php`. |
+| 2 | Đăng nhập tại `canhbao.php` | Prepared Statement: `SELECT * FROM tbl_qlthanhvien WHERE taikhoan = ? LIMIT 1`. Xác thực bằng `password_verify()`. Nếu mật khẩu cũ (plaintext) khớp → auto-hash sang Bcrypt + đăng nhập. |
+| 3 | Xem Dashboard | Hiển thị cards thống kê: Tổng đơn hàng, Tổng sản phẩm, Tổng khách hàng, Doanh thu (DELIVERED). |
 
 ### 3. Yêu cầu dữ liệu (Data Requirements)
-#### 3.1. Dữ liệu đối chiếu
-* **Doanh thu Thực (Revenue):** `SELECT SUM(tongtien) FROM oder WHERE status = 'DELIVERED'` đi kèm hàm so sánh Timestamp `ngaytao` để tính toán doanh thu các sản phẩm **THỰC TẾ ĐÃ HOÀN TẤT** chuyển đi, xóa bỏ rủi ro thống kê hoá đơn bị người dùng huỷ. 
-* **Bảng Đơn hàng (`oder`):** `SELECT COUNT(id) FROM oder;`
-* **Bảng Khách hàng (`tbl_tkkhachhang`):** `SELECT COUNT(makh) FROM tbl_tkkhachhang;`
-* **Bảng Sản phẩm (`tbl_qlsanpham`):** `SELECT COUNT(masp) FROM tbl_qlsanpham;`
+* **Doanh thu:** `SELECT SUM(tongtien) FROM oder WHERE status = 'DELIVERED'` + timestamp filter.
+* **Đơn hàng:** `SELECT COUNT(id) FROM oder;`
+* **Khách hàng:** `SELECT COUNT(makh) FROM tbl_tkkhachhang;`
+* **Sản phẩm:** `SELECT COUNT(masp) FROM tbl_qlsanpham;`
 
-### 4. Ràng buộc kỹ thuật & Bảo mật (Technical Constraints)
-* **Xác thực phiên làm việc:** Bắt buộc phải có session admin tồn tại, nếu không sẽ tự động redirect về trang đăng nhập.
+### 4. Ràng buộc kỹ thuật & Bảo mật
+* **Bcrypt Authentication:** `password_verify()` cho mật khẩu đã hash, fallback plaintext comparison → auto-hash migration.
+* **Prepared Statements:** Chống SQL injection cho form đăng nhập.
+* **Toast Notifications:** Thay thế alert() bằng custom Toast system (warning/error) với animation slide-in.
 
-### 5. Trường hợp ngoại lệ & Xử lý lỗi (Edge Cases)
-* **Trường hợp:** CSDL bị rỗng (chưa có đơn hàng hay khách hàng).
-  * **Xử lý:** Các câu truy vấn `COUNT` trả về 0 và hiển thị bình thường, không gây lỗi logic (Exception).
+### 5. Trường hợp ngoại lệ
+* **CSDL rỗng:** COUNT trả về 0, hiển thị bình thường.
+* **Sai mật khẩu:** Toast error "Sai tài khoản hoặc mật khẩu".
+* **Truy cập trực tiếp:** Toast warning "Bạn phải đăng nhập trước".
 
 ### 6. Giao diện (UI/UX)
-* Thiết kế sử dụng các khối thẻ màu sắc nổi bật (Blue, Green, Red, Yellow) để làm nổi bật các con số thống kê.
+* Dashboard cards gradient với icon FontAwesome.
+* Login form: Floating label input, green accent animation, avatar SVG.
+* Sidebar navigation: 6 menu items (Trang chủ, Sản phẩm, Khách hàng, Bài đăng, Thành viên, Đơn hàng).
