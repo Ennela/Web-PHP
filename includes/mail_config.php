@@ -6,23 +6,9 @@
  * Sử dụng: require_once 'mail_config.php'; trước khi gọi mail_helper.php
  */
 
-// ─── Load .env file nếu chạy local (XAMPP) ───
-// Trên Railway/Docker, biến môi trường đã được set sẵn.
-$envFile = dirname(__DIR__) . '/.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '' || $line[0] === '#') continue;
-        if (strpos($line, '=') === false) continue;
-        list($key, $value) = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-        if (!getenv($key)) {
-            putenv("$key=$value");
-        }
-    }
-}
+// Environment is initialized once by config.php before sessions/DB access.
+// Never read .env late during a request or from staging/production deployments.
+require_once dirname(__DIR__) . '/config.php';
 
 // ─── Mail Type Constants ───
 define('MAIL_TYPE_TRANSACTIONAL', 'transactional');
@@ -36,7 +22,7 @@ define('MAIL_TRANS_FROM_NAME',  getenv('MAIL_TRANS_FROM_NAME')  ?: 'Shop Sneaker
 define('MAIL_MARKETING_FROM_EMAIL', getenv('MAIL_MARKETING_FROM_EMAIL') ?: 'hello@yourdomain.com');
 define('MAIL_MARKETING_FROM_NAME',  getenv('MAIL_MARKETING_FROM_NAME')  ?: 'Shop Sneakers');
 
-define('MAIL_ADMIN_EMAIL', getenv('MAIL_ADMIN_EMAIL') ?: 'remkyorosi@gmail.com');
+define('MAIL_ADMIN_EMAIL', getenv('MAIL_ADMIN_EMAIL') ?: '');
 define('MAIL_ADMIN_NAME',  getenv('MAIL_ADMIN_NAME')  ?: 'Shop Admin');
 
 // ─── Brand Info (dùng trong email templates) ───

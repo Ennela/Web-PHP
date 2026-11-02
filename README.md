@@ -204,6 +204,9 @@ WEB-PHP/
 
 ## Chức năng nổi bật
 
+- **Bảo vệ CSRF toàn ứng dụng:** Token gắn với session cho form và AJAX; thao tác thay đổi dữ liệu dùng POST. Xem [cơ chế, callback và cách kiểm thử](./documents/CSRF_SECURITY.md).
+- **Cấu hình bảo mật:** Chặn file nhạy cảm, ẩn lỗi, HTTP security header, kiểm tra Host/proxy, cấu hình production và upload ảnh an toàn. Xem [hướng dẫn cấu hình và kiểm thử](./documents/SECURITY_CONFIGURATION.md).
+
 ### Phía Khách hàng
 
 - **Giao diện Mobile-First & Responsive:** Toàn bộ trang shop, giỏ hàng, thanh toán được tối ưu hóa hiển thị trên mọi thiết bị với CSS Grid/Flexbox và kĩ thuật clamp typography.

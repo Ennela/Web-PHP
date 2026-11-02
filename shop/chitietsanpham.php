@@ -1,15 +1,18 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
    
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: shop.php');
+        exit;
     }
     include BASE_PATH . 'includes/connect.php';
     require_once BASE_PATH . 'includes/inventory_helper.php';
@@ -1366,6 +1369,7 @@ require_once dirname(__DIR__) . '/config.php';
 
                     <!-- Add to Cart -->
                     <form action="<?php echo BASE_URL; ?>shop/giohang.php?action=add" method="POST" onsubmit="return validateSize()">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="size[<?= $product['masp'] ?>]" id="form-size" value="<?= ($preferredSize && !$preferredSizeOutOfStock) ? $preferredSize : '' ?>">
                         <div class="add-to-cart-section">
                             <div class="qty-label">Số lượng</div>

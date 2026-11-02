@@ -1,8 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
     header('Location: vechungtoi.php');
     exit;

@@ -6,7 +6,10 @@
  * - cancel: Hủy đơn (PENDING/CONFIRMED → CANCELLED + hoàn tồn kho)
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+csrf_require_post();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 

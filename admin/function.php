@@ -1,108 +1,61 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
+require_once BASE_PATH . 'includes/upload_helper.php';
 
-
-    function uploadFiles($uploadedFiles) {
-        $files = array();
-        $errors = array();
-        $returnFiles = array();
-        //Xử lý gom dữ liệu vào từng file đã upload
-        // var_dump($uploadedFiles);exit;
-
-        //chuyển hoá thành dạng key và values
-        foreach ($uploadedFiles as $key => $values) {
-            if(is_array($values)){
-                foreach ($values as $index => $value) {
-                    $files[$index][$key] = $value;
-                }
-            }else{
-                $files[$key] = $values;
-            }
-        }
-        // kết quả quy ra rõ ràng hơn từng thuộc tính và từng giá trị
-        $uploadPath = __DIR__ . "/uploads";
-
-
-        //kiểm tra tồn tại folder
-        if (!is_dir($uploadPath)) {
-            @mkdir($uploadPath, 0775, true);
-        }
-
-
-
-        if(is_array(reset($files))){ //Up nhiều ảnh
-            foreach ($files as $file) {
-                $result = processUploadFile($file,$uploadPath);
-                if($result['error']){
-                    $errors[] = $result['message'];
-                }else{
-                    $returnFiles[] = $result['path'];
-                }
-            }
-        }else{ //Up 1 ảnh
-            $result = processUploadFile($files,$uploadPath);
-            if($result['error']){
-                return array(
-                    'errors' => $result['message']
-                );
-            }else{
-                return array(
-                    'path' => $result['path']
-                );
-            }
-        }
-        return array(
-            'errors' => $errors,
-            'uploaded_files' => $returnFiles
-        );
+/** Compatibility wrapper for callers uploading one image or an image list. */
+function uploadFiles($uploadedFiles) {
+    if (!is_array($uploadedFiles) || !isset($uploadedFiles['name'])) {
+        return ['errors' => 'Dữ liệu ảnh tải lên không hợp lệ.'];
+    }
+    if (!is_array($uploadedFiles['name'])) {
+        $result = processUploadFile($uploadedFiles, __DIR__ . '/uploads');
+        return $result['error'] ? ['errors' => $result['message']] : ['path' => $result['path']];
     }
 
-    function processUploadFile($file,$uploadPath){
-        $file = validateUploadFile($file, $uploadPath);
-        if ($file != false) {
-//            $file["name"] = str_replace(' ','_',$file["name"]);
-            if(move_uploaded_file($file["tmp_name"], $uploadPath . '/' . $file["name"])){
-                return array(
-                    'error'=>false,
-                    'path' =>  'uploads/' . $file["name"]
-                );
+    $validated = [];
+    $paths = [];
+    try {
+        foreach ($uploadedFiles['name'] as $index => $name) {
+            $file = [];
+            foreach (['name', 'tmp_name', 'size', 'error'] as $key) {
+                $file[$key] = $uploadedFiles[$key][$index] ?? null;
             }
-        }else{
-            return array(
-                'error'=>false,
-                'message' => "File tải lên " . basename($file["name"]) . " không hợp lệ."
-            );
+            $validated[] = app_validate_image_upload($file);
         }
+        foreach ($validated as $image) {
+            $paths[] = app_store_validated_image($image, __DIR__ . '/uploads', 'uploads');
+        }
+        return ['errors' => [], 'uploaded_files' => $paths];
+    } catch (InvalidArgumentException | RuntimeException $error) {
+        foreach ($paths as $path) {
+            @unlink(__DIR__ . '/' . $path);
+        }
+        return ['errors' => [$error->getMessage()], 'uploaded_files' => []];
     }
+}
 
-//Check file hợp lệ
-    function validateUploadFile($file, $uploadPath) {
-        //Kiểm tra xem có vượt quá dung lượng cho phép không?
-        if ($file['size'] > 2 * 1024 * 1024) { //max upload is 2 Mb = 2 * 1024 kb * 1024 bite
+function processUploadFile($file, $uploadPath) {
+    try {
+        if (!is_array($file)) {
+            throw new InvalidArgumentException('Dữ liệu ảnh tải lên không hợp lệ.');
+        }
+        $path = app_store_image_upload($file, $uploadPath, 'uploads');
+        return ['error' => false, 'path' => $path];
+    } catch (InvalidArgumentException | RuntimeException $error) {
+        return ['error' => true, 'message' => $error->getMessage()];
+    }
+}
+
+function validateUploadFile($file, $uploadPath) {
+    try {
+        if (!is_array($file)) {
             return false;
         }
-        //Kiểm tra xem kiểu file có hợp lệ không?
-        $validTypes = array("jpg", "jpeg", "png", "bmp","xlsx","xls");
-        $fileType = strtolower(substr($file['name'], strrpos($file['name'], ".") + 1));
-        if (!in_array($fileType, $validTypes)) {
-            return false;
-        }
-//        Check xem file đã tồn tại chưa? Nếu tồn tại thì đổi tên
-//        $num = 0;
-//        $fileName = substr($file['name'], 0, strrpos($file['name'], "."));
-//        while (file_exists($uploadPath . '/' . $fileName . '.' . $fileType)) {
-//            $fileName = $fileName . "(" . $num . ")";
-//            $num++;
-//        }
-//        if($num != 0){
-//            $fileName = substr($file['name'], 0, strrpos($file['name'], ".")). "(" . $num . ")";
-//        }else{
-//            $fileName = substr($file['name'], 0, strrpos($file['name'], "."));
-//        }
-//        $file['name'] =  $fileName . '.' . $fileType;
-        return $file;
+        return array_merge($file, app_validate_image_upload($file));
+    } catch (InvalidArgumentException | RuntimeException $error) {
+        return false;
     }
-
-
+}
 
     function validateDateTime($date) {
         //Kiểm tra định dạng ngày tháng xem đúng DD/MM/YYYY hay chưa?

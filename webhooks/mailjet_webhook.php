@@ -16,14 +16,30 @@
  * 3. Chọn events: bounce, spam, blocked, unsub
  */
 
+// Load environment, safe errors and request policy before authenticating.
+// No database connection is opened until the webhook secret has been verified.
+require_once dirname(__DIR__) . '/config.php';
+
 // Chỉ chấp nhận POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     exit('Method Not Allowed');
 }
 
-// Load config & DB
-require_once dirname(__DIR__) . '/config.php';
+// Server-to-server endpoint: a mandatory secret replaces browser CSRF tokens.
+// Validate before database access or processing any event.
+$webhookSecret = getenv('MAILJET_WEBHOOK_SECRET');
+if (!is_string($webhookSecret) || $webhookSecret === '' || $webhookSecret === 'generate_a_random_secret_here') {
+    http_response_code(503);
+    exit('Webhook authentication is not configured');
+}
+$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? '';
+if (!is_string($authHeader) || !hash_equals($webhookSecret, $authHeader)) {
+    http_response_code(401);
+    exit('Unauthorized');
+}
+
+// Load DB only after authentication
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/mail_helper.php';
 
@@ -35,17 +51,6 @@ if (empty($events) || !is_array($events)) {
     error_log("MAILJET_WEBHOOK: Invalid payload received");
     http_response_code(400);
     exit('Bad Request');
-}
-
-// ─── Xác thực webhook (optional nhưng recommended) ───
-$webhookSecret = getenv('MAILJET_WEBHOOK_SECRET');
-if (!empty($webhookSecret)) {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? '';
-    if ($authHeader !== $webhookSecret) {
-        error_log("MAILJET_WEBHOOK: Unauthorized request");
-        http_response_code(401);
-        exit('Unauthorized');
-    }
 }
 
 // ─── Xử lý từng event ───

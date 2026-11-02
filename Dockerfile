@@ -1,48 +1,31 @@
-# ─────────────────────────────────────────────────
-# Dockerfile for WEB-PHP (PHP + Apache + MySQL ext)
-# Optimized for Railway deployment
-# ─────────────────────────────────────────────────
-FROM php:8.2-apache
+# Pin the supported PHP minor; rebuild regularly for security patch releases.
+FROM php:8.4-apache
 
-# Install system dependencies + PHP extensions
-RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    zip \
-    unzip \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpng-dev libjpeg62-turbo-dev libfreetype6-dev libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        mysqli \
-        gd \
-        zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install -j$(nproc) mysqli gd zip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Enable rewrite module
-RUN a2enmod rewrite
+RUN a2enmod rewrite headers \
+    && a2dismod -f autoindex status
 
-# Configure Apache: allow .htaccess overrides & set ServerName
-RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
-    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+COPY deploy/php-security.ini /usr/local/etc/php/conf.d/zz-security.ini
+COPY deploy/apache-security.conf /etc/apache2/conf-available/app-security.conf
+RUN a2enconf app-security
 
-# Default PORT for Railway
-ENV PORT=80
-
-# Set working directory
+ENV PORT=80 APP_ENV=production APP_DEBUG=0
 WORKDIR /var/www/html
+COPY --chown=root:root . .
 
-# Copy all application files
-COPY . .
+# Apache can read source, but the application may write only to upload folders.
+# Configuration stays root-owned and upload folders cannot supply .htaccess.
+RUN find /var/www/html -type d -exec chmod 755 {} + \
+    && find /var/www/html -type f -exec chmod 644 {} + \
+    && mkdir -p admin/uploads auth/uploads/avatars \
+    && chown -R www-data:www-data admin/uploads auth/uploads \
+    && find admin/uploads auth/uploads -type d -exec chmod 750 {} + \
+    && find admin/uploads auth/uploads -type f -exec chmod 640 {} + \
+    && chmod 755 docker-entrypoint.sh
 
-# Make entrypoint executable
-RUN chmod +x docker-entrypoint.sh
-
-# Create upload directories and set permissions
-RUN mkdir -p admin/uploads auth/uploads \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html \
-    && chmod -R 775 admin/uploads auth/uploads
-
-# Use entrypoint script to fix MPM + PORT at runtime
 ENTRYPOINT ["./docker-entrypoint.sh"]

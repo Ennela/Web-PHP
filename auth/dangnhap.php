@@ -1,16 +1,19 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     include BASE_PATH . 'includes/connect.php';
 
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: dangnhap.php');
+        exit;
     }
 
     if(isset($_POST['dangnhap'])) {
@@ -25,9 +28,12 @@ require_once dirname(__DIR__) . '/config.php';
             $count = mysqli_num_rows($sql_select_admin);
             $row_dangnhap = mysqli_fetch_array($sql_select_admin);
             if($count>0){
+                session_regenerate_id(true);
+                csrf_rotate_token();
                 $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
                 $_SESSION['makh'] = $row_dangnhap['makh'];
                 header('Location: ' . BASE_URL . 'home/trangchu.php');
+                exit;
 
             }else{
                 $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
@@ -143,6 +149,7 @@ require_once dirname(__DIR__) . '/config.php';
             <h2 class="auth-title">Đăng nhập</h2>
             <p class="auth-subtitle">Đăng nhập để trải nghiệm mua sắm</p>
             <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST">
+                <?= csrf_field() ?>
                 <div class="mb-3">
                     <label class="form-label" for="email">Tài khoản</label>
                     <input name="taikhoan" class="form-control" type="text" id="email" placeholder="Nhập tên đăng nhập">

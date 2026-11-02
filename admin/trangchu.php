@@ -1,18 +1,22 @@
 <?php
-    session_start();
+require_once dirname(__DIR__) . '/config.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
 
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
     include './connect_db.php';
     $lay = mysqli_query($con, "SELECT SUM(tongtien) as 'tong'  FROM oder WHERE MONTH(FROM_UNIXTIME(ngaytao)) = MONTH(CURRENT_DATE()) AND YEAR(FROM_UNIXTIME(ngaytao)) = YEAR(CURRENT_DATE()) AND status = 'DELIVERED'");
@@ -121,10 +125,13 @@
                                style="width: 120px;"><i
                                         class="fa fa-user fa-fw"></i> Đăng nhập </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất</a>
+                                        class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất</button>
+                            </form>
                         </div>
                     </div>
                 </li>
