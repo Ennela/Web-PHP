@@ -50,33 +50,30 @@ require_once dirname(__DIR__) . '/config.php';
 <?php
     include_once 'connect_db.php';
 include_once 'function.php';
-    if (isset($_GET['id'])) {
-        $sql_query   = "SELECT * FROM tbl_qlthanhvien WHERE id=".$_GET['id'];
-        $result_set  = mysqli_query($con, $sql_query);
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    $fetched_row = null;
+    if ($id > 0) {
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlthanhvien WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+        $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
+        mysqli_stmt_close($stmt);
     }
     if (isset($_POST['btn-save'])) {
-        // variables for input data
-        $hoten        = $_POST['hoten'];
-        $gioitinh     = $_POST['gioitinh'];
-        $ngaysinh     = $_POST['ngaysinh'];
-        $diachicuthe  = $_POST['diachicuthe'];
-        $chucvu       = $_POST['chucvu'];
-        $motacongviec = $_POST['motacongviec'];
+        $hoten        = $_POST['hoten'] ?? '';
+        $gioitinh     = $_POST['gioitinh'] ?? '';
+        $ngaysinh     = $_POST['ngaysinh'] ?? '';
+        $diachicuthe  = $_POST['diachicuthe'] ?? '';
+        $chucvu       = $_POST['chucvu'] ?? '';
+        $motacongviec = $_POST['motacongviec'] ?? '';
 
-        $ngaysinh = strtotime($ngaysinh);
+        $ngaysinh_ts = strtotime($ngaysinh) ?: 0;
 
-        // variables for input data
-        
-        // sql query for inserting data into database
-        
-        $sql_query
-            = "UPDATE tbl_qlthanhvien SET hoten='$hoten',gioitinh='$gioitinh',ngaysinh='$ngaysinh',diachicuthe='$diachicuthe',chucvu='$chucvu',motacongviec='$motacongviec' WHERE id="
-            .$_GET['id'];
-        // sql query for inserting data into database
-
-        // sql query execution function
-        if (mysqli_query($con, $sql_query)) {
+        $stmt_up = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET hoten = ?, gioitinh = ?, ngaysinh = ?, diachicuthe = ?, chucvu = ?, motacongviec = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt_up, "ssssssi", $hoten, $gioitinh, $ngaysinh_ts, $diachicuthe, $chucvu, $motacongviec, $id);
+        if (mysqli_stmt_execute($stmt_up)) {
+            mysqli_stmt_close($stmt_up);
             ?>
             <script type="text/javascript">
                 alert('D? li?u du?c chèn thành công ');

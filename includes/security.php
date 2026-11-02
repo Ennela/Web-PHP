@@ -1,5 +1,8 @@
 <?php
-/** Shared runtime hardening. Loaded before sessions, output and database access. */
+/** Shared runtime hardening & security defense module. Loaded before sessions, output and database access. */
+
+if (!defined('SECURITY_MODULE_LOADED')) {
+    define('SECURITY_MODULE_LOADED', true);
 
 function app_is_production(): bool
 {
@@ -12,7 +15,8 @@ function app_json_request(): bool
     return strpos($script, 'api_') === 0
         || in_array($script, ['cart_update_ajax.php', 'gallery_delete.php', 'mailjet_webhook.php'], true)
         || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false
-        || stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
+        || stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false
+        || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest';
 }
 
 function app_fail(int $status, string $message = 'Hệ thống tạm thời không khả dụng. Vui lòng thử lại sau.'): void
@@ -101,8 +105,6 @@ function app_security_headers(): void
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
     header('Cache-Control: no-store');
-    // Existing templates use inline handlers/styles. Keep them working while
-    // restricting third-party sources; a nonce-only policy needs a template migration.
     header("Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
         . "form-action 'self' https://sandbox.vnpayment.vn https://pay.vnpay.vn; "
         . "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://kit.fontawesome.com; "
@@ -111,7 +113,6 @@ function app_security_headers(): void
         . "img-src 'self' data: blob: https:; connect-src 'self' https://provinces.open-api.vn https://kit.fontawesome.com https://ka-f.fontawesome.com; "
         . "frame-src https://www.google.com https://maps.google.com; media-src 'self' blob:");
     if (app_is_production() && app_is_https()) {
-        // Deliberately omit includeSubDomains/preload: these require domain-wide ownership.
         header('Strict-Transport-Security: max-age=31536000');
     }
 }
@@ -132,7 +133,6 @@ function app_security_bootstrap(): ?string
     define('APP_OUTPUT_LEVEL', ob_get_level());
     ob_start();
     set_exception_handler(function (Throwable $exception): void {
-        // Diagnostics stay server-side; never log SQL, request bodies or secrets.
         error_log(sprintf('APP_EXCEPTION type=%s file=%s line=%d', get_class($exception), basename($exception->getFile()), $exception->getLine()));
         app_fail(500);
     });
@@ -182,7 +182,6 @@ function app_security_bootstrap(): ?string
         app_fail(400, 'Địa chỉ truy cập không hợp lệ.');
     }
 
-    // Defense in depth for PHP-only servers. Static resources are denied by the web server.
     $entry = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ?: '';
     $project = dirname(__DIR__) . DIRECTORY_SEPARATOR;
     $relative = str_replace('\\', '/', substr($entry, strlen($project)));
@@ -208,4 +207,192 @@ function app_security_bootstrap(): ?string
         exit;
     }
     return $canonical;
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SESSION & AUTHORIZATION / IDOR DEFENSE HELPERS
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+function init_secure_session(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+}
+
+function secure_session_regenerate(bool $forceRegenerate = true): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        if (!headers_sent()) {
+            session_regenerate_id($forceRegenerate);
+        }
+        if (function_exists('csrf_rotate_token')) {
+            csrf_rotate_token();
+        } else {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+    }
+}
+
+function secure_logout(?string $redirectUrl = null): void
+{
+    init_secure_session();
+    $_SESSION = [];
+    if (ini_get('session.use_cookies') && !headers_sent()) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params['path'],
+            $params['domain'],
+            $params['secure'],
+            $params['httponly']
+        );
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
+    if (!empty($redirectUrl)) {
+        if (!headers_sent()) {
+            header('Location: ' . $redirectUrl);
+        }
+        exit;
+    }
+}
+
+function get_csrf_token(): string
+{
+    if (function_exists('csrf_token')) {
+        return csrf_token();
+    }
+    init_secure_session();
+    if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_input(): string
+{
+    if (function_exists('csrf_field')) {
+        return csrf_field();
+    }
+    return '<input type="hidden" name="csrf_token" value="'
+        . htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+}
+
+function csrf_meta(): string
+{
+    return '<meta name="csrf-token" content="'
+        . htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+}
+
+function validate_csrf_token(?string $providedToken = null, ?string $rawBody = null): bool
+{
+    if (function_exists('csrf_valid_token') && $providedToken !== null) {
+        return csrf_valid_token($providedToken);
+    }
+    init_secure_session();
+    if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+        return false;
+    }
+    if ($providedToken === null) {
+        if (!empty($_POST['csrf_token']) && is_string($_POST['csrf_token'])) {
+            $providedToken = $_POST['csrf_token'];
+        } elseif (!empty($_SERVER['HTTP_X_CSRF_TOKEN']) && is_string($_SERVER['HTTP_X_CSRF_TOKEN'])) {
+            $providedToken = $_SERVER['HTTP_X_CSRF_TOKEN'];
+        } else {
+            $rawInput = ($rawBody !== null) ? $rawBody : file_get_contents('php://input');
+            if (!empty($rawInput)) {
+                $json = json_decode($rawInput, true);
+                if (is_array($json) && !empty($json['csrf_token']) && is_string($json['csrf_token'])) {
+                    $providedToken = $json['csrf_token'];
+                }
+            }
+        }
+    }
+    if (empty($providedToken) || !is_string($providedToken)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $providedToken);
+}
+
+function verify_csrf_or_abort(): void
+{
+    if (function_exists('csrf_require_post')) {
+        csrf_require_post();
+    }
+    if (!validate_csrf_token()) {
+        if (function_exists('csrf_reject')) {
+            csrf_reject(403);
+        } else {
+            http_response_code(403);
+            exit('CSRF token không hợp lệ.');
+        }
+    }
+}
+
+function is_user_logged_in(): bool
+{
+    init_secure_session();
+    return !empty($_SESSION['dangnhap']) && !empty($_SESSION['makh']);
+}
+
+function get_current_user_id(): int
+{
+    init_secure_session();
+    return isset($_SESSION['makh']) ? intval($_SESSION['makh']) : 0;
+}
+
+function require_user(?string $redirectUrl = null): void
+{
+    if (!is_user_logged_in()) {
+        if (app_json_request()) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập để thực hiện hành động này!'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        if ($redirectUrl === null) {
+            $base = defined('BASE_URL') ? BASE_URL : '/WEB-PHP/';
+            $redirectUrl = $base . 'auth/dangnhap.php';
+        }
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
+}
+
+function is_admin_logged_in(): bool
+{
+    init_secure_session();
+    return !empty($_SESSION['dangnhap1']);
+}
+
+function get_current_admin_id(): int
+{
+    init_secure_session();
+    return isset($_SESSION['manv']) ? intval($_SESSION['manv']) : 0;
+}
+
+function require_admin(?string $redirectUrl = null): void
+{
+    if (!is_admin_logged_in()) {
+        if (app_json_request()) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'Bạn không có quyền quản trị!'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        if ($redirectUrl === null) {
+            $base = defined('BASE_URL') ? BASE_URL : '/WEB-PHP/';
+            $redirectUrl = $base . 'admin/canhbao.php';
+        }
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
+}
+
 }

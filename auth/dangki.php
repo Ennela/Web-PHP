@@ -24,24 +24,38 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
             exit;
         }
 
-        // Check for duplicate username
-        $check_query = mysqli_query($con, "SELECT * FROM tbl_tkkhachhang WHERE username='$taikhoan' LIMIT 1");
-        if (mysqli_num_rows($check_query) > 0) {
+        // Check for duplicate username with prepared statement
+        $stmtUser = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmtUser, "s", $taikhoan);
+        mysqli_stmt_execute($stmtUser);
+        $resUser = mysqli_stmt_get_result($stmtUser);
+        if (mysqli_num_rows($resUser) > 0) {
+            mysqli_stmt_close($stmtUser);
             $_SESSION['swal_error'] = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!';
             header('Location: dangki.php');
             exit;
         }
+        mysqli_stmt_close($stmtUser);
 
-        // Check for duplicate email
-        $check_email = mysqli_query($con, "SELECT * FROM tbl_tkkhachhang WHERE email='$email' LIMIT 1");
-        if (mysqli_num_rows($check_email) > 0) {
+        // Check for duplicate email with prepared statement
+        $stmtEmail = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE email = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmtEmail, "s", $email);
+        mysqli_stmt_execute($stmtEmail);
+        $resEmail = mysqli_stmt_get_result($stmtEmail);
+        if (mysqli_num_rows($resEmail) > 0) {
+            mysqli_stmt_close($stmtEmail);
             $_SESSION['swal_error'] = 'Email đã được sử dụng. Vui lòng dùng email khác!';
             header('Location: dangki.php');
             exit;
         }
+        mysqli_stmt_close($stmtEmail);
 
-        $sql_query = "INSERT INTO tbl_tkkhachhang(hoten,email,username,password) VALUES('$hoten','$email','$taikhoan','$matkhau')";
-        if (mysqli_query($con, $sql_query)) {
+        $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
+        $stmtInsert = mysqli_prepare($con, "INSERT INTO tbl_tkkhachhang (hoten, email, username, password) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmtInsert, "ssss", $hoten, $email, $taikhoan, $hashedPassword);
+
+        if (mysqli_stmt_execute($stmtInsert)) {
+            mysqli_stmt_close($stmtInsert);
             $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
             header('Location: dangnhap.php');
             exit;
@@ -157,4 +171,4 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         </div>
     </main>
 
-<?php include BASE_PATH . 'includes/footer.php'; ?>
+<?php include BASE_PATH . 'includes/footer.php'; ?>

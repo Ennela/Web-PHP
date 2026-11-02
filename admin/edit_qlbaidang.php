@@ -23,10 +23,15 @@ require_once dirname(__DIR__) . '/config.php';
 <?php
     include_once 'connect_db.php';
     include_once 'function.php';
-    if (isset($_GET['id'])) {
-        $sql_query = "SELECT * FROM tbl_qlbaidang WHERE id=" . $_GET['id'];
-        $result_set = mysqli_query($con, $sql_query);
+    $id = intval($_GET['id'] ?? 0);
+    $fetched_row = null;
+    if ($id > 0) {
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlbaidang WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+        $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
+        mysqli_stmt_close($stmt);
     }
     if (isset($_POST['btn-save'])) {
         // Bi?n d? li?u d?u vào
@@ -48,14 +53,15 @@ require_once dirname(__DIR__) . '/config.php';
             mysqli_stmt_execute($imageUpdate);
             mysqli_stmt_close($imageUpdate);
         }
-        $sql_query
-            = "UPDATE tbl_qlbaidang SET nguoiphutrach='$nguoiphutrach',tieude='$tieude',chedo='$chedo',noidung='$noidung',ngaytao='"
-            . time() . "',ngaycapnhat='" . time() . "' WHERE id=" . $_GET['id'];
+        $now = time();
+        $stmtUp = mysqli_prepare($con, "UPDATE tbl_qlbaidang SET nguoiphutrach = ?, tieude = ?, chedo = ?, noidung = ?, ngaycapnhat = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmtUp, "ssssii", $nguoiphutrach, $tieude, $chedo, $noidung, $now, $id);
         // Truy v?n SQL d? chèn d? li?u vào co s? d? li?u'
 
         // sql query execution function
 
-        if (mysqli_query($con, $sql_query)) {
+        if (mysqli_stmt_execute($stmtUp)) {
+            mysqli_stmt_close($stmtUp);
 
             ?>
             <script type="text/javascript">

@@ -53,24 +53,38 @@ if (!empty($errors)) {
     exit;
 }
 
-// Kiểm tra mật khẩu hiện tại
-$query = mysqli_query($con, "SELECT `password` FROM `tbl_tkkhachhang` WHERE `makh` = $makh LIMIT 1");
-$user = mysqli_fetch_assoc($query);
+// Kiểm tra mật khẩu hiện tại bằng prepared statement
+$stmt = mysqli_prepare($con, "SELECT `password` FROM `tbl_tkkhachhang` WHERE `makh` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmt, "i", $makh);
+mysqli_stmt_execute($stmt);
+$res = mysqli_stmt_get_result($stmt);
+$user = mysqli_fetch_assoc($res);
+mysqli_stmt_close($stmt);
 
-if (!$user || $user['password'] !== $mk_hientai) {
+$currentPasswordMatch = false;
+if ($user) {
+    if (password_verify($mk_hientai, $user['password']) || $user['password'] === $mk_hientai) {
+        $currentPasswordMatch = true;
+    }
+}
+
+if (!$currentPasswordMatch) {
     echo json_encode(['success' => false, 'message' => 'Mật khẩu hiện tại không đúng']);
     exit;
 }
 
-// Update mật khẩu
-$mk_moi_safe = mysqli_real_escape_string($con, $mk_moi);
+// Update mật khẩu mới bằng bcrypt hash
+$hashedPassword = password_hash($mk_moi, PASSWORD_BCRYPT);
 $now = time();
-$sql = "UPDATE `tbl_tkkhachhang` SET `password` = '$mk_moi_safe', `last_updated` = $now WHERE `makh` = $makh";
+$updateStmt = mysqli_prepare($con, "UPDATE `tbl_tkkhachhang` SET `password` = ?, `last_updated` = ? WHERE `makh` = ?");
+mysqli_stmt_bind_param($updateStmt, "sii", $hashedPassword, $now, $makh);
 
-if (mysqli_query($con, $sql)) {
+if (mysqli_stmt_execute($updateStmt)) {
+    mysqli_stmt_close($updateStmt);
     echo json_encode(['success' => true, 'message' => 'Đổi mật khẩu thành công!']);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
+    mysqli_stmt_close($updateStmt);
+    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống. Vui lòng thử lại sau.']);
 }
 
 mysqli_close($con);

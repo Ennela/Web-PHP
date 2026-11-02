@@ -15,6 +15,12 @@ if ($id === false || $id === null) {
 
 require __DIR__ . '/connect_db.php';
 try {
+    $stmtDetail = mysqli_prepare($con, 'DELETE FROM `oder_chitiet` WHERE `madonhang` = ?');
+    if ($stmtDetail) {
+        mysqli_stmt_bind_param($stmtDetail, 'i', $id);
+        mysqli_stmt_execute($stmtDetail);
+        mysqli_stmt_close($stmtDetail);
+    }
     $stmt = mysqli_prepare($con, 'DELETE FROM `oder` WHERE `id` = ?');
     mysqli_stmt_bind_param($stmt, 'i', $id);
     mysqli_stmt_execute($stmt);

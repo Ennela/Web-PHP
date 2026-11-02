@@ -60,7 +60,7 @@
         <div class="collapse navbar-collapse" id="navcol-1">
             <?php
                 if (!empty($_SESSION['dangnhap'])) { ?>
-                    <div class="them d-none d-lg-block"><?php echo 'Chào: ' . $_SESSION['dangnhap'] ?>
+                    <div class="them d-none d-lg-block"><?php echo 'Chào: ' . htmlspecialchars($_SESSION['dangnhap']) ?>
                         <form method="post" action="<?= BASE_URL ?>auth/dangnhap.php" style="display:inline">
                             <?= csrf_field() ?>
                             <button type="submit" name="login" value="dangxuat" class="dangxuat" style="border:0;background:none;cursor:pointer">Đăng xuất</button>

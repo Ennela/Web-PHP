@@ -25,12 +25,17 @@ require_once dirname(__DIR__) . '/config.php';
     include_once 'function.php';
     require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
-    if (isset($_GET['masp'])) {
-        $sql_query = "SELECT * FROM tbl_qlsanpham WHERE masp=" . $_GET['masp'];
-        $result_set = mysqli_query($con, $sql_query);
+    $masp = intval($_GET['masp'] ?? 0);
+    $fetched_row = null;
+    $currentStock = [];
+    if ($masp > 0) {
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlsanpham WHERE masp = ?");
+        mysqli_stmt_bind_param($stmt, "i", $masp);
+        mysqli_stmt_execute($stmt);
+        $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
-        // Load tồn kho hiện tại
-        $currentStock = getStockByProduct($con, (int)$_GET['masp']);
+        mysqli_stmt_close($stmt);
+        $currentStock = getStockByProduct($con, $masp);
     }
     if (isset($_POST['btn-save'])) {
         // Biến dữ liệu đầu vào
@@ -56,14 +61,12 @@ require_once dirname(__DIR__) . '/config.php';
             mysqli_stmt_execute($imageUpdate);
             mysqli_stmt_close($imageUpdate);
         }
-        $sql_query
-            = "UPDATE tbl_qlsanpham SET tensp='$tensp',giasanpham='$giasanpham',giagoc='$giagoc',noidung='$noidung',ngaycapnhat='"
-            . time() . "',nhomsp='$nhomsp' WHERE masp=" . $_GET['masp'];
+        $now = time();
+        $stmtUp = mysqli_prepare($con, "UPDATE tbl_qlsanpham SET tensp = ?, giasanpham = ?, giagoc = ?, noidung = ?, ngaycapnhat = ?, nhomsp = ? WHERE masp = ?");
+        mysqli_stmt_bind_param($stmtUp, "ssssisi", $tensp, $giasanpham, $giagoc, $noidung, $now, $nhomsp, $masp);
 
-        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
-        // sql query execution function
-
-        if (mysqli_query($con, $sql_query) && !isset($error)) {
+        if (mysqli_stmt_execute($stmtUp) && !isset($error)) {
+            mysqli_stmt_close($stmtUp);
 
             // === CẬP NHẬT TỒN KHO ===
             if (isset($_POST['stock']) && is_array($_POST['stock'])) {

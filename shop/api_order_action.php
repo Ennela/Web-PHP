@@ -18,6 +18,7 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
 
 // Bắt buộc đăng nhập
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
@@ -39,11 +40,16 @@ if ($orderId <= 0 || !in_array($action, ['receive', 'cancel'])) {
     exit;
 }
 
-// Lấy đơn hàng và kiểm tra quyền sở hữu
-$result = mysqli_query($con, "SELECT * FROM `oder` WHERE `id` = $orderId AND `makh` = $makh LIMIT 1");
-$order = mysqli_fetch_assoc($result);
+// Lấy đơn hàng và kiểm tra quyền sở hữu (IDOR Check) bằng prepared statement
+$stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `id` = ? AND `makh` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmt, "ii", $orderId, $makh);
+mysqli_stmt_execute($stmt);
+$resOrder = mysqli_stmt_get_result($stmt);
+$order = mysqli_fetch_assoc($resOrder);
+mysqli_stmt_close($stmt);
 
 if (!$order) {
+    http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Đơn hàng không tồn tại hoặc bạn không có quyền']);
     exit;
 }
