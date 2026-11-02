@@ -1,17 +1,21 @@
 <?php
-session_start();
-if (!isset($_SESSION['dangnhap'])) {
+require_once dirname(__DIR__) . '/config.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+if (!isset($_SESSION['dangnhap1'])) {
 	header('Location: canhbao.php');
 	exit;
 }
-if (isset($_GET['login'])) {
-	$dangxuat = $_GET['login'];
+if (isset($_POST['login'])) {
+	$dangxuat = $_POST['login'];
 } else {
 	$dangxuat = '';
 }
 if ($dangxuat == 'dangxuat') {
 	session_destroy();
 	header('Location: index.php');
+        exit;
 }
 
 ?>
@@ -69,7 +73,7 @@ if ($dangxuat == 'dangxuat') {
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none" onclick="toggleDD('myDropdown')"><span
-                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo $_SESSION['dangnhap'] ?>
+                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                             </svg>
@@ -82,10 +86,13 @@ if ($dangxuat == 'dangxuat') {
                                style="width: 120px;"><i
                                         class="fa fa-user fa-fw"></i> Ðang nh?p </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i> Ðang xu?t</a>
+                                        class="fas fa-sign-out-alt fa-fw"></i> Ðang xu?t</button>
+                            </form>
                         </div>
                     </div>
                 </li>

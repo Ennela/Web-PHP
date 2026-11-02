@@ -1,18 +1,22 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
     
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
 
 ?>
@@ -147,11 +151,14 @@ include_once 'function.php';
                                         class="fa fa-user fa-fw"></i> Ðang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Ðang xu?t</a>
+                                Ðang xu?t</button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -243,6 +250,7 @@ include_once 'function.php';
             <div class="w-1/2 m-auto ">
                 <form method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                    <?= csrf_field() ?>
                     <label class="block ">
                         <span class="text-gray-700">H? và tên:</span>
                         <input value="<?php

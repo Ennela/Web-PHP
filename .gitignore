@@ -47,6 +47,10 @@ tests/
 .phpunit.cache/
 .phpunit.result.cache
 
+# Python HTTP regression checks
+__pycache__/
+*.pyc
+
 # Tài liệu nội bộ (không push lên remote)
 documents/SRS_USECASE_DIAGRAMS.MD
 images_docx/

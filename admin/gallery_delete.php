@@ -1,30 +1,27 @@
-<?php include 'header.php'; ?>
-<div class="main-content">
-    <h1>Xóa sản phẩm</h1>
-    <div id="content-box">
-    <?php
-    $error = false;
-    if (isset($_GET['id']) && !empty($_GET['id'])) {
-        include '../connect_db.php';
-        $result = mysqli_query($con, "DELETE FROM `image_library` WHERE `id` = ".$_GET['id']);
-        if (!$result) {
-            $error = "Không thể xóa ảnh trong thư viện.";
-        }
-        mysqli_close($con);
-        if ($error !== false) {
-            ?>
-            <div id="error-notify" class="box-content">
-                <h2>Thông báo</h2>
-                <h4><?= $error ?></h4>
-                <a href="javascript:window.history.go(-1)">Quay lại</a>
-            </div>
-        <?php } else { ?>
-            <div id="success-notify" class="box-content">
-                <h2>Xóa thư viện ảnh của sản phẩm thành công</h2>
-                <a href="javascript:window.history.go(-1)">Quay lại</a>
-            </div>
-        <?php } ?>
-    <?php } ?>
-    </div>
-</div>
-<?php include 'footer.php'; ?>
+<?php
+require_once dirname(__DIR__) . '/config.php';
+csrf_require_post();
+
+if (empty($_SESSION['dangnhap1'])) {
+    http_response_code(403);
+    exit('Không có quyền truy cập.');
+}
+
+$id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if ($id === false || $id === null) {
+    http_response_code(400);
+    exit('Mã bản ghi không hợp lệ.');
+}
+
+require __DIR__ . '/connect_db.php';
+try {
+    $stmt = mysqli_prepare($con, 'DELETE FROM `tbl_thuvienanh` WHERE `id` = ?');
+    mysqli_stmt_bind_param($stmt, 'i', $id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+} catch (mysqli_sql_exception $exception) {
+    http_response_code(409);
+    exit('Không thể xóa bản ghi đang được sử dụng.');
+}
+header('Location: quanlisanpham.php', true, 303);
+exit;

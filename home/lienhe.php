@@ -1,8 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
     header('Location: lienhe.php');
     exit;
@@ -361,6 +363,7 @@ if (isset($_POST['btn'])) {
                 <?php endif; ?>
 
                 <form method="post" id="contactForm" novalidate>
+                    <?= csrf_field() ?>
                     <div class="mb-4">
                         <label class="form-label" for="contact-name">Họ và tên <span style="color: #e63946;">*</span></label>
                         <input class="form-control" type="text" id="contact-name" name="name" placeholder="Ví dụ: Nguyễn Văn A" required>

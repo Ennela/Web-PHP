@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 include BASE_PATH . 'includes/header.php';
 ?>
 
@@ -234,7 +236,8 @@ include BASE_PATH . 'includes/header.php';
                     <strong>30 phút</strong>.
                 </div>
 
-                <form id="forgotForm" onsubmit="return false;">
+                <form method="post" id="forgotForm" onsubmit="return false;">
+                    <?= csrf_field() ?>
                     <div class="mb-4">
                         <label class="form-label" for="email_or_username">Email hoặc tên đăng nhập</label>
                         <input name="email_or_username" class="form-control" type="text" id="email_or_username"
@@ -291,6 +294,7 @@ include BASE_PATH . 'includes/header.php';
 
             fetch('<?php echo BASE_URL; ?>auth/api_quenmatkhau.php', {
                 method: 'POST',
+                headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content },
                 body: fd
             })
                 .then(res => res.json())

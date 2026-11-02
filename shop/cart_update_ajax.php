@@ -5,7 +5,10 @@
  * Returns JSON: { success, cart, totalHtml, itemTotalHtml }
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+csrf_require_post();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';

@@ -1,0 +1,69 @@
+{
+	admin off
+	auto_https off
+	frankenphp {
+		php_ini {
+			expose_php Off
+			display_errors Off
+			display_startup_errors Off
+			log_errors On
+			error_log /dev/stderr
+			allow_url_include Off
+			session.use_only_cookies 1
+			session.use_strict_mode 1
+			session.cookie_httponly 1
+			session.cookie_samesite Lax
+			upload_max_filesize 5M
+			post_max_size 20M
+			memory_limit 256M
+			max_execution_time 60
+			max_input_time 60
+		}
+	}
+}
+
+# Local HTTP listener. Deployments using HTTPS should terminate TLS at a trusted
+# reverse proxy or supply a separate production Caddy configuration.
+{$SITE_ADDRESS:http://127.0.0.1:8000} {
+	# Keep development traffic on loopback unless deployment explicitly opts in.
+	bind {$SITE_BIND:127.0.0.1}
+	root * {$APP_ROOT:.}
+
+	header {
+		-Server
+		-X-Powered-By
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	route {
+		request_body {
+			max_size 20MB
+		}
+		@trace method TRACE TRACK CONNECT
+		respond @trace "Method not allowed." 405
+
+		# Paths are normalized/decoded by Caddy before matching. Sensitive material
+		# never reaches PHP or file_server; query strings cannot bypass this rule.
+		@private path_regexp private (?i)(^|/)(\.[^/]+|database|documents|deploy|scripts|scratch|backups?|secrets|certs|vendor|node_modules|includes|vnpay_php)(/|$)|(^|/)(config\.php|connect_db\.php|function\.php|pagination\.php|Dockerfile|Caddyfile|docker-entrypoint\.sh|composer\.(json|lock)|package(-lock)?\.json|README[^/]*)(/|$)|\.(sql|log|ini|conf|ya?ml|toml|sh|bak|backup|old|orig|save|swp|pem|key|p12|pfx)([./]|$)|~$
+		respond @private "Not found." 404
+
+		# Uploads are raster images only. PHP/script/HTML/SVG files cannot execute
+		# or be rendered from either writable directory, including PATH_INFO.
+		@uploadScript path_regexp uploadScript (?i)^/(admin|auth)/uploads/.*\.(php[0-9]*|phtml|pht|phar|cgi|pl|py|rb|sh|shtml|html?|svg)([./]|$)
+		respond @uploadScript "Not found." 404
+		@nonImageUpload {
+			path /admin/uploads/* /auth/uploads/*
+			not path_regexp image (?i)\.(png|jpe?g|gif|webp|avif|ico|bmp)$
+		}
+		respond @nonImageUpload "Not found." 404
+
+		# Explicit entry points and directory indexes; no arbitrary front-controller
+		# fallback that would turn a blocked or missing resource into a 200 page.
+		php_server {
+			try_files {path} {path}/index.php
+		}
+	}
+}

@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 include BASE_PATH . 'includes/connect.php';
 

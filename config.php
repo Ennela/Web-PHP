@@ -1,12 +1,12 @@
 <?php
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-// Railway sets X-Forwarded-Proto for HTTPS
-if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-    $protocol = "https";
-}
-$host = $_SERVER['HTTP_HOST'];
+require_once __DIR__ . '/includes/environment.php';
+app_load_local_environment(__DIR__ . '/.env');
+require_once __DIR__ . '/includes/security.php';
+$canonical_url = app_security_bootstrap();
+$protocol = app_is_https() ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-$docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+$docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? __DIR__), '/');
 $dir = str_replace('\\', '/', __DIR__);
 if (strpos($dir, $docRoot) === 0) {
     $base_dir = substr($dir, strlen($docRoot)) . '/';
@@ -19,6 +19,9 @@ if ($base_dir === '/' || $base_dir === '//') {
     $base_dir = '/';
 }
 
-define('BASE_URL', $protocol . '://' . $host . $base_dir);
+define('BASE_URL', $canonical_url ?? ($protocol . '://' . $host . $base_dir));
 define('BASE_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+
+require_once BASE_PATH . 'includes/csrf.php';
+csrf_bootstrap($base_dir, $protocol === 'https');
 ?>

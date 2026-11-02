@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 
 include BASE_PATH . 'includes/connect.php';
@@ -241,7 +243,8 @@ include BASE_PATH . 'includes/header.php';
             <h2 class="auth-title">Đặt mật khẩu mới</h2>
             <p class="auth-subtitle">Nhập mật khẩu mới cho tài khoản <strong><?= htmlspecialchars($user['hoten'] ?? '') ?></strong></p>
 
-            <form id="resetForm" onsubmit="return false;">
+            <form method="post" id="resetForm" onsubmit="return false;">
+                <?= csrf_field() ?>
                 <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
 
                 <div class="mb-3">
@@ -350,6 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         fetch('<?= BASE_URL ?>auth/api_datlamatkhau.php', {
             method: 'POST',
+            headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content },
             body: fd
         })
         .then(res => res.json())

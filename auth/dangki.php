@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
     include_once BASE_PATH . 'includes/connect.php';
     if (isset($_POST['dangki'])) {
@@ -143,6 +145,7 @@ session_start();
                 <h2 class="auth-title">Đăng ký</h2>
                 <p class="auth-subtitle">Tạo tài khoản để mua sắm dễ dàng hơn</p>
                 <form method="post">
+                    <?= csrf_field() ?>
                     <div class="mb-3"><label class="form-label">Họ và tên</label><input class="form-control" name="hoten" type="text" placeholder="Nhập họ và tên" required></div>
                     <div class="mb-3"><label class="form-label">Email</label><input class="form-control" name="email" type="email" placeholder="Nhập địa chỉ email" required></div>
                     <div class="mb-3"><label class="form-label">Tên đăng nhập</label><input class="form-control" type="text" name="taikhoan" placeholder="Nhập tên đăng nhập" required></div>

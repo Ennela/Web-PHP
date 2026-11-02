@@ -1,8 +1,11 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
 /**
  * AJAX endpoint for admin - returns HTML table with order detail (products + sizes).
  */
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 if (empty($_SESSION['dangnhap1'])) {
     http_response_code(403);
     echo 'Không có quyền truy cập';

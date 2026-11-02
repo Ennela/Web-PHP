@@ -1,15 +1,18 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     date_default_timezone_set('Asia/Ho_Chi_Minh');
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: giohang.php');
+        exit;
     }
     include BASE_PATH . 'includes/connect.php';
     require_once BASE_PATH . 'includes/inventory_helper.php';
@@ -30,6 +33,7 @@ require_once dirname(__DIR__) . '/config.php';
             = array(); // nếu như chưa tồn tại thì tạo từ một mảng rỗng
     }
     if (isset($_GET['action'])) {
+        csrf_require_post();
         function update_cart($add = false)
         {
             global $con;
@@ -42,7 +46,7 @@ require_once dirname(__DIR__) . '/config.php';
                 }
             }
 
-            if (isset($_POST['quantity'])) {
+            if (isset($_POST['quantity']) && is_array($_POST['quantity'])) {
                 foreach ($_POST['quantity'] as $masp => $quantity) {
                     if ($quantity == 0) {
                         unset($_SESSION["giohang"][$masp]);
@@ -72,10 +76,10 @@ require_once dirname(__DIR__) . '/config.php';
                         }
                     }
                 }
-            } elseif (isset($_GET['masp'])) {
-                $masp = $_GET['masp'];
-                $quantity = isset($_GET['quantity']) ? (int)$_GET['quantity'] : 1;
-                $size = isset($_GET['size']) ? (int)$_GET['size'] : null;
+            } elseif (isset($_POST['masp'])) {
+                $masp = (int)$_POST['masp'];
+                $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 1;
+                $size = isset($_POST['size']) ? (int)$_POST['size'] : null;
 
                 if ($add && empty($size) && $preferredSize) {
                     $stockCheck = mysqli_query($con, "SELECT `soluong` FROM `tbl_tonkho` WHERE `masp` = " . (int)$masp . " AND `size` = $preferredSize");
@@ -108,8 +112,8 @@ require_once dirname(__DIR__) . '/config.php';
                 break;
 
             case "delete":
-                if (isset($_GET['masp'])) {
-                    unset($_SESSION["giohang"][$_GET['masp']]);
+                if (isset($_POST['masp'])) {
+                    unset($_SESSION["giohang"][(int)$_POST['masp']]);
                 }
                 header('Location:./giohang.php');// cho đẹp đường dẫn
                 break;
@@ -586,6 +590,7 @@ require_once dirname(__DIR__) . '/config.php';
             </div>
             <div class="content">
                 <form method="post" action="<?php echo BASE_URL; ?>shop/giohang.php?action=submit">
+                    <?= csrf_field() ?>
                     <div class="row">
                         <div class="col-lg-8 mb-4">
                             <div class="cart-items-wrapper">
@@ -742,7 +747,10 @@ function ajaxUpdate(masp, data, onSuccess) {
     
     fetch(AJAX_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
         body: JSON.stringify({ masp: masp, ...data })
     })
     .then(r => r.json())

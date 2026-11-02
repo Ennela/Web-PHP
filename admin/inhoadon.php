@@ -1,5 +1,9 @@
 <?php
-session_start();
+require_once dirname(__DIR__) . '/config.php';
+csrf_require_post();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 if (empty($_SESSION['dangnhap1'])) {
     header('Location: canhbao.php');
     exit;
@@ -8,12 +12,12 @@ if (empty($_SESSION['dangnhap1'])) {
 include './connect_db.php';
 
 // Kiểm tra có ID đơn hàng không
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
     echo "<script>alert('Không tìm thấy đơn hàng!'); window.location.href='quanlidonhang.php';</script>";
     exit;
 }
 
-$id = (int)$_GET['id'];
+$id = (int)$_POST['id'];
 
 // Lấy trạng thái hiện tại của đơn hàng
 $orderStatus = mysqli_query($con, "SELECT `status` FROM `oder` WHERE `id` = $id LIMIT 1");

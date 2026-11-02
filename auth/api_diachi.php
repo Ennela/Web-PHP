@@ -5,7 +5,9 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
@@ -95,7 +97,7 @@ switch ($action) {
             $newId = mysqli_insert_id($con);
             echo json_encode(['success' => true, 'message' => 'Thêm địa chỉ thành công!', 'id' => $newId]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . mysqli_error($con)]);
+            echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
 
@@ -139,7 +141,7 @@ switch ($action) {
         if (mysqli_query($con, $sql)) {
             echo json_encode(['success' => true, 'message' => 'Cập nhật địa chỉ thành công!']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . mysqli_error($con)]);
+            echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
 
@@ -166,7 +168,7 @@ switch ($action) {
             }
             echo json_encode(['success' => true, 'message' => 'Xóa địa chỉ thành công!']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . mysqli_error($con)]);
+            echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
 
@@ -184,7 +186,7 @@ switch ($action) {
         if (mysqli_query($con, "UPDATE `tbl_diachi` SET `macdinh` = 1 WHERE `id` = $id AND `makh` = $makh")) {
             echo json_encode(['success' => true, 'message' => 'Đã đặt làm địa chỉ mặc định!']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . mysqli_error($con)]);
+            echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
 

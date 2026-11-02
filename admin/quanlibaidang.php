@@ -1,18 +1,22 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
 
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
 
 ?>
@@ -20,13 +24,13 @@
     include './connect_db.php';
 
     if (!empty($_GET['action']) && $_GET['action'] == 'search' && !empty($_POST)) {
-        $_SESSION['locsanpham4'] = $_POST;
+        $_SESSION['locsanpham4'] = array_intersect_key($_POST, array_flip(['id', 'tieude']));
         header('Location: quanlibaidang.php');
         exit;
     }
     if (!empty($_SESSION['locsanpham4'])) {
         $where = "";
-        foreach ($_SESSION['locsanpham4'] as $field => $value) {
+        foreach (array_intersect_key($_SESSION['locsanpham4'], array_flip(['id', 'tieude'])) as $field => $value) {
             //tách mảng ra làm 2 $field và $value
 
             if (!empty($value)) {
@@ -44,7 +48,7 @@
                 }
             }
         }
-        extract($_SESSION['locsanpham4']);//tự động lấy ra biến id và hoten
+        extract(array_intersect_key($_SESSION['locsanpham4'], array_flip(['id', 'tieude'])));//tự động lấy ra biến id và hoten
     }
 
     $item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
@@ -144,11 +148,14 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                                Đăng xuất</button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -255,6 +262,7 @@
             <div class="w-full px-6 pb-4 animate-in" style="animation-delay: 0.1s;">
                 <div class="search-bar" style="justify-content: space-between;">
                     <form action="quanlibaidang.php?action=search" method="POST" class="flex items-center gap-3 flex-1">
+                        <?= csrf_field() ?>
                         <input type="text"
                                placeholder="Mã bài đăng ..." name="id"
                                value="<?= !empty($id) ? $id : "" ?>"/>
@@ -307,8 +315,11 @@
                                 <td class="text-center doimau"><a
                                             href="./edit_qlbaidang.php?id=<?= $row['id'] ?>"><i class="fas fa-edit mr-1"></i>Sửa</a>
                                 </td>
-                                <td class="text-center doimau"><a
-                                            href="./delete_qlbaidang.php?id=<?= $row['id'] ?>"><i class="fas fa-trash-alt mr-1"></i>Xóa</a>
+                                <td class="text-center doimau"><form method="post" action="./delete_qlbaidang.php" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                        <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;"><i class="fas fa-trash-alt mr-1"></i>Xóa</button>
+                                    </form>
                                 </td>
                             </tr>
                             <?php
