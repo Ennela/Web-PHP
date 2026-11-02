@@ -1,11 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 
 if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    session_destroy();
-    header('Location: vechungtoi.php');
-    exit;
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
 }
 
 include BASE_PATH . 'includes/connect.php';

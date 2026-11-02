@@ -1,14 +1,13 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 // Xử lý đăng xuất
 if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    session_destroy();
-    header('Location: ' . BASE_URL . 'home/trangchu.php');
-    exit;
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
 }
 
 include BASE_PATH . 'includes/connect.php';
@@ -17,14 +16,10 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
 // Tự động chuyển đơn SHIPPING > 15 ngày sang DELIVERED
 autoCompleteShippingOrders($con);
 
-// ===== BẮT BUỘC ĐĂNG NHẬP =====
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
-    $_SESSION['swal_warning'] = 'Vui lòng đăng nhập để tra cứu đơn hàng!';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
-    exit;
-}
+// ===== BẮT BUỘC ĐĂNG NHẬP (IDOR Defense) =====
+require_user(BASE_URL . 'auth/dangnhap.php');
 
-$makh = intval($_SESSION['makh']);
+$makh = get_current_user_id();
 
 // Map status to Vietnamese labels and colors
 function getStatusInfo($status) {
@@ -514,8 +509,11 @@ function processOrderAction(orderId, action, btn) {
     
     fetch('<?= BASE_URL ?>shop/api_order_action.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action, order_id: orderId })
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= get_csrf_token() ?>'
+        },
+        body: JSON.stringify({ action: action, order_id: orderId, csrf_token: '<?= get_csrf_token() ?>' })
     })
     .then(r => r.json())
     .then(data => {

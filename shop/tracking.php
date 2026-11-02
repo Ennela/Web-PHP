@@ -1,11 +1,11 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 
 include BASE_PATH . 'includes/connect.php';
 
-$orderCode = isset($_GET['order']) ? mysqli_real_escape_string($con, $_GET['order']) : '';
-$token = isset($_GET['token']) ? mysqli_real_escape_string($con, $_GET['token']) : '';
+$orderCode = isset($_GET['order']) ? trim($_GET['order']) : '';
+$token = isset($_GET['token']) ? trim($_GET['token']) : '';
 
 $error = '';
 $orderData = null;
@@ -14,23 +14,30 @@ $orderDetails = [];
 if (empty($orderCode) || empty($token)) {
     $error = "Đường dẫn không hợp lệ. Vui lòng kiểm tra lại link trong email của bạn.";
 } else {
-    // Kiểm tra đơn hàng và token
-    $query = "SELECT * FROM `oder` WHERE `order_code` = '$orderCode' AND `token` = '$token' LIMIT 1";
-    $result = mysqli_query($con, $query);
+    // Kiểm tra đơn hàng và token bằng prepared statement
+    $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND `token` = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "ss", $orderCode, $token);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $orderData = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
 
         // Lấy chi tiết đơn hàng
-        $orderId = $orderData['id'];
-        $detailsQuery = "SELECT c.*, p.tensp, p.anhdaidien FROM `oder_chitiet` c JOIN `tbl_qlsanpham` p ON c.masp = p.masp WHERE c.madonhang = '$orderId'";
-        $detailsResult = mysqli_query($con, $detailsQuery);
+        $orderId = (int)$orderData['id'];
+        $detailsStmt = mysqli_prepare($con, "SELECT c.*, p.tensp, p.anhdaidien FROM `oder_chitiet` c JOIN `tbl_qlsanpham` p ON c.masp = p.masp WHERE c.madonhang = ?");
+        mysqli_stmt_bind_param($detailsStmt, "i", $orderId);
+        mysqli_stmt_execute($detailsStmt);
+        $detailsResult = mysqli_stmt_get_result($detailsStmt);
         if ($detailsResult) {
             while ($row = mysqli_fetch_assoc($detailsResult)) {
                 $orderDetails[] = $row;
             }
         }
+        mysqli_stmt_close($detailsStmt);
     } else {
+        mysqli_stmt_close($stmt);
         $error = "Không tìm thấy đơn hàng hoặc token không đúng.";
     }
 }

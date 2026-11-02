@@ -5,20 +5,21 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+if (!is_user_logged_in()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
 
-$makh = intval($_SESSION['makh']);
+$makh = get_current_user_id();
 
-// === GET: Lấy danh sách ===
+// === GET: Lấy danh sách (Read-only) ===
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $result = mysqli_query($con, "SELECT * FROM `tbl_diachi` WHERE `makh` = $makh ORDER BY `macdinh` DESC, `ngaytao` DESC");
     $addresses = [];
@@ -29,11 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
-// === POST ===
+// === POST (State-changing) ===
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
+
+verify_csrf_or_abort();
 
 $action = $_POST['action'] ?? '';
 

@@ -7,6 +7,37 @@
 
     const BASE = document.querySelector('meta[name="base-url"]')?.content || '/WEB-PHP/';
 
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.content || '';
+    }
+
+    const _originalFetch = window.fetch;
+    const secureFetch = function(url, options) {
+        options = options || {};
+        const method = (options.method || 'GET').toUpperCase();
+        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+            const token = getCsrfToken();
+            if (token) {
+                if (!options.headers) {
+                    options.headers = {};
+                }
+                if (options.headers instanceof Headers) {
+                    if (!options.headers.has('X-CSRF-Token')) {
+                        options.headers.set('X-CSRF-Token', token);
+                    }
+                } else if (typeof options.headers === 'object') {
+                    if (!options.headers['X-CSRF-Token']) {
+                        options.headers['X-CSRF-Token'] = token;
+                    }
+                }
+                if (options.body instanceof FormData && !options.body.has('csrf_token')) {
+                    options.body.append('csrf_token', token);
+                }
+            }
+        }
+        return _originalFetch(url, options);
+    };
+
     // ============================================================
     // TOAST NOTIFICATION SYSTEM
     // ============================================================
@@ -188,7 +219,7 @@
             btnSaveProfile.disabled = true;
             btnSaveProfile.innerHTML = '<span class="acc-spinner"></span> Đang lưu...';
 
-            fetch(BASE + 'auth/api_capnhat_thongtin.php', {
+            secureFetch(BASE + 'auth/api_capnhat_thongtin.php', {
                 method: 'POST',
                 body: formData
             })
@@ -257,7 +288,7 @@
             const fd = new FormData();
             fd.append('avatar', file);
 
-            fetch(BASE + 'auth/api_upload_avatar.php', {
+            secureFetch(BASE + 'auth/api_upload_avatar.php', {
                 method: 'POST',
                 body: fd
             })
@@ -355,7 +386,7 @@
             btnChangePw.disabled = true;
             btnChangePw.innerHTML = '<span class="acc-spinner"></span> Đang xử lý...';
 
-            fetch(BASE + 'auth/api_doimatkhau.php', {
+            secureFetch(BASE + 'auth/api_doimatkhau.php', {
                 method: 'POST',
                 body: fd
             })
@@ -549,7 +580,7 @@
             btnSaveAddr.disabled = true;
             btnSaveAddr.innerHTML = '<span class="acc-spinner"></span>';
 
-            fetch(BASE + 'auth/api_diachi.php', {
+            secureFetch(BASE + 'auth/api_diachi.php', {
                 method: 'POST',
                 body: fd
             })
@@ -575,7 +606,7 @@
     function loadAddresses() {
         if (!addressGrid) return;
 
-        fetch(BASE + 'auth/api_diachi.php')
+        secureFetch(BASE + 'auth/api_diachi.php')
             .then(r => r.json())
             .then(data => {
                 if (!data.success) return;
@@ -643,7 +674,7 @@
             const fd = new FormData();
             fd.append('action', 'delete');
             fd.append('id', deleteBtn.dataset.id);
-            fetch(BASE + 'auth/api_diachi.php', { method: 'POST', body: fd })
+            secureFetch(BASE + 'auth/api_diachi.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) { Toast.success(data.message); loadAddresses(); }
@@ -659,7 +690,7 @@
             const fd = new FormData();
             fd.append('action', 'set_default');
             fd.append('id', defaultBtn.dataset.id);
-            fetch(BASE + 'auth/api_diachi.php', { method: 'POST', body: fd })
+            secureFetch(BASE + 'auth/api_diachi.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) { Toast.success(data.message); loadAddresses(); }
@@ -747,7 +778,7 @@
 
             btnSaveSize.disabled = true;
 
-            fetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', body: fd })
+            secureFetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -767,7 +798,7 @@
         const fd = new FormData();
         fd.append('action', 'delete');
         fd.append('id', id);
-        fetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', body: fd })
+        secureFetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(data => {
                 if (data.success) { Toast.success(data.message); loadSizes(); }
@@ -777,7 +808,7 @@
     }
 
     function loadSizes() {
-        fetch(BASE + 'auth/api_sizegiay.php')
+        secureFetch(BASE + 'auth/api_sizegiay.php')
             .then(r => r.json())
             .then(data => {
                 if (data.success) {

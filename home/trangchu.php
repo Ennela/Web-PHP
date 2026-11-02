@@ -1,19 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 
-//if (!isset($_SESSION['dangnhap'])) {
-//
-//    header('Location: index.php');
-//}
-if (isset($_GET['login'])) {
-    $dangxuat = $_GET['login'];
-} else {
-    $dangxuat = '';
-}
-if ($dangxuat == 'dangxuat') {
-    session_destroy();
-    header('Location: trangchu.php');
+if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
 }
 include BASE_PATH . 'includes/header.php';
 

@@ -1,19 +1,16 @@
-<?php
-session_start();
-if (!isset($_SESSION['dangnhap'])) {
-	header('Location: canhbao.php');
-	exit;
-}
-if (isset($_GET['login'])) {
-	$dangxuat = $_GET['login'];
-} else {
-	$dangxuat = '';
-}
-if ($dangxuat == 'dangxuat') {
-	session_destroy();
-	header('Location: index.php');
-}
+Ôªø<?php
+require_once dirname(__DIR__) . '/config.php';
+include './connect_db.php';
+require_admin();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
+    verify_csrf_or_abort();
+    secure_logout('dangnhap.php');
+}
+if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+    http_response_code(405);
+    die('ƒêƒÉng xu·∫•t b·∫±ng ph∆∞∆°ng th·ª©c GET kh√¥ng ƒë∆∞·ª£c ph√©p v√¨ l√Ω do b·∫£o m·∫≠t.');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -52,7 +49,7 @@ if ($dangxuat == 'dangxuat') {
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="TÏm ki?m"
+                           placeholder="TÔøΩm ki?m"
                            type="search">
                     <div class="absolute search-icon" style="top: 1rem; left: .8rem;">
                         <svg class="w-4 h-4 text-white pointer-events-none fill-current"
@@ -69,7 +66,7 @@ if ($dangxuat == 'dangxuat') {
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none" onclick="toggleDD('myDropdown')"><span
-                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin ch‡o, <?php echo $_SESSION['dangnhap'] ?>
+                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chÔøΩo, <?php echo $_SESSION['dangnhap'] ?>
                             <svg class="inline h-3 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                             </svg>
@@ -80,12 +77,14 @@ if ($dangxuat == 'dangxuat') {
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> –ang nh?p </a>
+                                        class="fa fa-user fa-fw"></i> ÔøΩang nh?p </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
-                               style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i> –ang xu?t</a>
+                            <form action="trangchu.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> ƒêƒÉng xu·∫•t
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -116,7 +115,7 @@ if ($dangxuat == 'dangxuat') {
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ s?n ph?m</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ s?n ph?m</span>
                     </a>
                 </li>
 
@@ -126,7 +125,7 @@ if ($dangxuat == 'dangxuat') {
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ Kh·ch h‡ng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ KhÔøΩch hÔøΩng</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -135,7 +134,7 @@ if ($dangxuat == 'dangxuat') {
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ b‡i dang</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ bÔøΩi dang</span>
                     </a>
                 </li>
 
@@ -145,7 +144,7 @@ if ($dangxuat == 'dangxuat') {
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ th‡nh viÍn</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ thÔøΩnh viÔøΩn</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -155,7 +154,7 @@ if ($dangxuat == 'dangxuat') {
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ don h‡ng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ don hÔøΩng</span>
                     </a>
                 </li>
             </ul>
@@ -168,7 +167,7 @@ if ($dangxuat == 'dangxuat') {
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">Danh s·ch danh m?c</h3>
+                <h3 class="font-bold pl-2">Danh sÔøΩch danh m?c</h3>
             </div>
         </div>
 
@@ -192,16 +191,16 @@ if ($dangxuat == 'dangxuat') {
             </div>
             <div class="w-full p-6 flex flex-row-reverse">
                 <button class=" mr-4 ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"><a
-                        href="./quanlisanpham.html">Qu?n lÌ s?n ph?m</a>
+                        href="./quanlisanpham.php">Qu?n lÔøΩ s?n ph?m</a>
                 </button>
                 <button class=" ml-8 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"><a
-                        href="./themdanhmuc.html">ThÍm danh m?c</a>
+                        href="./themdanhmuc.php">ThÔøΩm danh m?c</a>
                 </button>
                 <div class="flex items-center justify-center ">
                     <div class="flex border-2 border-gray-200 rounded">
-                        <input class="px-4 py-2 w-80" placeholder="Nh?p ID ho?c tÍn..." type="text">
+                        <input class="px-4 py-2 w-80" placeholder="Nh?p ID ho?c tÔøΩn..." type="text">
                         <button class="px-4 text-white bg-blue-500 border-l  ">
-                            TÏm
+                            TÔøΩm
                         </button>
                     </div>
                 </div>
@@ -211,30 +210,30 @@ if ($dangxuat == 'dangxuat') {
                     <thead class="bg-blue-300">
                     <tr class="border-2">
 
-                        <th class="w-6/12 ">TÍn danh m?c</th>
+                        <th class="w-6/12 ">TÔøΩn danh m?c</th>
 
-                        <th class="w-2/12 ">Ng‡y c?p nh?t</th>
-                        <th class="w-2/12 ">Ng‡y t?o</th>
+                        <th class="w-2/12 ">NgÔøΩy c?p nh?t</th>
+                        <th class="w-2/12 ">NgÔøΩy t?o</th>
 
                         <th class="w-1/12 ">S?a</th>
-                        <th class="w-1/12 ">Xo·</th>
+                        <th class="w-1/12 ">XoÔøΩ</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
-                        <td class="text-center">Gi‡y th? thao nam</td>
+                        <td class="text-center">GiÔøΩy th? thao nam</td>
                         <td class="text-center">20/09/2021 14:20</td>
                         <td class="text-center">20/09/2021 14:20</td>
 
                         <td class="text-center doimau"><a href="">S?a</a></td>
-                        <td class="text-center doimau"><a href="">Xo·</a></td>
+                        <td class="text-center doimau"><a href="">XoÔøΩ</a></td>
                     </tr>
                     <tr>
-                        <td class="text-center">Gi‡y th? thao n?</td>
+                        <td class="text-center">GiÔøΩy th? thao n?</td>
                         <td class="text-center">20/09/2021 14:20</td>
                         <td class="text-center">20/09/2021 14:20</td>
                         <td class="text-center doimau"><a href="">S?a</a></td>
-                        <td class="text-center doimau"><a href="">Xo·</a></td>
+                        <td class="text-center doimau"><a href="">XoÔøΩ</a></td>
                     </tr>
 
                     </tbody>
@@ -316,3 +315,4 @@ if ($dangxuat == 'dangxuat') {
 </body>
 
 </html>
+

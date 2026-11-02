@@ -5,11 +5,19 @@
  * Returns JSON: { success, cart, totalHtml, itemTotalHtml }
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
+
+verify_csrf_or_abort();
 
 // Migrate old session format
 if (isset($_SESSION['giohang']) && is_array($_SESSION['giohang'])) {

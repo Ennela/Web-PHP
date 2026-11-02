@@ -1,18 +1,14 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-    session_start();
-    date_default_timezone_set('Asia/Ho_Chi_Minh');
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: giohang.php');
-    }
-    include BASE_PATH . 'includes/connect.php';
-    require_once BASE_PATH . 'includes/inventory_helper.php';
+init_secure_session();
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+}
+include BASE_PATH . 'includes/connect.php';
+require_once BASE_PATH . 'includes/inventory_helper.php';
 
     // ===== MIGRATE OLD SESSION FORMAT =====
     // Old format: $_SESSION['giohang'][$masp] = quantity (int)
@@ -103,17 +99,26 @@ require_once dirname(__DIR__) . '/config.php';
 
         switch ($_GET['action']) {
             case "add":
+                verify_csrf_or_abort();
                 update_cart(true);
-                header('Location:./giohang.php');// cho đẹp đường dẫn
-                break;
+                header('Location:./giohang.php');
+                exit;
 
             case "delete":
-                if (isset($_GET['masp'])) {
-                    unset($_SESSION["giohang"][$_GET['masp']]);
+                // Chặn xóa qua GET để ngăn chặn tấn công CSRF
+                if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                    http_response_code(405);
+                    die('Xóa sản phẩm qua phương thức GET không được phép vì lý do bảo mật.');
                 }
-                header('Location:./giohang.php');// cho đẹp đường dẫn
-                break;
+                verify_csrf_or_abort();
+                if (isset($_POST['masp'])) {
+                    unset($_SESSION["giohang"][$_POST['masp']]);
+                }
+                header('Location:./giohang.php');
+                exit;
+
             case "submit":
+                verify_csrf_or_abort();
                 // Kiểm tra giỏ hàng trống
                 if (empty($_SESSION['giohang'])) {
                     $_SESSION['swal_warning'] = 'Giỏ hàng đang trống! Vui lòng thêm sản phẩm trước khi thanh toán.';
@@ -586,6 +591,7 @@ require_once dirname(__DIR__) . '/config.php';
             </div>
             <div class="content">
                 <form method="post" action="<?php echo BASE_URL; ?>shop/giohang.php?action=submit">
+                    <?= csrf_input() ?>
                     <div class="row">
                         <div class="col-lg-8 mb-4">
                             <div class="cart-items-wrapper">
@@ -742,8 +748,11 @@ function ajaxUpdate(masp, data, onSuccess) {
     
     fetch(AJAX_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ masp: masp, ...data })
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= get_csrf_token() ?>'
+        },
+        body: JSON.stringify({ masp: masp, csrf_token: '<?= get_csrf_token() ?>', ...data })
     })
     .then(r => r.json())
     .then(res => {

@@ -1,6 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 include BASE_PATH . 'includes/header.php';
 ?>
 
@@ -235,6 +235,7 @@ include BASE_PATH . 'includes/header.php';
                 </div>
 
                 <form id="forgotForm" onsubmit="return false;">
+                    <?= csrf_input() ?>
                     <div class="mb-4">
                         <label class="form-label" for="email_or_username">Email hoặc tên đăng nhập</label>
                         <input name="email_or_username" class="form-control" type="text" id="email_or_username"
@@ -286,11 +287,14 @@ include BASE_PATH . 'includes/header.php';
             btn.disabled = true;
             btn.innerHTML = '<span class="btn-spinner"></span> Đang xử lý...';
 
-            const fd = new FormData();
+            const fd = new FormData(form);
             fd.append('email_or_username', input);
 
             fetch('<?php echo BASE_URL; ?>auth/api_quenmatkhau.php', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '<?= get_csrf_token() ?>'
+                },
                 body: fd
             })
                 .then(res => res.json())

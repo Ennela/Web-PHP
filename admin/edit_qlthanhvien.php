@@ -1,20 +1,17 @@
-<?php
-    
-    session_start();
-    if ( ! isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
-        exit;
-    }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: index.php');
-    }
+Ôªø<?php
+require_once __DIR__ . '/connect_db.php';
+require_once __DIR__ . '/../includes/security.php';
+init_secure_session();
+require_admin();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'logout') {
+    verify_csrf_or_abort();
+    secure_logout('dangnhap.php');
+}
+if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+    http_response_code(405);
+    exit('Method Not Allowed. Logout requires POST.');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +20,7 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="ie=edge" http-equiv="X-UA-Compatible">
-    <title>S?a th‡nh viÍn</title>
+    <title>S?a thÔøΩnh viÔøΩn</title>
     <meta content="name" name="author">
     <meta content="description here" name="description">
     <meta content="keywords,here" name="keywords">
@@ -44,56 +41,52 @@
 <body class="bg-gray-800 font-sans leading-normal tracking-normal mt-12">
 
 <?php
-    include_once 'connect_db.php';
+include_once 'connect_db.php';
 include_once 'function.php';
-    if (isset($_GET['id'])) {
-        $sql_query   = "SELECT * FROM tbl_qlthanhvien WHERE id=".$_GET['id'];
-        $result_set  = mysqli_query($con, $sql_query);
-        $fetched_row = mysqli_fetch_array($result_set);
-    }
-    if (isset($_POST['btn-save'])) {
-        // variables for input data
-        $hoten        = $_POST['hoten'];
-        $gioitinh     = $_POST['gioitinh'];
-        $ngaysinh     = $_POST['ngaysinh'];
-        $diachicuthe  = $_POST['diachicuthe'];
-        $chucvu       = $_POST['chucvu'];
-        $motacongviec = $_POST['motacongviec'];
 
-        $ngaysinh = strtotime($ngaysinh);
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$fetched_row = null;
+if ($id > 0) {
+    $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlthanhvien WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    mysqli_stmt_execute($stmt);
+    $result_set = mysqli_stmt_get_result($stmt);
+    $fetched_row = mysqli_fetch_array($result_set);
+}
 
-        // variables for input data
-        
-        // sql query for inserting data into database
-        
-        $sql_query
-            = "UPDATE tbl_qlthanhvien SET hoten='$hoten',gioitinh='$gioitinh',ngaysinh='$ngaysinh',diachicuthe='$diachicuthe',chucvu='$chucvu',motacongviec='$motacongviec' WHERE id="
-            .$_GET['id'];
-        // sql query for inserting data into database
+if (isset($_POST['btn-save'])) {
+    verify_csrf_or_abort();
+    $hoten        = $_POST['hoten'] ?? '';
+    $gioitinh     = $_POST['gioitinh'] ?? '';
+    $ngaysinh     = $_POST['ngaysinh'] ?? '';
+    $diachicuthe  = $_POST['diachicuthe'] ?? '';
+    $chucvu       = $_POST['chucvu'] ?? '';
+    $motacongviec = $_POST['motacongviec'] ?? '';
 
-        // sql query execution function
-        if (mysqli_query($con, $sql_query)) {
-            ?>
-            <script type="text/javascript">
-                alert('D? li?u du?c chËn th‡nh cÙng ');
-                window.location.href = 'quanlithanhvien.php';
-            </script>
+    $ngaysinh_ts = strtotime($ngaysinh) ?: 0;
 
-        <?php
-            }
-            else
-            {
+    $stmt_up = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET hoten = ?, gioitinh = ?, ngaysinh = ?, diachicuthe = ?, chucvu = ?, motacongviec = ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt_up, "ssssssi", $hoten, $gioitinh, $ngaysinh_ts, $diachicuthe, $chucvu, $motacongviec, $id);
+    if (mysqli_stmt_execute($stmt_up)) {
         ?>
-            <script type="text/javascript">
-                alert('X?y ra l?i trong khi chËn d? li?u c?a b?n');
-            </script>
-            <?php
-        }
-        // sql query execution function
+        <script type="text/javascript">
+            alert('D·ªØ li·ªáu ƒë∆∞·ª£c c·∫≠p nh·∫≠t th√†nh c√¥ng');
+            window.location.href = 'quanlithanhvien.php';
+        </script>
+        <?php
+        exit;
+    } else {
+        ?>
+        <script type="text/javascript">
+            alert('X·∫£y ra l·ªói trong khi c·∫≠p nh·∫≠t d·ªØ li·ªáu c·ªßa b·∫°n');
+        </script>
+        <?php
     }
-    if (isset($_POST['btn-cancel'])) {
-        header("Location: quanlithanhvien.php");
-    }
+}
+if (isset($_POST['btn-cancel'])) {
+    header("Location: quanlithanhvien.php");
+    exit;
+}
 ?>
 <!--Nav-->
 <nav class="fixed top-0 z-20 px-1 pt-2 pb-1 mt-0 w-full h-auto bg-gray-800 md:pt-1">
@@ -108,7 +101,7 @@ include_once 'function.php';
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="TÏm ki?m"
+                           placeholder="TÔøΩm ki?m"
                            type="search">
                     <div class="absolute search-icon"
                          style="top: 1rem; left: .8rem;">
@@ -130,7 +123,7 @@ include_once 'function.php';
                                 onclick="toggleDD('myDropdown')"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
-                            Xin ch‡o, <?php
+                            Xin chÔøΩo, <?php
                                 echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
@@ -144,14 +137,16 @@ include_once 'function.php';
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> –ang nh?p
+                                        class="fa fa-user fa-fw"></i> ÔøΩang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
-                               style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i>
-                                –ang xu?t</a>
+                            <form method="post" action="" style="display: inline;">
+                                <?= csrf_input() ?>
+                                <input type="hidden" name="action" value="logout">
+                                <button type="submit" class="block w-full text-left p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline" style="background:none;border:none;cursor:pointer;width:120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> ƒêƒÉng xu·∫•t
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -178,50 +173,50 @@ include_once 'function.php';
 
                 <li class="mr-3 flex-1">
                     <a class="block py-1 md:py-3 pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 hover:border-blue-700"
-                       href="./quanlisanpham.html">
+                       href="./quanlisanpham.php">
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ s?n ph?m</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ s?n ph?m</span>
                     </a>
                 </li>
 
                 <li class="mr-3 flex-1">
                     <a class="block py-1 md:py-3 pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 hover:border-yellow-400"
-                       href="./quanlikhachhang.html">
+                       href="./quanlikhachhang.php">
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ Kh·ch h‡ng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ KhÔøΩch hÔøΩng</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
                     <a class="block py-1 md:py-3 pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 hover:border-blue-500"
-                       href="./quanlibaidang.html">
+                       href="./quanlibaidang.php">
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ b‡i dang</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ bÔøΩi dang</span>
                     </a>
                 </li>
 
                 <li class="mr-3 flex-1">
                     <a class="block py-1 md:py-3 pl-0 md:pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 border-pink-400"
-                       href="./quanlithanhvien.html">
+                       href="./quanlithanhvien.php">
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ th‡nh viÍn</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ thÔøΩnh viÔøΩn</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
                     <a class="block py-1 md:py-3 pl-0 md:pl-1 align-middle text-white no-underline hover:text-white border-b-2 border-gray-800 hover:border-green-400"
-                       href="./quanlidonhang.html">
+                       href="./quanlidonhang.php">
                         <i class="fas fa-wallet md:pr-3"></i>
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ don h‡ng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ don hÔøΩng</span>
                     </a>
                 </li>
             </ul>
@@ -234,7 +229,7 @@ include_once 'function.php';
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">ThÍm th‡nh viÍn</h3>
+                <h3 class="font-bold pl-2">ThÔøΩm thÔøΩnh viÔøΩn</h3>
             </div>
         </div>
 
@@ -243,17 +238,18 @@ include_once 'function.php';
             <div class="w-1/2 m-auto ">
                 <form method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                    <?= csrf_input() ?>
                     <label class="block ">
-                        <span class="text-gray-700">H? v‡ tÍn:</span>
+                        <span class="text-gray-700">H? vÔøΩ tÔøΩn:</span>
                         <input value="<?php
                             echo $fetched_row['hoten']; ?>" name="hoten"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
                                type="text">
                     </label>
-                    <!--gi?i tÌnh-->
+                    <!--gi?i tÔøΩnh-->
                     <label class="block mt-2">
-                        <span class="text-gray-700">Gi?i tÌnh:</span>
+                        <span class="text-gray-700">Gi?i tÔøΩnh:</span>
                         <div class="mt-2">
                             <label class="inline-flex items-center">
                                 <input  class="form-radio"
@@ -274,7 +270,7 @@ include_once 'function.php';
                         </div>
                     </label>
                     <label class="block mt-2">
-                        <span class="text-gray-700">Ng‡y sinh(DD-MM-YYYY): </span>
+                        <span class="text-gray-700">NgÔøΩy sinh(DD-MM-YYYY): </span>
                         <input value="<?= date('d-m-Y ', $fetched_row['ngaysinh']) ?>" name="ngaysinh"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
@@ -282,7 +278,7 @@ include_once 'function.php';
                     </label>
 
                     <label class="block mt-2">
-                        <span class=" text-gray-700">–?a ch? c? th?:</span>
+                        <span class=" text-gray-700">ÔøΩ?a ch? c? th?:</span>
                         <input value="<?php
                             echo $fetched_row['diachicuthe']; ?>" type="text"
                                name="diachicuthe"
@@ -298,15 +294,15 @@ include_once 'function.php';
                         <select value="1" type="text"
                                 name="chucvu"
                                 class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full">
-                            <option value="Qu?n lÌ" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Qu?n lÌ') ? 'selected' : '' ?>>Qu?n lÌ</option>
-                            <option value="Nh‚n viÍn" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Nh‚n viÍn') ? 'selected' : '' ?>>Nh‚n viÍn</option>
+                            <option value="Qu?n lÔøΩ" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Qu?n lÔøΩ') ? 'selected' : '' ?>>Qu?n lÔøΩ</option>
+                            <option value="NhÔøΩn viÔøΩn" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'NhÔøΩn viÔøΩn') ? 'selected' : '' ?>>NhÔøΩn viÔøΩn</option>
                         </select>
                     </label>
 
 
                     <!--                    Textarea-->
                     <label class="block mt-2">
-                        <span class="text-gray-700">MÙ t? cÙng vi?c:</span>
+                        <span class="text-gray-700">MÔøΩ t? cÔøΩng vi?c:</span>
                         <textarea  type="text"
                                   name="motacongviec"
                                   class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
@@ -372,3 +368,4 @@ include_once 'function.php';
 </body>
 
 </html>
+

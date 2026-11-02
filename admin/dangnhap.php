@@ -1,14 +1,12 @@
 <?php
-
-    session_start();
+    require_once dirname(__DIR__) . '/config.php';
+    init_secure_session();
     include './connect_db.php';
-?>
-<?php
-    // session_destroy();
-    // unset('dangnhap');
+
     if (isset($_POST['dangnhap'])) {
-        $taikhoan = $_POST['taikhoan'];
-        $matkhau = $_POST['matkhau'];
+        verify_csrf_or_abort();
+        $taikhoan = trim($_POST['taikhoan'] ?? '');
+        $matkhau = trim($_POST['matkhau'] ?? '');
         if ($taikhoan == '' || $matkhau == '') {
             ?>
             <script type="text/javascript">
@@ -27,6 +25,7 @@
 
             if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
                 // Đăng nhập thành công với bcrypt hash
+                secure_session_regenerate();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
                 header('Location: trangchu.php');
@@ -39,6 +38,7 @@
                 mysqli_stmt_execute($updateStmt);
                 mysqli_stmt_close($updateStmt);
 
+                secure_session_regenerate();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
                 header('Location: trangchu.php');
@@ -129,6 +129,7 @@
 <div class="h-screen flex justify-center items-center">
     <div class="bg-white rounded-lg w-2/5 px-16 py-16">
         <form method="post">
+            <?= csrf_input() ?>
             <div class="flex font-bold justify-center">
                 <img class="h-20 w-20"
                      src="https://raw.githubusercontent.com/sefyudem/Responsive-Login-Form/master/img/avatar.svg">

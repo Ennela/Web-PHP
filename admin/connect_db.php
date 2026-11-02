@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
 // ─── Admin Database Connection ───
 // Uses Railway environment variables when available, falls back to local XAMPP defaults
 $host     = getenv('MYSQLHOST')     ?: '127.0.0.1';

@@ -2,14 +2,10 @@
 /**
  * AJAX endpoint for admin - returns HTML table with order detail (products + sizes).
  */
-session_start();
-if (empty($_SESSION['dangnhap1'])) {
-    http_response_code(403);
-    echo 'Không có quyền truy cập';
-    exit;
-}
-
-include './connect_db.php';
+require_once __DIR__ . '/connect_db.php';
+require_once __DIR__ . '/../includes/security.php';
+init_secure_session();
+require_admin();
 
 $orderId = intval($_GET['id'] ?? 0);
 if ($orderId <= 0) {
@@ -17,11 +13,13 @@ if ($orderId <= 0) {
     exit;
 }
 
-$sql = "SELECT oc.quantity, oc.size, oc.price, sp.tensp, sp.anhdaidien 
+$stmt = mysqli_prepare($con, "SELECT oc.quantity, oc.size, oc.price, sp.tensp, sp.anhdaidien 
         FROM `oder_chitiet` oc 
         LEFT JOIN `tbl_qlsanpham` sp ON oc.masp = sp.masp 
-        WHERE oc.madonhang = $orderId";
-$result = mysqli_query($con, $sql);
+        WHERE oc.madonhang = ?");
+mysqli_stmt_bind_param($stmt, "i", $orderId);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 
 if (!$result || mysqli_num_rows($result) == 0) {
     echo '<p style="color:#64748b; font-size:0.85rem;">Không có sản phẩm nào trong đơn hàng này.</p>';

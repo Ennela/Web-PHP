@@ -1,25 +1,20 @@
 <?php
-    
-    session_start();
-    if ( ! isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
-        exit;
+    require_once dirname(__DIR__) . '/config.php';
+    include_once 'connect_db.php';
+    require_admin();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
+        verify_csrf_or_abort();
+        secure_logout('dangnhap.php');
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: index.php');
+    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+        http_response_code(405);
+        die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
     }
 
-?>
-<?php
-    include_once 'connect_db.php';
     include_once 'function.php';
     if (isset($_POST['btn-save'])) {
+        verify_csrf_or_abort();
         // Biến dữ liệu đầu vào
         $nguoiphutrach = $_POST['nguoiphutrach'];
 //        $anhtrungbay = $_POST['anhtrungbay'];
@@ -185,11 +180,12 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
-                               style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                            <form action="trangchu.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -281,6 +277,7 @@
             <div class="w-1/2 m-auto ">
                 <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
                       enctype="multipart/form-data" method="post">
+                    <?= csrf_input() ?>
                     <label class="block">
                         <span class="text-gray-700">Tên tiêu đề:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"

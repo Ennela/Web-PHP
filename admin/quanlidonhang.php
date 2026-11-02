@@ -1,25 +1,23 @@
 <?php
-
-session_start();
-date_default_timezone_set('Asia/Ho_Chi_Minh');
-if (!isset($_SESSION['dangnhap1'])) {
-    header('Location: canhbao.php');
-    exit;
-}
-if (isset($_GET['login'])) {
-    $dangxuat = $_GET['login'];
-} else {
-    $dangxuat = '';
-}
-if ($dangxuat == 'dangxuat') {
-    session_destroy();
-    header('Location: index.php');
-}
+require_once dirname(__DIR__) . '/config.php';
 include './connect_db.php';
+require_admin();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
+    verify_csrf_or_abort();
+    secure_logout('dangnhap.php');
+}
+if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+}
+
 require_once dirname(__DIR__) . '/includes/inventory_helper.php';
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 // ===== XỬ LÝ CẬP NHẬT TRẠNG THÁI =====
 if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
+    verify_csrf_or_abort();
     $order_id = intval($_POST['order_id']);
     $new_status = mysqli_real_escape_string($con, $_POST['new_status']);
     $valid_statuses = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
@@ -470,10 +468,12 @@ function getAdminStatusInfo($status) {
                                     href="dangnhap.php" style="width: 120px;"><i class="fa fa-user fa-fw"></i> Đăng nhập
                                 </a>
                                 <div class="border border-gray-800"></div>
-                                <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                                    href="?login=dangxuat" style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i>
-                                    Đăng xuất</a>
+                                <form action="trangchu.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
+                                </button>
+                            </form>
                             </div>
                         </div>
                     </li>
@@ -664,6 +664,7 @@ function getAdminStatusInfo($status) {
                                     </td>
                                     <td class="text-center">
                                         <form method="POST" action="quanlidonhang.php<?= !empty($_GET['page']) ? '?page=' . $_GET['page'] : '' ?>" class="status-form">
+                                            <?= csrf_input() ?>
                                             <input type="hidden" name="action" value="update_status">
                                             <input type="hidden" name="order_id" value="<?= $row['id'] ?>">
                                             <select name="new_status" class="status-select" onchange="this.form.submit()">
@@ -678,8 +679,13 @@ function getAdminStatusInfo($status) {
                                     <td class="text-center">
                                         <button class="btn-detail" onclick="toggleDetail(<?= $row['id'] ?>, this)">Xem</button>
                                     </td>
-                                    <td class="text-center doimau"> <a href="inhoadon.php?id=<?= $row['id'] ?>"
-                                            target="_blank">In</a>
+                                    <td class="text-center doimau">
+                                        <a href="inhoadon.php?id=<?= $row['id'] ?>" target="_blank" style="margin-right: 8px;">In</a>
+                                        <form action="./delete_qldonhang.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn hàng này?');">
+                                            <?= csrf_input() ?>
+                                            <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                                            <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font:inherit; text-decoration:underline;">Xóa</button>
+                                        </form>
                                     </td>
                                 </tr>
                                 <tr class="detail-row" id="detail-row-<?= $row['id'] ?>">

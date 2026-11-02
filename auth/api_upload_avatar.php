@@ -5,23 +5,27 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+if (!is_user_logged_in()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
 
-$makh = intval($_SESSION['makh']);
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
+
+verify_csrf_or_abort();
+
+$makh = get_current_user_id();
 
 if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
     echo json_encode(['success' => false, 'message' => 'Không tìm thấy file upload']);

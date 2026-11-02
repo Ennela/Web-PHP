@@ -6,16 +6,19 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
+
+verify_csrf_or_abort();
 
 $token       = trim($_POST['token'] ?? '');
 $mk_moi      = $_POST['matkhau_moi'] ?? '';

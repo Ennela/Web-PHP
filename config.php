@@ -4,11 +4,11 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "
 if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
     $protocol = "https";
 }
-$host = $_SERVER['HTTP_HOST'];
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-$docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+$docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
 $dir = str_replace('\\', '/', __DIR__);
-if (strpos($dir, $docRoot) === 0) {
+if (!empty($docRoot) && strpos($dir, $docRoot) === 0) {
     $base_dir = substr($dir, strlen($docRoot)) . '/';
 } else {
     $base_dir = '/WEB-PHP/'; 
@@ -21,4 +21,6 @@ if ($base_dir === '/' || $base_dir === '//') {
 
 define('BASE_URL', $protocol . '://' . $host . $base_dir);
 define('BASE_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+
+require_once BASE_PATH . 'includes/security.php';
 ?>

@@ -1,11 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 
 if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    session_destroy();
-    header('Location: lienhe.php');
-    exit;
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
 }
 
 include BASE_PATH . 'includes/header.php';
@@ -30,6 +29,7 @@ function GuiMail() {
 }
 
 if (isset($_POST['btn'])) {
+    verify_csrf_or_abort();
     // Server-side validation
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -361,6 +361,7 @@ if (isset($_POST['btn'])) {
                 <?php endif; ?>
 
                 <form method="post" id="contactForm" novalidate>
+                    <?= csrf_input() ?>
                     <div class="mb-4">
                         <label class="form-label" for="contact-name">Họ và tên <span style="color: #e63946;">*</span></label>
                         <input class="form-control" type="text" id="contact-name" name="name" placeholder="Ví dụ: Nguyễn Văn A" required>

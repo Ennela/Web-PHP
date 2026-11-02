@@ -1,6 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
@@ -8,19 +8,14 @@ include BASE_PATH . 'includes/connect.php';
 
 // ── Handle logout ──
 if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    session_destroy();
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
-    exit;
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
 }
 
 // ── Check authentication ──
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
-    $_SESSION['swal_warning'] = 'Vui lòng đăng nhập trước!';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
-    exit;
-}
+require_user(BASE_URL . 'auth/dangnhap.php');
 
-$makh = intval($_SESSION['makh']);
+$makh = get_current_user_id();
 $query = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang` WHERE `makh` = '$makh' LIMIT 1");
 $user = mysqli_fetch_array($query);
 
@@ -48,6 +43,7 @@ include BASE_PATH . 'includes/header.php';
 ?>
 
 <meta name="base-url" content="<?= BASE_URL ?>">
+<?= csrf_meta() ?>
 <link rel="stylesheet" href="<?= BASE_URL ?>assets/css/account.css">
 
 <!-- Mobile Toggle -->
@@ -92,10 +88,14 @@ include BASE_PATH . 'includes/header.php';
 
             <div class="sidebar-nav-divider"></div>
 
-            <a href="?login=dangxuat" class="sidebar-nav-item logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Đăng xuất</span>
-            </a>
+            <form action="<?= BASE_URL ?>auth/dangnhap.php" method="POST" style="margin:0;">
+                <?= csrf_input() ?>
+                <input type="hidden" name="btn_dangxuat" value="1">
+                <button type="submit" class="sidebar-nav-item logout" style="background:none; border:none; width:100%; text-align:left; cursor:pointer; font:inherit;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </form>
         </nav>
     </aside>
 
@@ -127,6 +127,7 @@ include BASE_PATH . 'includes/header.php';
 
                 <!-- Profile Form -->
                 <form id="profileForm" onsubmit="return false;">
+                    <?= csrf_input() ?>
                     <div class="acc-form-row">
                         <div class="acc-form-group">
                             <label class="acc-form-label">Họ và tên *</label>
@@ -205,6 +206,7 @@ include BASE_PATH . 'includes/header.php';
                 </div>
 
                 <form id="passwordForm" onsubmit="return false;">
+                    <?= csrf_input() ?>
                     <div class="acc-form-group">
                         <label class="acc-form-label">Mật khẩu hiện tại</label>
                         <div class="password-input-wrap">
@@ -406,6 +408,7 @@ include BASE_PATH . 'includes/header.php';
         </div>
         <div class="acc-modal-body">
             <form id="addressForm" onsubmit="return false;">
+                <?= csrf_input() ?>
                 <div class="acc-form-row">
                     <div class="acc-form-group">
                         <label class="acc-form-label">Họ tên người nhận *</label>

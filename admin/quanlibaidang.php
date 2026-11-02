@@ -1,23 +1,16 @@
 <?php
-
-    session_start();
-    if (!isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
-        exit;
-    }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: index.php');
-    }
-
-?>
-<?php
+    require_once dirname(__DIR__) . '/config.php';
     include './connect_db.php';
+    require_admin();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
+        verify_csrf_or_abort();
+        secure_logout('dangnhap.php');
+    }
+    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+        http_response_code(405);
+        die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+    }
 
     if (!empty($_GET['action']) && $_GET['action'] == 'search' && !empty($_POST)) {
         $_SESSION['locsanpham4'] = $_POST;
@@ -144,11 +137,12 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
-                               style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                            <form action="trangchu.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -307,8 +301,14 @@
                                 <td class="text-center doimau"><a
                                             href="./edit_qlbaidang.php?id=<?= $row['id'] ?>"><i class="fas fa-edit mr-1"></i>Sửa</a>
                                 </td>
-                                <td class="text-center doimau"><a
-                                            href="./delete_qlbaidang.php?id=<?= $row['id'] ?>"><i class="fas fa-trash-alt mr-1"></i>Xóa</a>
+                                <td class="text-center doimau">
+                                    <form action="./delete_qlbaidang.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?');">
+                                        <?= csrf_input() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                                        <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font:inherit; text-decoration:underline;">
+                                            <i class="fas fa-trash-alt mr-1"></i>Xóa
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             <?php

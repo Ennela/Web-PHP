@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/vanilla-zoom.min.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/test.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>sua.css">
+    <?= csrf_meta() ?>
 </head>
 
 <body>
@@ -59,9 +60,12 @@
         <div class="collapse navbar-collapse" id="navcol-1">
             <?php
                 if (!empty($_SESSION['dangnhap'])) { ?>
-                    <div class="them d-none d-lg-block"><?php echo 'Chào: ' . $_SESSION['dangnhap'] ?><a class="dangxuat"
-                                                                                       href="?login=dangxuat">Đăng
-                            xuất</a>
+                    <div class="them d-none d-lg-block"><?php echo 'Chào: ' . htmlspecialchars($_SESSION['dangnhap']) ?>
+                        <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST" style="display:inline; margin-left: 8px;">
+                            <?= csrf_input() ?>
+                            <input type="hidden" name="btn_dangxuat" value="1">
+                            <button type="submit" class="dangxuat" style="background:none; border:none; padding:0; cursor:pointer; color:inherit; font:inherit; text-decoration:underline;">Đăng xuất</button>
+                        </form>
                     </div>
                     <?php
                 }
@@ -86,7 +90,11 @@
                             <a class="dropdown-item" href="<?php echo BASE_URL; ?>auth/dangki.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Đăng ký</a>
                         <?php } else { ?>
                             <a class="dropdown-item" href="<?php echo BASE_URL; ?>auth/thongtintaikhoan.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Thông tin tài khoản</a>
-                            <a class="dropdown-item" href="?login=dangxuat" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Đăng xuất</a>
+                            <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <input type="hidden" name="btn_dangxuat" value="1">
+                                <button type="submit" class="dropdown-item" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif; background:none; border:none; width:100%; text-align:left; cursor:pointer;">Đăng xuất</button>
+                            </form>
                         <?php } ?>
                         <a class="dropdown-item" href="<?php echo BASE_URL; ?>shop/giohang.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Giỏ hàng</a>
                         <a class="dropdown-item" href="<?php echo BASE_URL; ?>shop/tradonhang.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Tra cứu đơn hàng</a>

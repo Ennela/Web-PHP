@@ -1,31 +1,31 @@
 <?php
-
-    session_start();
-    if (!isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
-        exit;
-    }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: index.php');
-    }
-
-?>
-<?php
+    require_once dirname(__DIR__) . '/config.php';
     include_once 'connect_db.php';
+    require_admin();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
+        verify_csrf_or_abort();
+        secure_logout('dangnhap.php');
+    }
+    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+        http_response_code(405);
+        die('ÄÄƒng xuáº¥t báº±ng phÆ°Æ¡ng thá»©c GET khÃ´ng Ä‘Æ°á»£c phÃ©p vÃ¬ lÃ½ do báº£o máº­t.');
+    }
+
     include_once 'function.php';
-    if (isset($_GET['id'])) {
-        $sql_query = "SELECT * FROM tbl_qlbaidang WHERE id=" . $_GET['id'];
-        $result_set = mysqli_query($con, $sql_query);
+    $id = intval($_GET['id'] ?? 0);
+    $fetched_row = null;
+    if ($id > 0) {
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlbaidang WHERE id = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+        $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
+        mysqli_stmt_close($stmt);
     }
     if (isset($_POST['btn-save'])) {
-        // Bi?n d? li?u d?u vào
+        verify_csrf_or_abort();
+        // Bi?n d? li?u d?u vï¿½o
         $nguoiphutrach = $_POST['nguoiphutrach'];
         $tieude = $_POST['tieude'];
         $chedo = $_POST['chedo'];
@@ -73,7 +73,7 @@
         $sql_query
             = "UPDATE tbl_qlbaidang SET nguoiphutrach='$nguoiphutrach',tieude='$tieude',chedo='$chedo',noidung='$noidung',ngaytao='"
             . time() . "',ngaycapnhat='" . time() . "' WHERE id=" . $_GET['id'];
-        // Truy v?n SQL d? chèn d? li?u vào co s? d? li?u'
+        // Truy v?n SQL d? chï¿½n d? li?u vï¿½o co s? d? li?u'
 
         // sql query execution function
 
@@ -81,14 +81,14 @@
 
             ?>
             <script type="text/javascript">
-                alert('D? li?u dã du?c dua vào');
+                alert('D? li?u dï¿½ du?c dua vï¿½o');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
         } else {
             ?>
             <script type="text/javascript">
-                alert('D? li?u dua vào không h?p l? vui lòng ki?m tra l?i');
+                alert('D? li?u dua vï¿½o khï¿½ng h?p l? vui lï¿½ng ki?m tra l?i');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
@@ -135,7 +135,7 @@
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="Tìm ki?m"
+                           placeholder="Tï¿½m ki?m"
                            type="search">
                     <div class="absolute search-icon"
                          style="top: 1rem; left: .8rem;">
@@ -157,7 +157,7 @@
                                 onclick="toggleDD('myDropdown')"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
-                            Xin chào, <?php
+                            Xin chï¿½o, <?php
                                 echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
@@ -171,14 +171,15 @@
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> Ğang nh?p
+                                        class="fa fa-user fa-fw"></i> ï¿½ang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
-                               style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i>
-                                Ğang xu?t</a>
+                            <form action="trangchu.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> ÄÄƒng xuáº¥t
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -209,7 +210,7 @@
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lí s?n ph?m</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lï¿½ s?n ph?m</span>
                     </a>
 
                 </li>
@@ -219,7 +220,7 @@
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lí Khách hàng</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lï¿½ Khï¿½ch hï¿½ng</span>
                     </a>
                 </li>
                 <li class="flex-1 mr-3">
@@ -228,7 +229,7 @@
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lí bài dang</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lï¿½ bï¿½i dang</span>
                     </a>
                 </li>
 
@@ -238,7 +239,7 @@
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lí thành viên</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lï¿½ thï¿½nh viï¿½n</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -248,7 +249,7 @@
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lí don hàng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lï¿½ don hï¿½ng</span>
                     </a>
                 </li>
             </ul>
@@ -261,7 +262,7 @@
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">S?a bài vi?t</h3>
+                <h3 class="font-bold pl-2">S?a bï¿½i vi?t</h3>
             </div>
         </div>
 
@@ -270,14 +271,15 @@
             <div class="w-1/2 m-auto ">
                 <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
                       enctype="multipart/form-data" method="post">
+                    <?= csrf_input() ?>
                     <label class="block">
-                        <span class="text-gray-700">Tên tiêu d?:</span>
+                        <span class="text-gray-700">Tï¿½n tiï¿½u d?:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="" value="<?php echo $fetched_row['tieude']; ?>"
                                type="text" name="tieude">
                     </label>
                     <label class="block">
-                        <span class="text-gray-700">Ngu?i ph? trách:</span>
+                        <span class="text-gray-700">Ngu?i ph? trï¿½ch:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="" value="<?php echo $fetched_row['nguoiphutrach']; ?>"
                                type="text" name="nguoiphutrach">

@@ -1,39 +1,44 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 // Xử lý đăng xuất
 if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    session_destroy();
-    header('Location: ' . BASE_URL . 'home/trangchu.php');
-    exit;
+    http_response_code(405);
+    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
 }
 
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
-// ===== BẮT BUỘC ĐĂNG NHẬP =====
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+// ===== BẮT BUỘC ĐĂNG NHẬP (IDOR Defense) =====
+if (!is_user_logged_in()) {
+    http_response_code(401);
     echo "<script>alert('Vui lòng đăng nhập để xem chi tiết đơn hàng!'); window.location.href='" . BASE_URL . "auth/dangnhap.php';</script>";
     exit;
 }
 
-$makh = intval($_SESSION['makh']);
+$makh = get_current_user_id();
 $orderId = intval($_GET['id'] ?? 0);
 
 if ($orderId <= 0) {
+    http_response_code(400);
     echo "<script>alert('Mã đơn hàng không hợp lệ!'); window.location.href='" . BASE_URL . "shop/tradonhang.php';</script>";
     exit;
 }
 
-// ===== CHỈ CHO XEM ĐƠN HÀNG CỦA CHÍNH USER =====
-$sql = "SELECT * FROM `oder` WHERE `id` = $orderId AND `makh` = $makh";
-$result = mysqli_query($con, $sql);
+// ===== CHỈ CHO XEM ĐƠN HÀNG CỦA CHÍNH USER (IDOR Protection) =====
+$stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `id` = ? AND `makh` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmt, "ii", $orderId, $makh);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $order = mysqli_fetch_assoc($result);
+mysqli_stmt_close($stmt);
 
 if (!$order) {
+    http_response_code(403);
     echo "<script>alert('Bạn không có quyền xem đơn hàng này!'); window.location.href='" . BASE_URL . "shop/tradonhang.php';</script>";
     exit;
 }
@@ -755,8 +760,11 @@ function orderDetailAction(orderId, action, btn) {
     
     fetch('<?= BASE_URL ?>shop/api_order_action.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action, order_id: orderId })
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= get_csrf_token() ?>'
+        },
+        body: JSON.stringify({ action: action, order_id: orderId, csrf_token: '<?= get_csrf_token() ?>' })
     })
     .then(r => r.json())
     .then(data => {

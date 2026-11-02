@@ -5,24 +5,29 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 
-// Check auth
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+// Check auth & IDOR protection: user ID strictly from server session
+if (!is_user_logged_in()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
 
-$makh = intval($_SESSION['makh']);
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
+
+// CSRF Protection
+verify_csrf_or_abort();
+
+$makh = get_current_user_id();
 
 // Lấy dữ liệu
 $hoten = trim($_POST['hoten'] ?? '');

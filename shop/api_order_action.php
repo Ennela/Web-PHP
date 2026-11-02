@@ -6,20 +6,30 @@
  * - cancel: Hủy đơn (PENDING/CONFIRMED → CANCELLED + hoàn tồn kho)
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
-// Bắt buộc đăng nhập
-if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+// Bắt buộc đăng nhập (IDOR Defense)
+if (!is_user_logged_in()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
 
-$makh = intval($_SESSION['makh']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
+    exit;
+}
+
+// Bắt buộc xác thực CSRF Token
+verify_csrf_or_abort();
+
+$makh = get_current_user_id();
 
 // Parse input
 $input = json_decode(file_get_contents('php://input'), true);
@@ -32,15 +42,21 @@ $action = $input['action'] ?? '';
 $orderId = intval($input['order_id'] ?? 0);
 
 if ($orderId <= 0 || !in_array($action, ['receive', 'cancel'])) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Yêu cầu không hợp lệ']);
     exit;
 }
 
-// Lấy đơn hàng và kiểm tra quyền sở hữu
-$result = mysqli_query($con, "SELECT * FROM `oder` WHERE `id` = $orderId AND `makh` = $makh LIMIT 1");
-$order = mysqli_fetch_assoc($result);
+// Lấy đơn hàng và kiểm tra quyền sở hữu (IDOR Check)
+$stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `id` = ? AND `makh` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmt, "ii", $orderId, $makh);
+mysqli_stmt_execute($stmt);
+$resOrder = mysqli_stmt_get_result($stmt);
+$order = mysqli_fetch_assoc($resOrder);
+mysqli_stmt_close($stmt);
 
 if (!$order) {
+    http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Đơn hàng không tồn tại hoặc bạn không có quyền']);
     exit;
 }

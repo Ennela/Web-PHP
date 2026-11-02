@@ -1,6 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+init_secure_session();
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
 include BASE_PATH . 'includes/header.php';

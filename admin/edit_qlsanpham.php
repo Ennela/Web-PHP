@@ -1,34 +1,35 @@
 <?php
-
-    session_start();
-    if (!isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
-        exit;
-    }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: index.php');
-    }
-
-?>
-<?php
+    require_once dirname(__DIR__) . '/config.php';
     include_once 'connect_db.php';
+    require_admin();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
+        verify_csrf_or_abort();
+        secure_logout('dangnhap.php');
+    }
+    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+        http_response_code(405);
+        die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+    }
+
     include_once 'function.php';
     require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
-    if (isset($_GET['masp'])) {
-        $sql_query = "SELECT * FROM tbl_qlsanpham WHERE masp=" . $_GET['masp'];
-        $result_set = mysqli_query($con, $sql_query);
+    $masp = intval($_GET['masp'] ?? 0);
+    $fetched_row = null;
+    $currentStock = [];
+    if ($masp > 0) {
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlsanpham WHERE masp = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, "i", $masp);
+        mysqli_stmt_execute($stmt);
+        $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
+        mysqli_stmt_close($stmt);
         // Load tồn kho hiện tại
-        $currentStock = getStockByProduct($con, (int)$_GET['masp']);
+        $currentStock = getStockByProduct($con, $masp);
     }
     if (isset($_POST['btn-save'])) {
+        verify_csrf_or_abort();
         // Biến dữ liệu đầu vào
 
         $tensp = $_POST['tensp'];
@@ -196,11 +197,12 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
-                               style="width: 120px;"><i
-                                        class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                            <form action="trangchu.php" method="POST" style="margin:0;">
+                                <?= csrf_input() ?>
+                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -289,6 +291,7 @@
             <div class="w-1/2 m-auto ">
                 <form enctype="multipart/form-data" method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                    <?= csrf_input() ?>
                     <label class="block">
                         <span class="text-gray-700">Tên sản phẩm:</span>
                         <input type="text" name="tensp" value="<?php echo $fetched_row['tensp']; ?>"
