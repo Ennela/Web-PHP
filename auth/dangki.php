@@ -1,72 +1,71 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
-
-include_once BASE_PATH . 'includes/connect.php';
-if (isset($_POST['dangki'])) {
-    verify_csrf_or_abort();
-
-    $hoten = trim($_POST['hoten'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $taikhoan = trim($_POST['taikhoan'] ?? '');
-    $matkhau = trim($_POST['matkhau'] ?? '');
-
-    if ($hoten === '' || $email === '' || $taikhoan === '' || $matkhau === '') {
-        $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
-        header('Location: dangki.php');
-        exit;
-    }
-
-    // Validate email format
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['swal_error'] = 'Địa chỉ email không hợp lệ!';
-        header('Location: dangki.php');
-        exit;
-    }
-
-    // Check for duplicate username with prepared statement
-    $stmtUser = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
-    mysqli_stmt_bind_param($stmtUser, "s", $taikhoan);
-    mysqli_stmt_execute($stmtUser);
-    $resUser = mysqli_stmt_get_result($stmtUser);
-    if (mysqli_num_rows($resUser) > 0) {
-        mysqli_stmt_close($stmtUser);
-        $_SESSION['swal_error'] = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!';
-        header('Location: dangki.php');
-        exit;
-    }
-    mysqli_stmt_close($stmtUser);
-
-    // Check for duplicate email with prepared statement
-    $stmtEmail = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE email = ? LIMIT 1");
-    mysqli_stmt_bind_param($stmtEmail, "s", $email);
-    mysqli_stmt_execute($stmtEmail);
-    $resEmail = mysqli_stmt_get_result($stmtEmail);
-    if (mysqli_num_rows($resEmail) > 0) {
-        mysqli_stmt_close($stmtEmail);
-        $_SESSION['swal_error'] = 'Email đã được sử dụng. Vui lòng dùng email khác!';
-        header('Location: dangki.php');
-        exit;
-    }
-    mysqli_stmt_close($stmtEmail);
-
-    $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
-    $stmtInsert = mysqli_prepare($con, "INSERT INTO tbl_tkkhachhang (hoten, email, username, password) VALUES (?, ?, ?, ?)");
-    mysqli_stmt_bind_param($stmtInsert, "ssss", $hoten, $email, $taikhoan, $hashedPassword);
-
-    if (mysqli_stmt_execute($stmtInsert)) {
-        mysqli_stmt_close($stmtInsert);
-        $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
-        header('Location: dangnhap.php');
-        exit;
-    } else {
-        mysqli_stmt_close($stmtInsert);
-        $_SESSION['swal_error'] = 'Xảy ra lỗi trong khi đăng ký. Vui lòng thử lại!';
-        header('Location: dangki.php');
-        exit;
-    }
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
-include BASE_PATH . 'includes/header.php';
+
+    include_once BASE_PATH . 'includes/connect.php';
+    if (isset($_POST['dangki'])) {
+        $hoten = trim($_POST['hoten'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $taikhoan = trim($_POST['taikhoan'] ?? '');
+        $matkhau = trim($_POST['matkhau'] ?? '');
+
+        if ($hoten === '' || $email === '' || $taikhoan === '' || $matkhau === '') {
+            $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
+            header('Location: dangki.php');
+            exit;
+        }
+
+        // Validate email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['swal_error'] = 'Địa chỉ email không hợp lệ!';
+            header('Location: dangki.php');
+            exit;
+        }
+
+        // Check for duplicate username with prepared statement
+        $stmtUser = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmtUser, "s", $taikhoan);
+        mysqli_stmt_execute($stmtUser);
+        $resUser = mysqli_stmt_get_result($stmtUser);
+        if (mysqli_num_rows($resUser) > 0) {
+            mysqli_stmt_close($stmtUser);
+            $_SESSION['swal_error'] = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!';
+            header('Location: dangki.php');
+            exit;
+        }
+        mysqli_stmt_close($stmtUser);
+
+        // Check for duplicate email with prepared statement
+        $stmtEmail = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE email = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmtEmail, "s", $email);
+        mysqli_stmt_execute($stmtEmail);
+        $resEmail = mysqli_stmt_get_result($stmtEmail);
+        if (mysqli_num_rows($resEmail) > 0) {
+            mysqli_stmt_close($stmtEmail);
+            $_SESSION['swal_error'] = 'Email đã được sử dụng. Vui lòng dùng email khác!';
+            header('Location: dangki.php');
+            exit;
+        }
+        mysqli_stmt_close($stmtEmail);
+
+        $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
+        $stmtInsert = mysqli_prepare($con, "INSERT INTO tbl_tkkhachhang (hoten, email, username, password) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmtInsert, "ssss", $hoten, $email, $taikhoan, $hashedPassword);
+
+        if (mysqli_stmt_execute($stmtInsert)) {
+            mysqli_stmt_close($stmtInsert);
+            $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
+            header('Location: dangnhap.php');
+            exit;
+        } else {
+            $_SESSION['swal_error'] = 'Xảy ra lỗi trong khi đăng ký. Vui lòng thử lại!';
+            header('Location: dangki.php');
+            exit;
+        }
+    }
+    include BASE_PATH . 'includes/header.php';
 ?>
 
 <style>
@@ -160,7 +159,7 @@ include BASE_PATH . 'includes/header.php';
                 <h2 class="auth-title">Đăng ký</h2>
                 <p class="auth-subtitle">Tạo tài khoản để mua sắm dễ dàng hơn</p>
                 <form method="post">
-                    <?= csrf_input() ?>
+                    <?= csrf_field() ?>
                     <div class="mb-3"><label class="form-label">Họ và tên</label><input class="form-control" name="hoten" type="text" placeholder="Nhập họ và tên" required></div>
                     <div class="mb-3"><label class="form-label">Email</label><input class="form-control" name="email" type="email" placeholder="Nhập địa chỉ email" required></div>
                     <div class="mb-3"><label class="form-label">Tên đăng nhập</label><input class="form-control" type="text" name="taikhoan" placeholder="Nhập tên đăng nhập" required></div>
@@ -172,4 +171,4 @@ include BASE_PATH . 'includes/header.php';
         </div>
     </main>
 
-<?php include BASE_PATH . 'includes/footer.php'; ?>
+<?php include BASE_PATH . 'includes/footer.php'; ?>

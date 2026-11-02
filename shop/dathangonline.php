@@ -1,10 +1,16 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (isset($_GET['action'])) {
+    csrf_require_post();
+}
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 require_once(BASE_PATH . 'vnpay_php/config.php');
+vnpay_require_configuration();
 include BASE_PATH . 'includes/connect.php'; 
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
@@ -38,7 +44,6 @@ if(empty($orderProducts)){
 }
 
 if(isset($_GET['action']) && $_GET['action'] == 'submit'){
-    verify_csrf_or_abort();
     $tenkh = $_POST['tenkh'] ?? '';
     $sdt = $_POST['sdt'] ?? '';
     $diachi = $_POST['diachi'] ?? '';
@@ -224,7 +229,7 @@ include BASE_PATH . 'includes/header.php';
                         </div>
                         <div class="card-body">
                             <form method="post" action="<?php echo BASE_URL; ?>shop/dathangonline.php?action=submit">
-                                <?= csrf_input() ?>
+                                <?= csrf_field() ?>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Họ tên người nhận <span class="text-danger">*</span></label>
                                     <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= htmlspecialchars($default_name) ?>"/>

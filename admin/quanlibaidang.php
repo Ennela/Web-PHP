@@ -1,25 +1,36 @@
 <?php
-    require_once dirname(__DIR__) . '/config.php';
-    include './connect_db.php';
-    require_admin();
+require_once dirname(__DIR__) . '/config.php';
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-        verify_csrf_or_abort();
-        secure_logout('dangnhap.php');
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
     }
-    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-        http_response_code(405);
-        die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+    if (!isset($_SESSION['dangnhap1'])) {
+        header('Location: canhbao.php');
+        exit;
     }
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
+    }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
+        header('Location: index.php');
+        exit;
+    }
+
+?>
+<?php
+    include './connect_db.php';
 
     if (!empty($_GET['action']) && $_GET['action'] == 'search' && !empty($_POST)) {
-        $_SESSION['locsanpham4'] = $_POST;
+        $_SESSION['locsanpham4'] = array_intersect_key($_POST, array_flip(['id', 'tieude']));
         header('Location: quanlibaidang.php');
         exit;
     }
     if (!empty($_SESSION['locsanpham4'])) {
         $where = "";
-        foreach ($_SESSION['locsanpham4'] as $field => $value) {
+        foreach (array_intersect_key($_SESSION['locsanpham4'], array_flip(['id', 'tieude'])) as $field => $value) {
             //tách mảng ra làm 2 $field và $value
 
             if (!empty($value)) {
@@ -37,7 +48,7 @@
                 }
             }
         }
-        extract($_SESSION['locsanpham4']);//tự động lấy ra biến id và hoten
+        extract(array_intersect_key($_SESSION['locsanpham4'], array_flip(['id', 'tieude'])));//tự động lấy ra biến id và hoten
     }
 
     $item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
@@ -137,11 +148,13 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <form action="trangchu.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
-                                </button>
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
+                               style="width: 120px;"><i
+                                        class="fas fa-sign-out-alt fa-fw"></i>
+                                Đăng xuất</button>
                             </form>
                         </div>
                     </div>
@@ -249,6 +262,7 @@
             <div class="w-full px-6 pb-4 animate-in" style="animation-delay: 0.1s;">
                 <div class="search-bar" style="justify-content: space-between;">
                     <form action="quanlibaidang.php?action=search" method="POST" class="flex items-center gap-3 flex-1">
+                        <?= csrf_field() ?>
                         <input type="text"
                                placeholder="Mã bài đăng ..." name="id"
                                value="<?= !empty($id) ? $id : "" ?>"/>
@@ -301,13 +315,10 @@
                                 <td class="text-center doimau"><a
                                             href="./edit_qlbaidang.php?id=<?= $row['id'] ?>"><i class="fas fa-edit mr-1"></i>Sửa</a>
                                 </td>
-                                <td class="text-center doimau">
-                                    <form action="./delete_qlbaidang.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đăng này?');">
-                                        <?= csrf_input() ?>
-                                        <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                        <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font:inherit; text-decoration:underline;">
-                                            <i class="fas fa-trash-alt mr-1"></i>Xóa
-                                        </button>
+                                <td class="text-center doimau"><form method="post" action="./delete_qlbaidang.php" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                        <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;"><i class="fas fa-trash-alt mr-1"></i>Xóa</button>
                                     </form>
                                 </td>
                             </tr>

@@ -1,23 +1,29 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-include './connect_db.php';
-require_admin();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-    verify_csrf_or_abort();
-    secure_logout('dangnhap.php');
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
-}
-
-require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 date_default_timezone_set('Asia/Ho_Chi_Minh');
+if (!isset($_SESSION['dangnhap1'])) {
+    header('Location: canhbao.php');
+    exit;
+}
+if (isset($_POST['login'])) {
+    $dangxuat = $_POST['login'];
+} else {
+    $dangxuat = '';
+}
+if ($dangxuat == 'dangxuat') {
+    session_destroy();
+    header('Location: index.php');
+        exit;
+}
+include './connect_db.php';
+require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
 // ===== XỬ LÝ CẬP NHẬT TRẠNG THÁI =====
 if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
-    verify_csrf_or_abort();
     $order_id = intval($_POST['order_id']);
     $new_status = mysqli_real_escape_string($con, $_POST['new_status']);
     $valid_statuses = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
@@ -67,13 +73,13 @@ if (
     !empty($_GET['action']) && $_GET['action'] == 'search'
     && !empty($_POST)
 ) {
-    $_SESSION['locsanpham2'] = $_POST;
+    $_SESSION['locsanpham2'] = array_intersect_key($_POST, array_flip(['id', 'tenkh', 'status']));
     header('Location: quanlidonhang.php');
     exit;
 }
 if (!empty($_SESSION['locsanpham2'])) {
     $where = "";
-    foreach ($_SESSION['locsanpham2'] as $field => $value) {
+    foreach (array_intersect_key($_SESSION['locsanpham2'], array_flip(['id', 'tenkh', 'status'])) as $field => $value) {
         if (!empty($value)) {
             switch ($field) {
                 case 'tenkh':
@@ -89,7 +95,7 @@ if (!empty($_SESSION['locsanpham2'])) {
             }
         }
     }
-    extract($_SESSION['locsanpham2']);
+    extract(array_intersect_key($_SESSION['locsanpham2'], array_flip(['id', 'tenkh', 'status'])));
 }
 
 $item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
@@ -468,11 +474,13 @@ function getAdminStatusInfo($status) {
                                     href="dangnhap.php" style="width: 120px;"><i class="fa fa-user fa-fw"></i> Đăng nhập
                                 </a>
                                 <div class="border border-gray-800"></div>
-                                <form action="trangchu.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
-                                </button>
+                                <form method="post" style="margin:0;">
+                                    <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
+                                     style="width: 120px;"><i
+                                        class="fas fa-sign-out-alt fa-fw"></i>
+                                    Đăng xuất</button>
                             </form>
                             </div>
                         </div>
@@ -599,6 +607,7 @@ function getAdminStatusInfo($status) {
 
                     <div class="mr-8 flex items-center justify-center ">
                         <form action="quanlidonhang.php?action=search" method="POST">
+                            <?= csrf_field() ?>
                             <div class="flex ">
                                 <input type="text" class="border-2 border-gray-200 rounded px-2 py-2 w-30"
                                     placeholder="Nhập id ..." name="id" value="<?= !empty($id) ? $id : "" ?>" />
@@ -664,7 +673,7 @@ function getAdminStatusInfo($status) {
                                     </td>
                                     <td class="text-center">
                                         <form method="POST" action="quanlidonhang.php<?= !empty($_GET['page']) ? '?page=' . $_GET['page'] : '' ?>" class="status-form">
-                                            <?= csrf_input() ?>
+                                            <?= csrf_field() ?>
                                             <input type="hidden" name="action" value="update_status">
                                             <input type="hidden" name="order_id" value="<?= $row['id'] ?>">
                                             <select name="new_status" class="status-select" onchange="this.form.submit()">
@@ -679,12 +688,10 @@ function getAdminStatusInfo($status) {
                                     <td class="text-center">
                                         <button class="btn-detail" onclick="toggleDetail(<?= $row['id'] ?>, this)">Xem</button>
                                     </td>
-                                    <td class="text-center doimau">
-                                        <a href="inhoadon.php?id=<?= $row['id'] ?>" target="_blank" style="margin-right: 8px;">In</a>
-                                        <form action="./delete_qldonhang.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn hàng này?');">
-                                            <?= csrf_input() ?>
-                                            <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                            <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font:inherit; text-decoration:underline;">Xóa</button>
+                                    <td class="text-center doimau"> <form method="post" action="inhoadon.php" target="_blank" style="display:inline;">
+                                        <?= csrf_field() ?>
+                                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                            <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;">In</button>
                                         </form>
                                     </td>
                                 </tr>

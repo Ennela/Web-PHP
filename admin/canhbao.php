@@ -1,14 +1,15 @@
 <?php
-ob_start();
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+ob_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 include './connect_db.php';
 
 // Xử lý đăng nhập
 if (isset($_POST['dangnhap'])) {
-    verify_csrf_or_abort();
-    $taikhoan = trim($_POST['taikhoan'] ?? '');
-    $matkhau = trim($_POST['matkhau'] ?? '');
+    $taikhoan = $_POST['taikhoan'];
+    $matkhau = $_POST['matkhau'];
 
     if ($taikhoan == '' || $matkhau == '') {
         $thongbao = 'empty';
@@ -23,7 +24,8 @@ if (isset($_POST['dangnhap'])) {
 
         if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
             // Đăng nhập thành công với bcrypt hash
-            secure_session_regenerate();
+            session_regenerate_id(true);
+            csrf_rotate_token();
             $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
             $_SESSION['manv'] = $row_dangnhap['id'];
             header('Location: trangchu.php');
@@ -37,7 +39,8 @@ if (isset($_POST['dangnhap'])) {
             mysqli_stmt_execute($updateStmt);
             mysqli_stmt_close($updateStmt);
 
-            secure_session_regenerate();
+            session_regenerate_id(true);
+            csrf_rotate_token();
             $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
             $_SESSION['manv'] = $row_dangnhap['id'];
             header('Location: trangchu.php');
@@ -240,7 +243,7 @@ if (isset($_POST['dangnhap'])) {
 <div class="h-screen flex justify-center items-center">
     <div class="bg-white rounded-lg w-2/5 px-16 py-16">
         <form method="post">
-            <?= csrf_input() ?>
+            <?= csrf_field() ?>
             <div class="flex font-bold justify-center">
                 <img class="h-20 w-20"
                      src="https://raw.githubusercontent.com/sefyudem/Responsive-Login-Form/master/img/avatar.svg">

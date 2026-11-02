@@ -1,14 +1,21 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
-date_default_timezone_set('Asia/Ho_Chi_Minh');
-
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
-}
-include BASE_PATH . 'includes/connect.php';
-require_once BASE_PATH . 'includes/inventory_helper.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
+    }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
+        header('Location: giohang.php');
+        exit;
+    }
+    include BASE_PATH . 'includes/connect.php';
+    require_once BASE_PATH . 'includes/inventory_helper.php';
 
     // ===== MIGRATE OLD SESSION FORMAT =====
     // Old format: $_SESSION['giohang'][$masp] = quantity (int)
@@ -26,6 +33,7 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
             = array(); // nếu như chưa tồn tại thì tạo từ một mảng rỗng
     }
     if (isset($_GET['action'])) {
+        csrf_require_post();
         function update_cart($add = false)
         {
             global $con;
@@ -38,7 +46,7 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
                 }
             }
 
-            if (isset($_POST['quantity'])) {
+            if (isset($_POST['quantity']) && is_array($_POST['quantity'])) {
                 foreach ($_POST['quantity'] as $masp => $quantity) {
                     if ($quantity == 0) {
                         unset($_SESSION["giohang"][$masp]);
@@ -68,10 +76,10 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
                         }
                     }
                 }
-            } elseif (isset($_GET['masp'])) {
-                $masp = $_GET['masp'];
-                $quantity = isset($_GET['quantity']) ? (int)$_GET['quantity'] : 1;
-                $size = isset($_GET['size']) ? (int)$_GET['size'] : null;
+            } elseif (isset($_POST['masp'])) {
+                $masp = (int)$_POST['masp'];
+                $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 1;
+                $size = isset($_POST['size']) ? (int)$_POST['size'] : null;
 
                 if ($add && empty($size) && $preferredSize) {
                     $stockCheck = mysqli_query($con, "SELECT `soluong` FROM `tbl_tonkho` WHERE `masp` = " . (int)$masp . " AND `size` = $preferredSize");
@@ -99,26 +107,17 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
 
         switch ($_GET['action']) {
             case "add":
-                verify_csrf_or_abort();
                 update_cart(true);
-                header('Location:./giohang.php');
-                exit;
+                header('Location:./giohang.php');// cho đẹp đường dẫn
+                break;
 
             case "delete":
-                // Chặn xóa qua GET để ngăn chặn tấn công CSRF
-                if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                    http_response_code(405);
-                    die('Xóa sản phẩm qua phương thức GET không được phép vì lý do bảo mật.');
-                }
-                verify_csrf_or_abort();
                 if (isset($_POST['masp'])) {
-                    unset($_SESSION["giohang"][$_POST['masp']]);
+                    unset($_SESSION["giohang"][(int)$_POST['masp']]);
                 }
-                header('Location:./giohang.php');
-                exit;
-
+                header('Location:./giohang.php');// cho đẹp đường dẫn
+                break;
             case "submit":
-                verify_csrf_or_abort();
                 // Kiểm tra giỏ hàng trống
                 if (empty($_SESSION['giohang'])) {
                     $_SESSION['swal_warning'] = 'Giỏ hàng đang trống! Vui lòng thêm sản phẩm trước khi thanh toán.';
@@ -591,7 +590,7 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
             </div>
             <div class="content">
                 <form method="post" action="<?php echo BASE_URL; ?>shop/giohang.php?action=submit">
-                    <?= csrf_input() ?>
+                    <?= csrf_field() ?>
                     <div class="row">
                         <div class="col-lg-8 mb-4">
                             <div class="cart-items-wrapper">
@@ -750,9 +749,9 @@ function ajaxUpdate(masp, data, onSuccess) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': '<?= get_csrf_token() ?>'
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({ masp: masp, csrf_token: '<?= get_csrf_token() ?>', ...data })
+        body: JSON.stringify({ masp: masp, ...data })
     })
     .then(r => r.json())
     .then(res => {

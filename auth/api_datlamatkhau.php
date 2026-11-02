@@ -6,19 +6,18 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
-
-verify_csrf_or_abort();
 
 $token       = trim($_POST['token'] ?? '');
 $mk_moi      = $_POST['matkhau_moi'] ?? '';
@@ -67,7 +66,7 @@ if (mysqli_query($con, $sql)) {
     $_SESSION['swal_success'] = 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.';
     echo json_encode(['success' => true, 'message' => 'Đặt lại mật khẩu thành công!', 'redirect' => BASE_URL . 'auth/dangnhap.php']);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . mysqli_error($con)]);
+    echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
 }
 
 mysqli_close($con);

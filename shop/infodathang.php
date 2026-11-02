@@ -1,14 +1,25 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
-
-include BASE_PATH . 'includes/connect.php';
-require_once BASE_PATH . 'includes/inventory_helper.php';
-
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+if (isset($_GET['action'])) {
+    csrf_require_post();
 }
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    include BASE_PATH . 'includes/connect.php';
+    require_once BASE_PATH . 'includes/inventory_helper.php';
+
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
+    }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
+        header('Location: ' . BASE_URL . 'home/trangchu.php');
+        exit;
+    }
     require_once BASE_PATH . 'includes/mail_helper.php';
     require_once BASE_PATH . 'includes/email_templates.php';
 
@@ -81,7 +92,6 @@ if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
     }
 
     if (isset($_GET['action'])) {
-        verify_csrf_or_abort();
         $_POST['quantity'] = $_SESSION['chuyen'];
         $sizes = isset($_SESSION['chuyen_size']) ? $_SESSION['chuyen_size'] : [];
         $timsanpham = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN (" . implode(",", array_keys($_POST['quantity'])) . ")");
@@ -309,7 +319,7 @@ if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
                         </div>
                         <div class="card-body">
                             <form method="post" action="<?php echo BASE_URL; ?>shop/infodathang.php?action=submit">
-                                <?= csrf_input() ?>
+                                <?= csrf_field() ?>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Họ tên người nhận <span class="text-danger">*</span></label>
                                     <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= htmlspecialchars($default_name) ?>"/>

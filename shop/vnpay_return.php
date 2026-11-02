@@ -1,15 +1,29 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
-include BASE_PATH . 'includes/connect.php';
-require_once BASE_PATH . 'includes/inventory_helper.php';
-include BASE_PATH . 'includes/header.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_once(BASE_PATH . 'vnpay_php/config.php');
 
+// VNPAY is an external GET callback: authenticate its signature before any effects.
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    header('Allow: GET');
+    http_response_code(405);
+    exit('Method not allowed');
+}
+vnpay_require_configuration();
 $vnp_SecureHash = $_GET['vnp_SecureHash'] ?? '';
+if (!is_string($vnp_SecureHash) || !preg_match('/\A[0-9a-f]{128}\z/i', $vnp_SecureHash)) {
+    http_response_code(403);
+    exit('Chữ ký thanh toán không hợp lệ.');
+}
 $inputData = array();
 foreach ($_GET as $key => $value) {
     if (substr($key, 0, 4) == "vnp_") {
+        if (!is_string($value)) {
+            http_response_code(403);
+            exit('Dữ liệu thanh toán không hợp lệ.');
+        }
         $inputData[$key] = $value;
     }
 }
@@ -28,7 +42,16 @@ foreach ($inputData as $key => $value) {
 }
 $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-$vnpaySuccess = ($secureHash == $vnp_SecureHash && $_GET['vnp_ResponseCode'] == '00');
+if (!hash_equals($secureHash, $vnp_SecureHash)) {
+    http_response_code(403);
+    exit('Chữ ký thanh toán không hợp lệ.');
+}
+
+include BASE_PATH . 'includes/connect.php';
+require_once BASE_PATH . 'includes/inventory_helper.php';
+include BASE_PATH . 'includes/header.php';
+
+$vnpaySuccess = (($_GET['vnp_ResponseCode'] ?? '') === '00');
 $orderId = intval($_GET['vnp_TxnRef'] ?? 0);
 
 // ===== KIỂM TRA TRẠNG THÁI ĐƠN HÀNG TRONG DB =====

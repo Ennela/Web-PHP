@@ -1,10 +1,22 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+//if (!isset($_SESSION['dangnhap'])) {
+//
+//    header('Location: index.php');
+//}
+if (isset($_POST['login'])) {
+    $dangxuat = $_POST['login'];
+} else {
+    $dangxuat = '';
+}
+if ($dangxuat == 'dangxuat') {
+    session_destroy();
+    header('Location: trangchu.php');
+    exit;
 }
 include BASE_PATH . 'includes/header.php';
 

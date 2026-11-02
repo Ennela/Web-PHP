@@ -1,16 +1,23 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-include './connect_db.php';
-require_admin();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+if (!isset($_SESSION['dangnhap1'])) {
+	header('Location: canhbao.php');
+	exit;
+}
+if (isset($_POST['login'])) {
+	$dangxuat = $_POST['login'];
+} else {
+	$dangxuat = '';
+}
+if ($dangxuat == 'dangxuat') {
+	session_destroy();
+	header('Location: index.php');
+        exit;
+}
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-    verify_csrf_or_abort();
-    secure_logout('dangnhap.php');
-}
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,7 +73,7 @@ if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none" onclick="toggleDD('myDropdown')"><span
-                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo $_SESSION['dangnhap'] ?>
+                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                             </svg>
@@ -79,11 +86,12 @@ if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
                                style="width: 120px;"><i
                                         class="fa fa-user fa-fw"></i> Đăng nhập </a>
                             <div class="border border-gray-800"></div>
-                            <form action="trangchu.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
-                                </button>
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
+                               style="width: 120px;"><i
+                                        class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất</button>
                             </form>
                         </div>
                     </div>
@@ -175,7 +183,8 @@ if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
 
         <div class="flex flex-wrap p-6">
             <div class="w-1/2 m-auto ">
-                <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                <form method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                    <?= csrf_field() ?>
                     <label class="block ">
                         <span class="text-gray-700">Họ và tên:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full" placeholder=""

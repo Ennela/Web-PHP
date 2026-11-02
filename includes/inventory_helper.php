@@ -178,7 +178,8 @@ function validateAndDeductStock($con, $items) {
     } catch (Exception $e) {
         mysqli_rollback($con);
         mysqli_autocommit($con, true);
-        return ['success' => false, 'errors' => [['message' => 'Lỗi hệ thống: ' . $e->getMessage()]]];
+        error_log('Inventory transaction failed; exception type ' . get_class($e) . '.');
+        return ['success' => false, 'errors' => [['message' => 'Không thể cập nhật tồn kho. Vui lòng thử lại sau.']]];
     }
 }
 
@@ -240,18 +241,22 @@ function restoreStock($con, $orderId) {
 }
 
 /**
- * Tự động chuyển đơn hàng SHIPPING > 15 ngày sang DELIVERED.
- * Gọi hàm này khi load trang tra cứu đơn hàng.
+ * Complete old shipping orders for the authenticated customer only.
+ * Invoke from a CSRF-protected POST after authentication, never during a GET.
  */
-function autoCompleteShippingOrders($con) {
+function autoCompleteShippingOrders($con, int $makh) {
+    if ($makh <= 0) {
+        return 0;
+    }
     $fifteenDaysAgo = time() - (15 * 24 * 60 * 60);
-    
-    $sql = "UPDATE `oder` SET `status` = 'DELIVERED', `payment_status` = CASE 
+    $stmt = mysqli_prepare($con, "UPDATE `oder` SET `status` = 'DELIVERED', `payment_status` = CASE
                 WHEN `payment_status` = 'PAID' THEN 'PAID'
                 ELSE 'UNPAID'
             END
-            WHERE `status` = 'SHIPPING' AND `ngaytao` < $fifteenDaysAgo";
-    mysqli_query($con, $sql);
-    
-    return mysqli_affected_rows($con);
+            WHERE `status` = 'SHIPPING' AND `ngaytao` < ? AND `makh` = ?");
+    mysqli_stmt_bind_param($stmt, 'ii', $fifteenDaysAgo, $makh);
+    mysqli_stmt_execute($stmt);
+    $updated = mysqli_stmt_affected_rows($stmt);
+    mysqli_stmt_close($stmt);
+    return $updated;
 }

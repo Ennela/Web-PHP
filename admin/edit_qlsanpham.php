@@ -1,17 +1,27 @@
 <?php
-    require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/config.php';
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    if (!isset($_SESSION['dangnhap1'])) {
+        header('Location: canhbao.php');
+        exit;
+    }
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
+    }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
+        header('Location: index.php');
+        exit;
+    }
+
+?>
+<?php
     include_once 'connect_db.php';
-    require_admin();
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-        verify_csrf_or_abort();
-        secure_logout('dangnhap.php');
-    }
-    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-        http_response_code(405);
-        die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
-    }
-
     include_once 'function.php';
     require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
@@ -19,17 +29,15 @@
     $fetched_row = null;
     $currentStock = [];
     if ($masp > 0) {
-        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlsanpham WHERE masp = ? LIMIT 1");
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlsanpham WHERE masp = ?");
         mysqli_stmt_bind_param($stmt, "i", $masp);
         mysqli_stmt_execute($stmt);
         $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
         mysqli_stmt_close($stmt);
-        // Load tồn kho hiện tại
         $currentStock = getStockByProduct($con, $masp);
     }
     if (isset($_POST['btn-save'])) {
-        verify_csrf_or_abort();
         // Biến dữ liệu đầu vào
 
         $tensp = $_POST['tensp'];
@@ -40,53 +48,25 @@
         $nhomsp = $_POST['nhomsp'];
 
 
-        if (isset($_FILES['anhdaidien']) && !empty($_FILES['anhdaidien']['name'][0])) {
-            $uploadedFiles = $_FILES['anhdaidien'];
-            $result1 = uploadFiles($uploadedFiles);
-            if (!empty($result1['errors'])) {
-                $error = $result1['errors'];
-            } else {
-                $anhdaidien = $result1['path'];
-            }
-            $sql_query1
-                = "UPDATE tbl_qlsanpham SET anhdaidien='$anhdaidien' WHERE masp=" . $_GET['masp'];
-
-            $result_set1 = mysqli_query($con, $sql_query1);
-
+        try {
+            $images = app_upload_admin_images($_FILES);
+        } catch (InvalidArgumentException | RuntimeException $error) {
+            app_fail(422, $error->getMessage());
         }
-        if (isset($_FILES['anhgiuoithieu1']) && !empty($_FILES['anhgiuoithieu1']['name'][0])) {
-            $uploadedFiles1 = $_FILES['anhgiuoithieu1'];
-            $result2 = uploadFiles($uploadedFiles1);
-            if (!empty($result2['errors'])) {
-                $error = $result2['errors'];
-            } else {
-                $anhgiuoithieu1 = $result2['path'];
-            }
-            $sql_query2
-                = "UPDATE tbl_qlsanpham SET anhgiuoithieu1='$anhgiuoithieu1' WHERE masp=" . $_GET['masp'];
-
-            $result_set2 = mysqli_query($con, $sql_query2);
+        // Field names come from the helper's fixed allowlist, never request data.
+        foreach ($images as $field => $path) {
+            $imageId = (int)($_GET['masp'] ?? 0);
+            $imageUpdate = mysqli_prepare($con, "UPDATE `tbl_qlsanpham` SET `$field` = ? WHERE `masp` = ?");
+            mysqli_stmt_bind_param($imageUpdate, 'si', $path, $imageId);
+            mysqli_stmt_execute($imageUpdate);
+            mysqli_stmt_close($imageUpdate);
         }
-        if (isset($_FILES['anhgiuoithieu2']) && !empty($_FILES['anhgiuoithieu2']['name'][0])) {
-            $uploadedFiles2 = $_FILES['anhgiuoithieu2'];
-            $result3 = uploadFiles($uploadedFiles2);
-            if (!empty($result3['errors'])) {
-                $error = $result3['errors'];
-            } else {
-                $anhgiuoithieu2 = $result3['path'];
-            }
-            $sql_query3
-                = "UPDATE tbl_qlsanpham SET anhgiuoithieu2='$anhgiuoithieu2' WHERE masp=" . $_GET['masp'];
-            $result_set3 = mysqli_query($con, $sql_query3);
-        }
-        $sql_query
-            = "UPDATE tbl_qlsanpham SET tensp='$tensp',giasanpham='$giasanpham',giagoc='$giagoc',noidung='$noidung',ngaycapnhat='"
-            . time() . "',nhomsp='$nhomsp' WHERE masp=" . $_GET['masp'];
+        $now = time();
+        $stmtUp = mysqli_prepare($con, "UPDATE tbl_qlsanpham SET tensp = ?, giasanpham = ?, giagoc = ?, noidung = ?, ngaycapnhat = ?, nhomsp = ? WHERE masp = ?");
+        mysqli_stmt_bind_param($stmtUp, "ssssisi", $tensp, $giasanpham, $giagoc, $noidung, $now, $nhomsp, $masp);
 
-        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
-        // sql query execution function
-
-        if (mysqli_query($con, $sql_query) && !isset($error)) {
+        if (mysqli_stmt_execute($stmtUp) && !isset($error)) {
+            mysqli_stmt_close($stmtUp);
 
             // === CẬP NHẬT TỒN KHO ===
             if (isset($_POST['stock']) && is_array($_POST['stock'])) {
@@ -197,11 +177,13 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <form action="trangchu.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
-                                </button>
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
+                               style="width: 120px;"><i
+                                        class="fas fa-sign-out-alt fa-fw"></i>
+                                Đăng xuất</button>
                             </form>
                         </div>
                     </div>
@@ -291,7 +273,7 @@
             <div class="w-1/2 m-auto ">
                 <form enctype="multipart/form-data" method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                    <?= csrf_input() ?>
+                    <?= csrf_field() ?>
                     <label class="block">
                         <span class="text-gray-700">Tên sản phẩm:</span>
                         <input type="text" name="tensp" value="<?php echo $fetched_row['tensp']; ?>"
@@ -326,7 +308,7 @@
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhdaidien"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh giới thiệu 1: </label>
@@ -335,7 +317,7 @@
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu1" value=""
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh giới thiệu 2: </label>
@@ -344,7 +326,7 @@
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu2"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
 
 

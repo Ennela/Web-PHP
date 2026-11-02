@@ -5,6 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <title>Blog - Brand</title>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,400i,700,700i,600,600i">
@@ -21,7 +22,6 @@
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/vanilla-zoom.min.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/test.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>sua.css">
-    <?= csrf_meta() ?>
 </head>
 
 <body>
@@ -61,10 +61,9 @@
             <?php
                 if (!empty($_SESSION['dangnhap'])) { ?>
                     <div class="them d-none d-lg-block"><?php echo 'Chào: ' . htmlspecialchars($_SESSION['dangnhap']) ?>
-                        <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST" style="display:inline; margin-left: 8px;">
-                            <?= csrf_input() ?>
-                            <input type="hidden" name="btn_dangxuat" value="1">
-                            <button type="submit" class="dangxuat" style="background:none; border:none; padding:0; cursor:pointer; color:inherit; font:inherit; text-decoration:underline;">Đăng xuất</button>
+                        <form method="post" action="<?= BASE_URL ?>auth/dangnhap.php" style="display:inline">
+                            <?= csrf_field() ?>
+                            <button type="submit" name="login" value="dangxuat" class="dangxuat" style="border:0;background:none;cursor:pointer">Đăng xuất</button>
                         </form>
                     </div>
                     <?php
@@ -90,10 +89,9 @@
                             <a class="dropdown-item" href="<?php echo BASE_URL; ?>auth/dangki.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Đăng ký</a>
                         <?php } else { ?>
                             <a class="dropdown-item" href="<?php echo BASE_URL; ?>auth/thongtintaikhoan.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Thông tin tài khoản</a>
-                            <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <input type="hidden" name="btn_dangxuat" value="1">
-                                <button type="submit" class="dropdown-item" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif; background:none; border:none; width:100%; text-align:left; cursor:pointer;">Đăng xuất</button>
+                            <form method="post" action="<?= BASE_URL ?>auth/dangnhap.php">
+                                <?= csrf_field() ?>
+                                <button type="submit" name="login" value="dangxuat" class="dropdown-item" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Đăng xuất</button>
                             </form>
                         <?php } ?>
                         <a class="dropdown-item" href="<?php echo BASE_URL; ?>shop/giohang.php" style="padding-right: .5rem;padding-left: .5rem;font-weight: 600;font-size: .8rem;text-transform: uppercase;transform: scale(1.03);color: var(--bs-dark);text-decoration: none;font-family: Montserrat, sans-serif;">Giỏ hàng</a>

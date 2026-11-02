@@ -1,16 +1,24 @@
 <?php
-    require_once dirname(__DIR__) . '/config.php';
-    include './connect_db.php';
-    require_admin();
+require_once dirname(__DIR__) . '/config.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-        verify_csrf_or_abort();
-        secure_logout('dangnhap.php');
+    if (!isset($_SESSION['dangnhap1'])) {
+        header('Location: canhbao.php');
+        exit;
     }
-    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-        http_response_code(405);
-        die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
     }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
+        header('Location: index.php');
+        exit;
+    }
+    include './connect_db.php';
     $lay = mysqli_query($con, "SELECT SUM(tongtien) as 'tong'  FROM oder WHERE MONTH(FROM_UNIXTIME(ngaytao)) = MONTH(CURRENT_DATE()) AND YEAR(FROM_UNIXTIME(ngaytao)) = YEAR(CURRENT_DATE()) AND status = 'DELIVERED'");
     $tongdoanhthu = mysqli_fetch_array($lay);
     $laysp = mysqli_query($con, "SELECT * FROM tbl_qlsanpham ");
@@ -117,11 +125,12 @@
                                style="width: 120px;"><i
                                         class="fa fa-user fa-fw"></i> Đăng nhập </a>
                             <div class="border border-gray-800"></div>
-                            <form action="trangchu.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất
-                                </button>
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
+                               style="width: 120px;"><i
+                                        class="fas fa-sign-out-alt fa-fw"></i> Đăng xuất</button>
                             </form>
                         </div>
                     </div>

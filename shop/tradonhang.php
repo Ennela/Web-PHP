@@ -1,25 +1,36 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 // Xử lý đăng xuất
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật.');
+if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
+    session_destroy();
+    header('Location: ' . BASE_URL . 'home/trangchu.php');
+    exit;
 }
 
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
-// Tự động chuyển đơn SHIPPING > 15 ngày sang DELIVERED
-autoCompleteShippingOrders($con);
+// ===== BẮT BUỘC ĐĂNG NHẬP =====
+if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
+    $_SESSION['swal_warning'] = 'Vui lòng đăng nhập để tra cứu đơn hàng!';
+    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    exit;
+}
 
-// ===== BẮT BUỘC ĐĂNG NHẬP (IDOR Defense) =====
-require_user(BASE_URL . 'auth/dangnhap.php');
+$makh = intval($_SESSION['makh']);
 
-$makh = get_current_user_id();
+if (($_POST['action'] ?? '') === 'sync_shipping') {
+    csrf_require_post();
+    autoCompleteShippingOrders($con, $makh);
+    header('Location: ' . BASE_URL . 'shop/tradonhang.php', true, 303);
+    exit;
+}
 
 // Map status to Vietnamese labels and colors
 function getStatusInfo($status) {
@@ -348,6 +359,13 @@ include BASE_PATH . 'includes/header.php';
         <div class="container text-center">
             <h2><i class="fas fa-shipping-fast mr-2"></i> Đơn Hàng Của Tôi</h2>
             <p class="mt-2">Theo dõi trạng thái tất cả đơn hàng của bạn</p>
+            <form method="post" action="<?= BASE_URL ?>shop/tradonhang.php" class="mt-3">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="sync_shipping">
+                <button type="submit" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sync-alt mr-1"></i> Cập nhật trạng thái giao hàng
+                </button>
+            </form>
             <div class="mt-3">
                 <span class="user-badge">
                     <i class="fas fa-user-circle"></i>
@@ -511,9 +529,9 @@ function processOrderAction(orderId, action, btn) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': '<?= get_csrf_token() ?>'
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({ action: action, order_id: orderId, csrf_token: '<?= get_csrf_token() ?>' })
+        body: JSON.stringify({ action: action, order_id: orderId })
     })
     .then(r => r.json())
     .then(data => {

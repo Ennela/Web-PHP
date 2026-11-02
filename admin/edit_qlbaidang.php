@@ -1,22 +1,32 @@
 <?php
-    require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/config.php';
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    if (!isset($_SESSION['dangnhap1'])) {
+        header('Location: canhbao.php');
+        exit;
+    }
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
+    }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
+        header('Location: index.php');
+        exit;
+    }
+
+?>
+<?php
     include_once 'connect_db.php';
-    require_admin();
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['admin_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-        verify_csrf_or_abort();
-        secure_logout('dangnhap.php');
-    }
-    if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-        http_response_code(405);
-        die('ƒêƒÉng xu·∫•t b·∫±ng ph∆∞∆°ng th·ª©c GET kh√¥ng ƒë∆∞·ª£c ph√©p v√¨ l√Ω do b·∫£o m·∫≠t.');
-    }
-
     include_once 'function.php';
     $id = intval($_GET['id'] ?? 0);
     $fetched_row = null;
     if ($id > 0) {
-        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlbaidang WHERE id = ? LIMIT 1");
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlbaidang WHERE id = ?");
         mysqli_stmt_bind_param($stmt, "i", $id);
         mysqli_stmt_execute($stmt);
         $result_set = mysqli_stmt_get_result($stmt);
@@ -24,71 +34,45 @@
         mysqli_stmt_close($stmt);
     }
     if (isset($_POST['btn-save'])) {
-        verify_csrf_or_abort();
-        // Bi?n d? li?u d?u vÔøΩo
+        // Bi?n d? li?u d?u v‡o
         $nguoiphutrach = $_POST['nguoiphutrach'];
         $tieude = $_POST['tieude'];
         $chedo = $_POST['chedo'];
         $noidung = $_POST['noidung'];
 
-        if (isset($_FILES['anhdaidien']) && !empty($_FILES['anhdaidien']['name'][0])) {
-            $uploadedFiles = $_FILES['anhdaidien'];
-            $result1 = uploadFiles($uploadedFiles);
-            if (!empty($result1['errors'])) {
-                $error = $result1['errors'];
-            } else {
-                $anhdaidien = $result1['path'];
-            }
-            $sql_query1
-                = "UPDATE tbl_qlbaidang SET anhdaidien='$anhdaidien' WHERE id=" . $_GET['id'];
-            $result_set1 = mysqli_query($con, $sql_query1);
-
-
+        try {
+            $images = app_upload_admin_images($_FILES);
+        } catch (InvalidArgumentException | RuntimeException $error) {
+            app_fail(422, $error->getMessage());
         }
-        if (isset($_FILES['anhgiuoithieu1']) && !empty($_FILES['anhgiuoithieu1']['name'][0])) {
-            $uploadedFiles1 = $_FILES['anhgiuoithieu1'];
-            $result2 = uploadFiles($uploadedFiles1);
-            if (!empty($result2['errors'])) {
-                $error = $result2['errors'];
-            } else {
-                $anhgiuoithieu1 = $result2['path'];
-            }
-            $sql_query2
-                = "UPDATE tbl_qlbaidang SET anhgiuoithieu1='$anhgiuoithieu1' WHERE id=" . $_GET['id'];
-            $result_set2 = mysqli_query($con, $sql_query2);
+        // Field names come from the helper's fixed allowlist, never request data.
+        foreach ($images as $field => $path) {
+            $imageId = (int)($_GET['id'] ?? 0);
+            $imageUpdate = mysqli_prepare($con, "UPDATE `tbl_qlbaidang` SET `$field` = ? WHERE `id` = ?");
+            mysqli_stmt_bind_param($imageUpdate, 'si', $path, $imageId);
+            mysqli_stmt_execute($imageUpdate);
+            mysqli_stmt_close($imageUpdate);
         }
-        if (isset($_FILES['anhgiuoithieu2']) && !empty($_FILES['anhgiuoithieu2']['name'][0])) {
-            $uploadedFiles2 = $_FILES['anhgiuoithieu2'];
-            $result3 = uploadFiles($uploadedFiles2);
-            if (!empty($result3['errors'])) {
-                $error = $result3['errors'];
-            } else {
-                $anhgiuoithieu2 = $result3['path'];
-            }
-            $sql_query3
-                = "UPDATE tbl_qlbaidang SET anhgiuoithieu2='$anhgiuoithieu2' WHERE id=" . $_GET['id'];
-            $result_set3 = mysqli_query($con, $sql_query3);
-
-        }
-        $sql_query
-            = "UPDATE tbl_qlbaidang SET nguoiphutrach='$nguoiphutrach',tieude='$tieude',chedo='$chedo',noidung='$noidung',ngaytao='"
-            . time() . "',ngaycapnhat='" . time() . "' WHERE id=" . $_GET['id'];
-        // Truy v?n SQL d? chÔøΩn d? li?u vÔøΩo co s? d? li?u'
+        $now = time();
+        $stmtUp = mysqli_prepare($con, "UPDATE tbl_qlbaidang SET nguoiphutrach = ?, tieude = ?, chedo = ?, noidung = ?, ngaycapnhat = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmtUp, "ssssii", $nguoiphutrach, $tieude, $chedo, $noidung, $now, $id);
+        // Truy v?n SQL d? chËn d? li?u v‡o co s? d? li?u'
 
         // sql query execution function
 
-        if (mysqli_query($con, $sql_query)) {
+        if (mysqli_stmt_execute($stmtUp)) {
+            mysqli_stmt_close($stmtUp);
 
             ?>
             <script type="text/javascript">
-                alert('D? li?u dÔøΩ du?c dua vÔøΩo');
+                alert('D? li?u d„ du?c dua v‡o');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
         } else {
             ?>
             <script type="text/javascript">
-                alert('D? li?u dua vÔøΩo khÔøΩng h?p l? vui lÔøΩng ki?m tra l?i');
+                alert('D? li?u dua v‡o khÙng h?p l? vui lÚng ki?m tra l?i');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
@@ -135,7 +119,7 @@
         <div class="flex flex-1 justify-center px-2 text-white md:w-1/3 md:justify-start">
                 <span class="relative w-full">
                     <input class="px-2 py-3 pl-10 w-full leading-normal text-white bg-gray-900 rounded border border-transparent transition appearance-none focus:outline-none focus:border-gray-400"
-                           placeholder="TÔøΩm ki?m"
+                           placeholder="TÏm ki?m"
                            type="search">
                     <div class="absolute search-icon"
                          style="top: 1rem; left: .8rem;">
@@ -157,7 +141,7 @@
                                 onclick="toggleDD('myDropdown')"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
-                            Xin chÔøΩo, <?php
+                            Xin ch‡o, <?php
                                 echo $_SESSION['dangnhap1'] ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
@@ -171,14 +155,16 @@
                             <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                href="dangnhap.php"
                                style="width: 120px;"><i
-                                        class="fa fa-user fa-fw"></i> ÔøΩang nh?p
+                                        class="fa fa-user fa-fw"></i> –ang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
-                            <form action="trangchu.php" method="POST" style="margin:0;">
-                                <?= csrf_input() ?>
-                                <button type="submit" name="admin_dangxuat" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline text-left w-full bg-transparent border-0 cursor-pointer" style="width: 120px;">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i> ƒêƒÉng xu·∫•t
-                                </button>
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
+                               style="width: 120px;"><i
+                                        class="fas fa-sign-out-alt fa-fw"></i>
+                                –ang xu?t</button>
                             </form>
                         </div>
                     </div>
@@ -210,7 +196,7 @@
 
                         <i class="fas fa-dolly md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÔøΩ s?n ph?m</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÌ s?n ph?m</span>
                     </a>
 
                 </li>
@@ -220,7 +206,7 @@
 
                         <i class="far fa-address-card md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÔøΩ KhÔøΩch hÔøΩng</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÌ Kh·ch h‡ng</span>
                     </a>
                 </li>
                 <li class="flex-1 mr-3">
@@ -229,7 +215,7 @@
 
                         <i class="fas fa-align-left md:pr-3"></i>
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÔøΩ bÔøΩi dang</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÌ b‡i dang</span>
                     </a>
                 </li>
 
@@ -239,7 +225,7 @@
                         <i class="far fa-address-book md:pr-3"></i>
 
                         <span
-                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÔøΩ thÔøΩnh viÔøΩn</span>
+                                class="block pb-1 text-xs text-gray-600 md:pb-0 md:text-base md:text-gray-400 md:inline-block">Qu?n lÌ th‡nh viÍn</span>
                     </a>
                 </li>
                 <li class="mr-3 flex-1">
@@ -249,7 +235,7 @@
 
 
                         <span
-                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÔøΩ don hÔøΩng</span>
+                                class="pb-1 md:pb-0 text-xs md:text-base text-gray-600 md:text-gray-400 block md:inline-block">Qu?n lÌ don h‡ng</span>
                     </a>
                 </li>
             </ul>
@@ -262,7 +248,7 @@
 
         <div class="bg-gray-800 pt-3">
             <div class="rounded-tl-3xl bg-gradient-to-r from-blue-900 to-gray-800 p-4 shadow text-2xl text-white">
-                <h3 class="font-bold pl-2">S?a bÔøΩi vi?t</h3>
+                <h3 class="font-bold pl-2">S?a b‡i vi?t</h3>
             </div>
         </div>
 
@@ -271,15 +257,15 @@
             <div class="w-1/2 m-auto ">
                 <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
                       enctype="multipart/form-data" method="post">
-                    <?= csrf_input() ?>
+                    <?= csrf_field() ?>
                     <label class="block">
-                        <span class="text-gray-700">TÔøΩn tiÔøΩu d?:</span>
+                        <span class="text-gray-700">TÍn tiÍu d?:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="" value="<?php echo $fetched_row['tieude']; ?>"
                                type="text" name="tieude">
                     </label>
                     <label class="block">
-                        <span class="text-gray-700">Ngu?i ph? trÔøΩch:</span>
+                        <span class="text-gray-700">Ngu?i ph? tr·ch:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="" value="<?php echo $fetched_row['nguoiphutrach']; ?>"
                                type="text" name="nguoiphutrach">
@@ -302,7 +288,7 @@
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhdaidien"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <div class="mt-5">
                         <label for="avatar">Ch?n ?nh gi?i thi?u 1: </label>
@@ -311,7 +297,7 @@
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu1"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <div class="mt-5">
                         <label for="avatar">Ch?n ?nh gi?i thi?u 2: </label>
@@ -320,7 +306,7 @@
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu2"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <!--                    Textarea-->
                     <label class="block mt-2">

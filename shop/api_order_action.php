@@ -6,30 +6,24 @@
  * - cancel: Hủy đơn (PENDING/CONFIRMED → CANCELLED + hoàn tồn kho)
  */
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+csrf_require_post();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
-// Bắt buộc đăng nhập (IDOR Defense)
-if (!is_user_logged_in()) {
+// Bắt buộc đăng nhập
+if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
-    exit;
-}
-
-// Bắt buộc xác thực CSRF Token
-verify_csrf_or_abort();
-
-$makh = get_current_user_id();
+$makh = intval($_SESSION['makh']);
 
 // Parse input
 $input = json_decode(file_get_contents('php://input'), true);
@@ -42,12 +36,11 @@ $action = $input['action'] ?? '';
 $orderId = intval($input['order_id'] ?? 0);
 
 if ($orderId <= 0 || !in_array($action, ['receive', 'cancel'])) {
-    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Yêu cầu không hợp lệ']);
     exit;
 }
 
-// Lấy đơn hàng và kiểm tra quyền sở hữu (IDOR Check)
+// Lấy đơn hàng và kiểm tra quyền sở hữu (IDOR Check) bằng prepared statement
 $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `id` = ? AND `makh` = ? LIMIT 1");
 mysqli_stmt_bind_param($stmt, "ii", $orderId, $makh);
 mysqli_stmt_execute($stmt);

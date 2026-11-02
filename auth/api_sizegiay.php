@@ -5,21 +5,23 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
 include BASE_PATH . 'includes/connect.php';
 
-if (!is_user_logged_in()) {
+if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập!']);
     exit;
 }
 
-$makh = get_current_user_id();
+$makh = intval($_SESSION['makh']);
 
-// === GET: Lấy danh sách (Read-only) ===
+// === GET: Lấy danh sách ===
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $result = mysqli_query($con, "SELECT * FROM `tbl_sizegiay` WHERE `makh` = $makh ORDER BY `he_size`, `size_value`");
     $sizes = [];
@@ -30,14 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
-// === POST (State-changing) ===
+// === POST ===
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
-
-verify_csrf_or_abort();
 
 $action = $_POST['action'] ?? '';
 
@@ -76,7 +75,7 @@ switch ($action) {
         if (mysqli_query($con, $sql)) {
             echo json_encode(['success' => true, 'message' => 'Lưu size yêu thích thành công!']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . mysqli_error($con)]);
+            echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
 
@@ -90,7 +89,7 @@ switch ($action) {
         if (mysqli_query($con, "DELETE FROM `tbl_sizegiay` WHERE `id` = $id AND `makh` = $makh")) {
             echo json_encode(['success' => true, 'message' => 'Đã xóa size!']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . mysqli_error($con)]);
+            echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
 

@@ -1,11 +1,13 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 include BASE_PATH . 'includes/connect.php';
 
-$orderCode = isset($_GET['order']) ? trim($_GET['order']) : '';
-$token = isset($_GET['token']) ? trim($_GET['token']) : '';
+$orderCode = isset($_GET['order']) ? mysqli_real_escape_string($con, $_GET['order']) : '';
+$token = isset($_GET['token']) ? mysqli_real_escape_string($con, $_GET['token']) : '';
 
 $error = '';
 $orderData = null;

@@ -1,15 +1,23 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
+csrf_require_post();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+if (empty($_SESSION['dangnhap1'])) {
+    header('Location: canhbao.php');
+    exit;
+}
+
 include './connect_db.php';
-require_admin();
 
 // Kiểm tra có ID đơn hàng không
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
     echo "<script>alert('Không tìm thấy đơn hàng!'); window.location.href='quanlidonhang.php';</script>";
     exit;
 }
 
-$id = (int)$_GET['id'];
+$id = (int)$_POST['id'];
 
 // Lấy trạng thái hiện tại của đơn hàng bằng prepared statement
 $stmtStatus = mysqli_prepare($con, "SELECT `status` FROM `oder` WHERE `id` = ? LIMIT 1");
@@ -30,19 +38,19 @@ if ($currentStatus === 'CANCELLED') {
     echo "<script>alert('Đơn hàng đã bị hủy, không thể in!'); window.location.href='quanlidonhang.php';</script>";
     exit;
 }
-// BẢO MẬT: Phương thức GET chỉ dùng để đọc/in, KHÔNG tự ý thay đổi trạng thái sang SHIPPING (tránh CSRF)
 $statusUpdated = false;
+if (in_array($currentStatus, ['PENDING', 'CONFIRMED'])) {
+    mysqli_query($con, "UPDATE `oder` SET `status` = 'SHIPPING' WHERE `id` = $id");
+    $statusUpdated = true;
+}
 
-$stmtOder = mysqli_prepare($con, "SELECT oder.tenkh, oder.diachi, oder.sdt, oder.note, oder.status, oder_chitiet.*, tbl_qlsanpham.tensp as tbl_qlsanpham_tensp
+$oder = mysqli_query($con, "SELECT oder.tenkh, oder.diachi, oder.sdt, oder.note, oder.status, oder_chitiet.*, tbl_qlsanpham.tensp as tbl_qlsanpham_tensp
 FROM oder
 INNER JOIN oder_chitiet ON oder.id = oder_chitiet.madonhang
 INNER JOIN tbl_qlsanpham ON tbl_qlsanpham.masp = oder_chitiet.masp
-WHERE oder.id = ?");
-mysqli_stmt_bind_param($stmtOder, "i", $id);
-mysqli_stmt_execute($stmtOder);
-$resOder = mysqli_stmt_get_result($stmtOder);
-$oder = mysqli_fetch_all($resOder, MYSQLI_ASSOC);
-mysqli_stmt_close($stmtOder);
+WHERE oder.id = " . $id);
+
+$oder = mysqli_fetch_all($oder, MYSQLI_ASSOC);
 
 if (empty($oder)) {
     echo "<script>alert('Đơn hàng không tồn tại hoặc chưa có sản phẩm!'); window.location.href='quanlidonhang.php';</script>";

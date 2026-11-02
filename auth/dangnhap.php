@@ -1,68 +1,66 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
-include BASE_PATH . 'includes/connect.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    include BASE_PATH . 'includes/connect.php';
 
-// Xử lý đăng xuất bảo mật qua POST + CSRF
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['btn_dangxuat']) || (isset($_POST['action']) && $_POST['action'] === 'dangxuat'))) {
-    verify_csrf_or_abort();
-    secure_logout(BASE_URL . 'auth/dangnhap.php');
-}
-
-// Chặn phương thức GET đăng xuất nhằm ngăn chặn tấn công CSRF
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
-    http_response_code(405);
-    die('Đăng xuất bằng phương thức GET không được phép vì lý do bảo mật. Vui lòng sử dụng nút đăng xuất.');
-}
-
-if (isset($_POST['dangnhap'])) {
-    verify_csrf_or_abort();
-
-    $taikhoan = trim($_POST['taikhoan'] ?? '');
-    $matkhau = trim($_POST['matkhau'] ?? '');
-    if ($taikhoan === '' || $matkhau === '') {
-        $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
+    } else {
+        $dangxuat = '';
+    }
+    if ($dangxuat == 'dangxuat') {
+        session_destroy();
         header('Location: dangnhap.php');
         exit;
-    } else {
-        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
-        mysqli_stmt_bind_param($stmt, "s", $taikhoan);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        $row_dangnhap = mysqli_fetch_assoc($result);
-        mysqli_stmt_close($stmt);
+    }
 
-        // Kiểm tra mật khẩu (hỗ trợ cả hash bcrypt lẫn plain text fallback)
-        $loginSuccess = false;
-        if ($row_dangnhap) {
-            if (password_verify($matkhau, $row_dangnhap['password'])) {
-                $loginSuccess = true;
-            } elseif ($row_dangnhap['password'] === $matkhau) {
-                // Tự động nâng cấp hash mật khẩu
-                $loginSuccess = true;
-                $newHash = password_hash($matkhau, PASSWORD_BCRYPT);
-                $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
-                mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
-                mysqli_stmt_execute($upStmt);
-                mysqli_stmt_close($upStmt);
-            }
-        }
-
-        if ($loginSuccess) {
-            secure_session_regenerate();
-            $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
-            $_SESSION['makh'] = (int)$row_dangnhap['makh'];
-            header('Location: ' . BASE_URL . 'home/trangchu.php');
-            exit;
-        } else {
-            $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
+    if (isset($_POST['dangnhap'])) {
+        $taikhoan = trim($_POST['taikhoan'] ?? '');
+        $matkhau = trim($_POST['matkhau'] ?? '');
+        if ($taikhoan === '' || $matkhau === '') {
+            $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
             header('Location: dangnhap.php');
             exit;
+        } else {
+            $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
+            mysqli_stmt_bind_param($stmt, "s", $taikhoan);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row_dangnhap = mysqli_fetch_assoc($result);
+            mysqli_stmt_close($stmt);
+
+            $loginSuccess = false;
+            if ($row_dangnhap) {
+                if (password_verify($matkhau, $row_dangnhap['password'])) {
+                    $loginSuccess = true;
+                } elseif ($row_dangnhap['password'] === $matkhau) {
+                    $loginSuccess = true;
+                    $newHash = password_hash($matkhau, PASSWORD_BCRYPT);
+                    $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
+                    mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
+                    mysqli_stmt_execute($upStmt);
+                    mysqli_stmt_close($upStmt);
+                }
+            }
+
+            if ($loginSuccess) {
+                session_regenerate_id(true);
+                csrf_rotate_token();
+                $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
+                $_SESSION['makh'] = (int)$row_dangnhap['makh'];
+                header('Location: ' . BASE_URL . 'home/trangchu.php');
+                exit;
+            } else {
+                $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
+                header('Location: dangnhap.php');
+                exit;
+            }
         }
     }
-}
 
-include BASE_PATH . 'includes/header.php';
+    include BASE_PATH . 'includes/header.php';
 ?>
 
 <style>
@@ -168,7 +166,7 @@ include BASE_PATH . 'includes/header.php';
             <h2 class="auth-title">Đăng nhập</h2>
             <p class="auth-subtitle">Đăng nhập để trải nghiệm mua sắm</p>
             <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST">
-                <?= csrf_input() ?>
+                <?= csrf_field() ?>
                 <div class="mb-3">
                     <label class="form-label" for="email">Tài khoản</label>
                     <input name="taikhoan" class="form-control" type="text" id="email" placeholder="Nhập tên đăng nhập">
@@ -191,4 +189,4 @@ include BASE_PATH . 'includes/header.php';
     </div>
 </main>
 
-<?php include BASE_PATH . 'includes/footer.php'; ?>
+<?php include BASE_PATH . 'includes/footer.php'; ?>

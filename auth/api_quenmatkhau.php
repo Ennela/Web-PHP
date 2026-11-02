@@ -6,7 +6,9 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-init_secure_session();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 
@@ -15,12 +17,9 @@ include_once BASE_PATH . 'includes/mail_helper.php';
 include_once BASE_PATH . 'includes/email_templates.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method không hợp lệ']);
     exit;
 }
-
-verify_csrf_or_abort();
 
 $input = trim($_POST['email_or_username'] ?? '');
 
