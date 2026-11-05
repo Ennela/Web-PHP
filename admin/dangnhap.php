@@ -12,7 +12,7 @@ require_once dirname(__DIR__) . '/config.php';
         $matkhau = $_POST['matkhau'];
         if ($taikhoan == '' || $matkhau == '') {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Vui lòng nhập đủ thông tin');
                 window.location.href = 'dangnhap.php';
             </script>
@@ -50,7 +50,7 @@ require_once dirname(__DIR__) . '/config.php';
                 exit;
             } else {
                 ?>
-                <script type="text/javascript">
+                <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                     alert('Sai tài khoản hoặc mật khẩu');
                     window.location.href = 'dangnhap.php';
                 </script>
@@ -66,7 +66,7 @@ require_once dirname(__DIR__) . '/config.php';
     <title>Trang đăng nhập</title>
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
           rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a81368914c.js"></script>
+    <script nonce="<?= e(csp_nonce()) ?>" src="https://kit.fontawesome.com/a81368914c.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
 </head>
@@ -172,7 +172,7 @@ require_once dirname(__DIR__) . '/config.php';
         </form>
     </div>
 </div>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     const inputs = document.querySelectorAll("input");
 
 

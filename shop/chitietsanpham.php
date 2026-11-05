@@ -1221,11 +1221,11 @@ require_once dirname(__DIR__) . '/config.php';
 
         <!-- Breadcrumb -->
         <nav class="product-breadcrumb">
-            <a href="<?php echo BASE_URL; ?>home/trangchu.php">Trang chủ</a>
+            <a href="<?= e(BASE_URL) ?>home/trangchu.php">Trang chủ</a>
             <span>/</span>
-            <a href="<?php echo BASE_URL; ?>shop/shop.php">Cửa hàng</a>
+            <a href="<?= e(BASE_URL) ?>shop/shop.php">Cửa hàng</a>
             <span>/</span>
-            <span style="color:#1e293b; font-weight:700;"><?= htmlspecialchars($product['tensp']) ?></span>
+            <span style="color:#1e293b; font-weight:700;"><?= e($product['tensp']) ?></span>
         </nav>
 
         <!-- Main Product Block -->
@@ -1237,13 +1237,13 @@ require_once dirname(__DIR__) . '/config.php';
                     <!-- Main Image -->
                     <div class="gallery-main" id="gallery-main">
                         <?php if(!empty($product['nhomsp'])): ?>
-                        <div class="gallery-badge"><?= htmlspecialchars($product['nhomsp']) ?></div>
+                        <div class="gallery-badge"><?= e($product['nhomsp']) ?></div>
                         <?php endif; ?>
                         <img
                             id="main-product-img"
-                            src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($product['anhdaidien']) ?>"
-                            alt="<?= htmlspecialchars($product['tensp']) ?>"
-                            onerror="this.src='<?php echo BASE_URL; ?>assets/img/no-image.png'"
+                            src="<?= e(safe_url(BASE_URL . 'admin/' . $product['anhdaidien'])) ?>"
+                            alt="<?= e($product['tensp']) ?>"
+                            data-image-fallback="<?= e(safe_url(BASE_URL . 'assets/img/no-image.png')) ?>"
                         >
                         <!-- Zoom magnification layer -->
                         <div class="zoom-layer" id="zoom-layer"></div>
@@ -1267,10 +1267,10 @@ require_once dirname(__DIR__) . '/config.php';
                             if (empty($img)) continue;
                         ?>
                         <div class="thumb-item <?= $i === 0 ? 'active' : '' ?>"
-                             onclick="switchImage(this, '<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($img) ?>')">
-                            <img src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($img) ?>"
+                             data-image-src="<?= e(safe_url(BASE_URL . 'admin/' . $img)) ?>" data-product-action="switch-image">
+                            <img src="<?= e(safe_url(BASE_URL . 'admin/' . $img)) ?>"
                                  alt="Ảnh <?= $i+1 ?>"
-                                 onerror="this.parentElement.style.display='none'">
+                                 data-hide-on-error>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -1282,10 +1282,10 @@ require_once dirname(__DIR__) . '/config.php';
                 <div class="product-info-panel">
 
                     <?php if(!empty($product['nhomsp'])): ?>
-                    <div class="product-category-tag"><?= htmlspecialchars($product['nhomsp']) ?></div>
+                    <div class="product-category-tag"><?= e($product['nhomsp']) ?></div>
                     <?php endif; ?>
 
-                    <h1 class="product-name"><?= htmlspecialchars($product['tensp']) ?></h1>
+                    <h1 class="product-name"><?= e($product['tensp']) ?></h1>
 
                     <!-- Star Rating -->
                     <div class="star-rating">
@@ -1307,14 +1307,14 @@ require_once dirname(__DIR__) . '/config.php';
                         <?php endif; ?>
                         <span class="price-sale"><?= number_format($product['giasanpham'], 0, ',', '.') ?>&nbsp;đ</span>
                         <?php if(!empty($discount) && $discount > 0): ?>
-                        <span class="price-discount-badge">-<?= $discount ?>%</span>
+                        <span class="price-discount-badge">-<?= (int)$discount ?>%</span>
                         <?php endif; ?>
                     </div>
 
                     <!-- Short Description -->
                     <?php if(!empty($product['noidung'])): ?>
                     <div class="product-desc">
-                        <?= nl2br(htmlspecialchars(mb_substr($product['noidung'], 0, 200))) ?>
+                        <?= nl2br(e(mb_substr(strip_tags($product['noidung'] ?? ''), 0, 200))) ?>
                         <?= mb_strlen($product['noidung']) > 200 ? '...' : '' ?>
                     </div>
                     <?php endif; ?>
@@ -1323,7 +1323,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="size-selector-block">
                         <div class="size-selector-header">
                             <span class="size-label">Chọn size</span>
-                            <a href="#" class="size-guide-link" id="open-size-guide" onclick="openSizeGuide(); return false;"><i class="fas fa-ruler" style="margin-right:4px;"></i> Hướng dẫn chọn size</a>
+                            <a href="#" class="size-guide-link" id="open-size-guide" data-product-action="open-guide"><i class="fas fa-ruler" style="margin-right:4px;"></i> Hướng dẫn chọn size</a>
                         </div>
                         <div class="size-grid" id="size-grid">
                             <?php
@@ -1338,10 +1338,10 @@ require_once dirname(__DIR__) . '/config.php';
                             ?>
                             <button type="button" 
                                     class="size-btn <?= $btnClass ?>"
-                                    data-size="<?= $s ?>"
-                                    data-stock="<?= $sizeStock ?>"
-                                    <?= $isOutOfStock ? 'disabled title="Hết hàng"' : 'onclick="selectSize(this, ' . $s . ', ' . $sizeStock . ')"' ?>>
-                                <?= $s ?>
+                                    data-size="<?= (int)$s ?>"
+                                    data-stock="<?= (int)$sizeStock ?>"
+                                    <?= $isOutOfStock ? 'disabled title="Hết hàng"' : '' ?>>
+                                <?= (int)$s ?>
                                 <span class="size-stock-label <?= $isOutOfStock ? '' : ($isLowStock ? 'low' : '') ?>">
                                     <?= $isOutOfStock ? 'Hết' : ($isLowStock ? "Còn $sizeStock" : 'Còn hàng') ?>
                                 </span>
@@ -1352,11 +1352,11 @@ require_once dirname(__DIR__) . '/config.php';
                         
                         <?php if ($preferredSize && $preferredSizeOutOfStock): ?>
                         <div class="size-preferred-notice warning">
-                            <i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i> Size yêu thích của bạn (<?= $preferredSize ?>) hiện đang hết hàng. Vui lòng chọn size khác.
+                            <i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i> Size yêu thích của bạn (<?= (int)$preferredSize ?>) hiện đang hết hàng. Vui lòng chọn size khác.
                         </div>
                         <?php elseif ($preferredSize && !$preferredSizeOutOfStock): ?>
                         <div class="size-preferred-notice info">
-                            <i class="fas fa-check" style="margin-right:4px;"></i> Đã tự động chọn size yêu thích của bạn: <?= $preferredSize ?>
+                            <i class="fas fa-check" style="margin-right:4px;"></i> Đã tự động chọn size yêu thích của bạn: <?= (int)$preferredSize ?>
                         </div>
                         <?php endif; ?>
                         
@@ -1368,16 +1368,16 @@ require_once dirname(__DIR__) . '/config.php';
                     </div>
 
                     <!-- Add to Cart -->
-                    <form action="<?php echo BASE_URL; ?>shop/giohang.php?action=add" method="POST" onsubmit="return validateSize()">
+                    <form action="<?= e(BASE_URL) ?>shop/giohang.php?action=add" method="POST" data-validate-size>
                         <?= csrf_field() ?>
-                        <input type="hidden" name="size[<?= $product['masp'] ?>]" id="form-size" value="<?= ($preferredSize && !$preferredSizeOutOfStock) ? $preferredSize : '' ?>">
+                        <input type="hidden" name="size[<?= (int)$product['masp'] ?>]" id="form-size" value="<?= ($preferredSize && !$preferredSizeOutOfStock) ? $preferredSize : '' ?>">
                         <div class="add-to-cart-section">
                             <div class="qty-label">Số lượng</div>
                             <div class="qty-control">
-                                <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                                <button type="button" class="qty-btn" data-product-action="quantity" data-delta="-1">−</button>
                                 <input class="qty-input" type="number" value="1" min="1" max="<?= ($preferredSize && !$preferredSizeOutOfStock) ? ($productStock[$preferredSize] ?? 99) : 99 ?>"
-                                       name="quantity[<?= $product['masp'] ?>]" id="qty-field">
-                                <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                                       name="quantity[<?= (int)$product['masp'] ?>]" id="qty-field">
+                                <button type="button" class="qty-btn" data-product-action="quantity" data-delta="1">+</button>
                             </div>
                             <button class="btn-add-cart" type="submit">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1411,13 +1411,13 @@ require_once dirname(__DIR__) . '/config.php';
         <!-- Tabs: Description & Reviews -->
         <div class="product-tabs-section">
             <div class="product-tabs-nav">
-                <button class="tab-btn active" onclick="switchTab(this, 'tab-desc')">Mô tả sản phẩm</button>
-                <button class="tab-btn" onclick="switchTab(this, 'tab-reviews')">Đánh giá (3)</button>
+                <button class="tab-btn active" data-product-action="tab" data-tab="tab-desc">Mô tả sản phẩm</button>
+                <button class="tab-btn" data-product-action="tab" data-tab="tab-reviews">Đánh giá (3)</button>
             </div>
 
             <!-- Description Tab -->
             <div class="tab-content-panel active" id="tab-desc">
-                <p class="tab-description"><?= nl2br(htmlspecialchars($product['noidung'])) ?></p>
+                <div class="tab-description"><?= clean_html($product['noidung']) ?></div>
 
                 <!-- Image Grid -->
                 <div class="desc-images-grid">
@@ -1430,9 +1430,9 @@ require_once dirname(__DIR__) . '/config.php';
                     foreach ($descImages as $img):
                     ?>
                     <div class="desc-img-item">
-                        <img src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($img) ?>"
-                             alt="<?= htmlspecialchars($product['tensp']) ?>"
-                             onerror="this.parentElement.style.display='none'">
+                        <img src="<?= e(safe_url(BASE_URL . 'admin/' . $img)) ?>"
+                             alt="<?= e($product['tensp']) ?>"
+                             data-hide-on-error>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -1449,10 +1449,10 @@ require_once dirname(__DIR__) . '/config.php';
                 foreach ($reviews as $rv): ?>
                 <div class="review-card">
                     <div class="review-header">
-                        <div class="reviewer-avatar"><?= mb_substr($rv['name'], 0, 1) ?></div>
+                        <div class="reviewer-avatar"><?= e(mb_substr($rv['name'], 0, 1)) ?></div>
                         <div>
-                            <div class="reviewer-name"><?= $rv['name'] ?></div>
-                            <div class="reviewer-date"><?= $rv['date'] ?></div>
+                            <div class="reviewer-name"><?= e($rv['name']) ?></div>
+                            <div class="reviewer-date"><?= e($rv['date']) ?></div>
                         </div>
                         <div class="star-rating ms-auto">
                             <?php for($s=1;$s<=5;$s++): ?>
@@ -1460,7 +1460,7 @@ require_once dirname(__DIR__) . '/config.php';
                             <?php endfor; ?>
                         </div>
                     </div>
-                    <p class="review-text"><?= $rv['text'] ?></p>
+                    <p class="review-text"><?= e($rv['text']) ?></p>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -1477,17 +1477,17 @@ require_once dirname(__DIR__) . '/config.php';
                     while ($related = mysqli_fetch_assoc($related_query)) {
                 ?>
                 <div class="col-6 col-md-4 col-lg-3">
-                    <a href="chitietsanpham.php?masp=<?= $related['masp'] ?>" class="related-card">
+                    <a href="chitietsanpham.php?masp=<?= (int)$related['masp'] ?>" class="related-card">
                         <div class="related-img-wrap">
-                            <img src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($related['anhdaidien']) ?>"
-                                 alt="<?= htmlspecialchars($related['tensp']) ?>"
-                                 onerror="this.src='<?php echo BASE_URL; ?>assets/img/no-image.png'">
+                            <img src="<?= e(safe_url(BASE_URL . 'admin/' . $related['anhdaidien'])) ?>"
+                                 alt="<?= e($related['tensp']) ?>"
+                                 data-image-fallback="<?= e(safe_url(BASE_URL . 'assets/img/no-image.png')) ?>">
                         </div>
                         <div class="related-info">
                             <div class="related-stars">
                                 <span>&starf;</span><span>&starf;</span><span>&starf;</span><span>&starf;</span><span style="color:#ddd;">&starf;</span>
                             </div>
-                            <div class="related-name"><?= htmlspecialchars($related['tensp']) ?></div>
+                            <div class="related-name"><?= e($related['tensp']) ?></div>
                             <div class="related-price"><?= number_format($related['giasanpham'], 0, ',', '.') ?>&nbsp;đ</div>
                         </div>
                     </a>
@@ -1503,19 +1503,19 @@ require_once dirname(__DIR__) . '/config.php';
 </main>
 
 <!-- ===== SIZE GUIDE MODAL ===== -->
-<div class="size-guide-overlay" id="size-guide-overlay" onclick="closeSizeGuide(event)">
-    <div class="size-guide-modal" onclick="event.stopPropagation()">
+<div class="size-guide-overlay" id="size-guide-overlay" data-product-action="close-guide-overlay">
+    <div class="size-guide-modal" data-product-action="stop-propagation">
         <div class="size-guide-header">
             <h3>
                 <span class="sg-icon"><i class="fas fa-shoe-prints"></i></span>
                 Hướng dẫn chọn size giày
             </h3>
-            <button class="size-guide-close" onclick="closeSizeGuide()" title="Đóng">&times;</button>
+            <button class="size-guide-close" data-product-action="close-guide" title="Đóng">&times;</button>
         </div>
         <div class="size-guide-body">
             <!-- Size guide image -->
-            <div class="size-guide-img-wrap" onclick="openLightboxSizeGuide()">
-                <img src="<?php echo BASE_URL; ?>images/size_guide.png" alt="Bảng hướng dẫn chọn size giày" loading="lazy">
+            <div class="size-guide-img-wrap" data-product-action="guide-lightbox">
+                <img src="<?= e(BASE_URL) ?>images/size_guide.png" alt="Bảng hướng dẫn chọn size giày" loading="lazy">
             </div>
 
             <!-- Measurement steps -->
@@ -1575,27 +1575,26 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 <!-- ===== LIGHTBOX MODAL ===== -->
-<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+<div class="lightbox-overlay" id="lightbox" data-product-action="close-lightbox-overlay">
     <div class="lightbox-img-wrap" id="lightbox-wrap">
-        <button class="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
-        <button class="lightbox-nav lightbox-prev" onclick="lbNav(-1, event)">&#8249;</button>
+        <button class="lightbox-close" data-product-action="close-lightbox">&#x2715;</button>
+        <button class="lightbox-nav lightbox-prev" data-product-action="lightbox-nav" data-direction="-1">&#8249;</button>
         <img id="lightbox-img" src="" alt="">
-        <button class="lightbox-nav lightbox-next" onclick="lbNav(1, event)">&#8250;</button>
+        <button class="lightbox-nav lightbox-next" data-product-action="lightbox-nav" data-direction="1">&#8250;</button>
     </div>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 // ---- Image Gallery & Zoom System ----
 
 // Collect all gallery image URLs
-const lbImages = [
-    <?php
-    $allImgs = array_filter([$product['anhdaidien'], $product['anhgiuoithieu1'], $product['anhgiuoithieu2']]);
-    foreach ($allImgs as $img) {
-        echo "'" . BASE_URL . "admin/" . htmlspecialchars($img, ENT_QUOTES) . "',";
-    }
-    ?>
-];
+<?php
+$allImgs = array_filter([$product['anhdaidien'], $product['anhgiuoithieu1'], $product['anhgiuoithieu2']]);
+$lightboxUrls = array_values(array_map(static function ($image) {
+    return safe_url(BASE_URL . 'admin/' . $image);
+}, $allImgs));
+?>
+const lbImages = <?= js_value($lightboxUrls) ?>;
 let lbCurrentIdx = 0;
 
 // === SMOOTH HOVER ZOOM ===
@@ -1614,7 +1613,7 @@ let lbCurrentIdx = 0;
 
     // Preload zoom image & set as background
     function setZoomImage(src) {
-        zoomLayer.style.backgroundImage = `url('${src}')`;
+        zoomLayer.style.backgroundImage = `url(${JSON.stringify(src)})`;
         zoomLayer.style.backgroundSize = `${zoomScale * 100}%`;
     }
 
@@ -1798,7 +1797,7 @@ function closeSizeGuide(e) {
 function openLightboxSizeGuide() {
     closeSizeGuide();
     setTimeout(() => {
-        const sgImg = '<?php echo BASE_URL; ?>images/size_guide.png';
+        const sgImg = <?= js_value(safe_url(BASE_URL . 'images/size_guide.png')) ?>;
         const overlay = document.getElementById('lightbox');
         const img = document.getElementById('lightbox-img');
         // Temporarily set lightbox for single image
@@ -1811,8 +1810,8 @@ function openLightboxSizeGuide() {
 }
 
 // ---- Size Selector (with stock awareness) ----
-let selectedSize = <?= ($preferredSize && !$preferredSizeOutOfStock) ? $preferredSize : 'null' ?>;
-let currentStock = <?= ($preferredSize && !$preferredSizeOutOfStock) ? ($productStock[$preferredSize] ?? 0) : 0 ?>;
+let selectedSize = <?= js_value(($preferredSize && !$preferredSizeOutOfStock) ? (int)$preferredSize : null) ?>;
+let currentStock = <?= js_value(($preferredSize && !$preferredSizeOutOfStock) ? (int)($productStock[$preferredSize] ?? 0) : 0) ?>;
 
 function selectSize(btn, size, stock) {
     // Don't select disabled buttons
@@ -1877,6 +1876,46 @@ function switchTab(btn, tabId) {
     btn.classList.add('active');
     document.getElementById(tabId).classList.add('active');
 }
+
+// Bind trusted behavior in JavaScript; content never supplies executable handlers.
+document.querySelectorAll('[data-product-action]').forEach(element => {
+    element.addEventListener('click', event => {
+        switch (element.dataset.productAction) {
+            case 'switch-image': switchImage(element, element.dataset.imageSrc); break;
+            case 'open-guide': event.preventDefault(); openSizeGuide(); break;
+            case 'quantity': changeQty(Number.parseInt(element.dataset.delta, 10)); break;
+            case 'tab': switchTab(element, element.dataset.tab); break;
+            case 'close-guide-overlay': closeSizeGuide(event); break;
+            case 'close-guide': closeSizeGuide(); break;
+            case 'stop-propagation': event.stopPropagation(); break;
+            case 'guide-lightbox': openLightboxSizeGuide(); break;
+            case 'close-lightbox-overlay': closeLightbox(event); break;
+            case 'close-lightbox': closeLightbox(); break;
+            case 'lightbox-nav': lbNav(Number.parseInt(element.dataset.direction, 10), event); break;
+        }
+    });
+});
+document.querySelectorAll('.size-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        if (!button.disabled) selectSize(button, Number.parseInt(button.dataset.size, 10), Number.parseInt(button.dataset.stock, 10));
+    });
+});
+document.querySelector('[data-validate-size]').addEventListener('submit', event => {
+    if (!validateSize()) event.preventDefault();
+});
+document.querySelectorAll('img[data-image-fallback], img[data-hide-on-error]').forEach(image => {
+    const handleError = () => {
+        if (image.dataset.imageFallback) {
+            const fallback = image.dataset.imageFallback;
+            delete image.dataset.imageFallback;
+            image.src = fallback;
+        } else if (image.hasAttribute('data-hide-on-error')) {
+            image.parentElement.style.display = 'none';
+        }
+    };
+    image.addEventListener('error', handleError);
+    if (image.complete && image.naturalWidth === 0) handleError();
+});
 </script>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>

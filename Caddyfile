@@ -47,7 +47,7 @@
 
 		# Paths are normalized/decoded by Caddy before matching. Sensitive material
 		# never reaches PHP or file_server; query strings cannot bypass this rule.
-		@private path_regexp private (?i)(^|/)(\.[^/]+|database|documents|deploy|scripts|scratch|backups?|secrets|certs|vendor|node_modules|includes|vnpay_php)(/|$)|(^|/)(config\.php|connect_db\.php|function\.php|pagination\.php|Dockerfile|Caddyfile|docker-entrypoint\.sh|composer\.(json|lock)|package(-lock)?\.json|README[^/]*)(/|$)|\.(sql|log|ini|conf|ya?ml|toml|sh|bak|backup|old|orig|save|swp|pem|key|p12|pfx)([./]|$)|~$
+		@private path_regexp private (?i)(^|/)(\.[^/]+|database|documents|deploy|scripts|scratch|backups?|secrets|certs|vendor|lib|node_modules|includes|vnpay_php)(/|$)|(^|/)(config\.php|connect_db\.php|function\.php|pagination\.php|Dockerfile|Caddyfile|docker-entrypoint\.sh|composer\.(json|lock)|package(-lock)?\.json|README[^/]*)(/|$)|\.(sql|log|ini|conf|ya?ml|toml|sh|bak|backup|old|orig|save|swp|pem|key|p12|pfx)([./]|$)|~$
 		respond @private "Not found." 404
 
 		# Uploads are raster images only. PHP/script/HTML/SVG files cannot execute

@@ -589,7 +589,7 @@ require_once dirname(__DIR__) . '/config.php';
                 <p class="editorial-subheading">Kiểm tra lại sản phẩm và hoàn tất đặt hàng.</p>
             </div>
             <div class="content">
-                <form method="post" action="<?php echo BASE_URL; ?>shop/giohang.php?action=submit">
+                <form method="post" action="<?= e(BASE_URL) ?>shop/giohang.php?action=submit">
                     <?= csrf_field() ?>
                     <div class="row">
                         <div class="col-lg-8 mb-4">
@@ -603,13 +603,13 @@ require_once dirname(__DIR__) . '/config.php';
                                             $itemQty = is_array($cartItem) ? $cartItem['quantity'] : (int)$cartItem;
                                             $itemSize = is_array($cartItem) ? ($cartItem['size'] ?? null) : null;
                                 ?>
-                                            <div class="cart-product-item" data-masp="<?= $row['masp'] ?>" data-price="<?= $row['giasanpham'] ?>">
+                                            <div class="cart-product-item" data-masp="<?= (int)$row['masp'] ?>" data-price="<?= (int)$row['giasanpham'] ?>">
                                                 <div class="cart-item-grid">
                                                     <div class="cart-item-img">
-                                                        <img src="<?php echo BASE_URL; ?>admin/<?= $row['anhdaidien'] ?>" alt="<?= htmlspecialchars($row['tensp']) ?>">
+                                                        <img src="<?= e(safe_url(BASE_URL . 'admin/' . $row['anhdaidien'])) ?>" alt="<?= e($row['tensp']) ?>">
                                                     </div>
                                                     <div class="cart-item-name">
-                                                        <a class="cart-product-name" href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>"><?= $row['tensp'] ?></a>
+                                                        <a class="cart-product-name" href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=<?= (int)$row['masp'] ?>"><?= e($row['tensp']) ?></a>
                                                     </div>
                                                     <div class="cart-item-size cart-size-col">
                                                         <span class="cart-size-label">Size</span>
@@ -620,7 +620,7 @@ require_once dirname(__DIR__) . '/config.php';
                                                         $sizeOverQty = ($selectedSizeStock > 0 && $itemQty > $selectedSizeStock);
                                                         if ($sizeOutOfStock || $sizeOverQty || empty($itemSize)) $hasStockIssues = true;
                                                         ?>
-                                                        <select name="size[<?= $row['masp'] ?>]" class="cart-size-select <?= $sizeOutOfStock ? 'stock-error-border' : '' ?>" data-masp="<?= $row['masp'] ?>">
+                                                        <select name="size[<?= (int)$row['masp'] ?>]" class="cart-size-select <?= $sizeOutOfStock ? 'stock-error-border' : '' ?>" data-masp="<?= (int)$row['masp'] ?>">
                                                             <option value="">--</option>
                                                             <?php
                                                             $sizes = [36, 37, 38, 39, 40, 41, 42, 43, 44];
@@ -628,35 +628,35 @@ require_once dirname(__DIR__) . '/config.php';
                                                                 $sStock = $itemStockMap[$s] ?? 0;
                                                                 $isDisabled = ($sStock <= 0);
                                                             ?>
-                                                            <option value="<?= $s ?>" 
+                                                            <option value="<?= (int)$s ?>"
                                                                     <?= ($itemSize == $s) ? 'selected' : '' ?>
                                                                     <?= $isDisabled ? 'disabled' : '' ?>
-                                                                    data-stock="<?= $sStock ?>">
-                                                                <?= $s ?><?= $isDisabled ? ' (Hết hàng)' : '' ?>
+                                                                    data-stock="<?= (int)$sStock ?>">
+                                                                <?= (int)$s ?><?= $isDisabled ? ' (Hết hàng)' : '' ?>
                                                             </option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                         <?php if (empty($itemSize)): ?>
-                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Chọn size</div>
+                                                        <div class="cart-size-warning" data-masp="<?= (int)$row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Chọn size</div>
                                                         <?php elseif ($sizeOutOfStock): ?>
-                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Hết hàng</div>
+                                                        <div class="cart-size-warning" data-masp="<?= (int)$row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Hết hàng</div>
                                                         <?php elseif ($sizeOverQty): ?>
-                                                        <div class="cart-size-warning" data-masp="<?= $row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Còn <?= $selectedSizeStock ?></div>
+                                                        <div class="cart-size-warning" data-masp="<?= (int)$row['masp'] ?>"><i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Còn <?= (int)$selectedSizeStock ?></div>
                                                         <?php endif; ?>
                                                     </div>
                                                     <div class="cart-item-qty">
                                                         <span class="cart-size-label">Số lượng</span>
                                                         <div class="qty-cart-control">
-                                                            <button type="button" class="qty-cart-btn" onclick="cartChangeQty(<?= $row['masp'] ?>, -1)">−</button>
-                                                            <input type="number" min="1" value="<?= $itemQty ?>" name="quantity[<?= $row['masp'] ?>]" class="quantity-input" data-masp="<?= $row['masp'] ?>">
-                                                            <button type="button" class="qty-cart-btn" onclick="cartChangeQty(<?= $row['masp'] ?>, 1)">+</button>
+                                                            <button type="button" class="qty-cart-btn" data-cart-delta="-1">−</button>
+                                                            <input type="number" min="1" value="<?= (int)$itemQty ?>" name="quantity[<?= (int)$row['masp'] ?>]" class="quantity-input" data-masp="<?= (int)$row['masp'] ?>">
+                                                            <button type="button" class="qty-cart-btn" data-cart-delta="1">+</button>
                                                         </div>
                                                     </div>
                                                     <div class="cart-item-price">
-                                                        <span class="cart-price" id="price-<?= $row['masp'] ?>"><?= number_format($row['giasanpham'] * $itemQty, 0, ",", ".") ?>&nbsp;đ</span>
+                                                        <span class="cart-price" id="price-<?= (int)$row['masp'] ?>"><?= number_format($row['giasanpham'] * $itemQty, 0, ",", ".") ?>&nbsp;đ</span>
                                                     </div>
                                                     <div class="cart-item-delete">
-                                                        <button type="button" class="btn-delete-cart" title="Xóa" onclick="cartDeleteItem(<?= $row['masp'] ?>)"><i class="fas fa-trash-alt"></i></button>
+                                                        <button type="button" class="btn-delete-cart" title="Xóa" data-cart-delete><i class="fas fa-trash-alt"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -668,7 +668,7 @@ require_once dirname(__DIR__) . '/config.php';
                                         echo "<div class='text-center py-5'>
                                                 <i class='fas fa-shopping-basket fs-1 text-muted mb-3 d-block'></i>
                                                 <p class='fs-5 text-muted'>Bạn chưa có sản phẩm nào trong giỏ hàng</p>
-                                                <a href='".BASE_URL."shop/shop.php' class='btn btn-dark mt-3 px-4 py-2 fw-bold'>MUA SẮM NGAY</a>
+                                                <a href='".e(BASE_URL . 'shop/shop.php')."' class='btn btn-dark mt-3 px-4 py-2 fw-bold'>MUA SẮM NGAY</a>
                                               </div>";
                                     }
                                 ?>
@@ -708,9 +708,9 @@ require_once dirname(__DIR__) . '/config.php';
     <span id="save-text">Đang lưu...</span>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 // ===== CART AUTO-UPDATE SYSTEM =====
-const AJAX_URL = '<?php echo BASE_URL; ?>shop/cart_update_ajax.php';
+const AJAX_URL = <?= js_value(BASE_URL . 'shop/cart_update_ajax.php') ?>;
 let saveTimeout = null;
 let isSaving = false;
 
@@ -779,7 +779,7 @@ function updatePricesFromResponse(res) {
         if (priceEl) {
             priceEl.classList.add('updating');
             setTimeout(() => {
-                priceEl.innerHTML = item.itemTotalFormatted;
+                priceEl.textContent = formatCurrency(Number(item.itemTotal)) + '\u00a0đ';
                 priceEl.classList.remove('updating');
             }, 150);
         }
@@ -788,8 +788,8 @@ function updatePricesFromResponse(res) {
     // Update summary totals
     const subtotalEl = document.getElementById('summary-subtotal');
     const totalEl = document.getElementById('summary-total');
-    if (subtotalEl) subtotalEl.innerHTML = res.grandTotalFormatted;
-    if (totalEl) totalEl.innerHTML = res.grandTotalFormatted;
+    if (subtotalEl) subtotalEl.textContent = formatCurrency(Number(res.grandTotal)) + '\u00a0đ';
+    if (totalEl) totalEl.textContent = formatCurrency(Number(res.grandTotal)) + '\u00a0đ';
 }
 
 // Debounced update (for typing in quantity field)
@@ -818,7 +818,7 @@ function debouncedUpdate(masp) {
         if (item) {
             const unitPrice = parseInt(item.dataset.price);
             const priceEl = document.getElementById('price-' + masp);
-            if (priceEl) priceEl.innerHTML = formatCurrency(unitPrice * qty) + '&nbsp;đ';
+            if (priceEl) priceEl.textContent = formatCurrency(unitPrice * qty) + '\u00a0đ';
         }
         
         ajaxUpdate(masp, {
@@ -861,7 +861,7 @@ function cartChangeQty(masp, delta) {
     if (item) {
         const unitPrice = parseInt(item.dataset.price);
         const priceEl = document.getElementById('price-' + masp);
-        if (priceEl) priceEl.innerHTML = formatCurrency(unitPrice * val) + '&nbsp;đ';
+        if (priceEl) priceEl.textContent = formatCurrency(unitPrice * val) + '\u00a0đ';
     }
     
     // Recalculate local grand total
@@ -897,7 +897,10 @@ function showStockAlert(masp, maxStock) {
     } else {
         const alertDiv = document.createElement('div');
         alertDiv.className = 'stock-alert-toast';
-        alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> ' + msg;
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-exclamation-triangle';
+        icon.style.marginRight = '6px';
+        alertDiv.append(icon, document.createTextNode(' ' + String(msg)));
         alertDiv.style.cssText = 'position:fixed; top:20px; right:20px; z-index:99999; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; padding:14px 24px; border-radius:12px; font-weight:600; font-size:0.88rem; box-shadow:0 8px 30px rgba(239,68,68,0.4); animation:slideInRight 0.3s ease; max-width:400px;';
         document.body.appendChild(alertDiv);
         
@@ -928,12 +931,19 @@ function cartDeleteItem(masp) {
             // Check if cart is now empty
             const remaining = document.querySelectorAll('.cart-product-item');
             if (remaining.length === 0) {
-                document.querySelector('.cart-items-wrapper').innerHTML = 
-                    '<div class="text-center py-5">' +
-                    '<i class="fas fa-shopping-basket fs-1 text-muted mb-3 d-block"></i>' +
-                    '<p class="fs-5 text-muted">Bạn chưa có sản phẩm nào trong giỏ hàng</p>' +
-                    '<a href="<?php echo BASE_URL; ?>shop/shop.php" class="btn btn-dark mt-3 px-4 py-2 fw-bold">MUA SẮM NGAY</a>' +
-                    '</div>';
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-5';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-shopping-basket fs-1 text-muted mb-3 d-block';
+                const message = document.createElement('p');
+                message.className = 'fs-5 text-muted';
+                message.textContent = 'Bạn chưa có sản phẩm nào trong giỏ hàng';
+                const link = document.createElement('a');
+                link.href = <?= js_value(BASE_URL . 'shop/shop.php') ?>;
+                link.className = 'btn btn-dark mt-3 px-4 py-2 fw-bold';
+                link.textContent = 'MUA SẮM NGAY';
+                empty.append(icon, message, link);
+                document.querySelector('.cart-items-wrapper').replaceChildren(empty);
             }
         }, 450);
     });
@@ -950,8 +960,8 @@ function recalcLocalTotal() {
     });
     const subtotalEl = document.getElementById('summary-subtotal');
     const totalEl = document.getElementById('summary-total');
-    if (subtotalEl) subtotalEl.innerHTML = formatCurrency(total) + '&nbsp;đ';
-    if (totalEl) totalEl.innerHTML = formatCurrency(total) + '&nbsp;đ';
+    if (subtotalEl) subtotalEl.textContent = formatCurrency(total) + '\u00a0đ';
+    if (totalEl) totalEl.textContent = formatCurrency(total) + '\u00a0đ';
 }
 
 // ===== EVENT LISTENERS =====
@@ -1025,7 +1035,10 @@ function recheckStockIssues(res) {
                 const w = document.createElement('div');
                 w.className = 'cart-size-warning';
                 w.setAttribute('data-masp', masp);
-                w.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:2px;font-size:0.7rem;"></i> Còn ' + sizeStock;
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-exclamation-triangle';
+                icon.style.cssText = 'margin-right:2px;font-size:0.7rem';
+                w.append(icon, document.createTextNode(' Còn ' + String(sizeStock)));
                 if (sizeSelect) sizeSelect.parentElement.appendChild(w);
             }
         }
@@ -1046,6 +1059,16 @@ function recheckStockIssues(res) {
         if (btnVnpay) { btnVnpay.disabled = false; btnVnpay.style.opacity = '1'; btnVnpay.style.cursor = 'pointer'; }
     }
 }
+
+document.querySelectorAll('[data-cart-delta]').forEach(button => {
+    button.addEventListener('click', () => {
+        const productId = Number.parseInt(button.closest('[data-masp]').dataset.masp, 10);
+        cartChangeQty(productId, Number.parseInt(button.dataset.cartDelta, 10));
+    });
+});
+document.querySelectorAll('[data-cart-delete]').forEach(button => {
+    button.addEventListener('click', () => cartDeleteItem(Number.parseInt(button.closest('[data-masp]').dataset.masp, 10)));
+});
 </script>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>

@@ -165,7 +165,7 @@ require_once dirname(__DIR__) . '/config.php';
         <div class="auth-card">
             <h2 class="auth-title">Đăng nhập</h2>
             <p class="auth-subtitle">Đăng nhập để trải nghiệm mua sắm</p>
-            <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST">
+            <form action="<?= e(BASE_URL) ?>auth/dangnhap.php" method="POST">
                 <?= csrf_field() ?>
                 <div class="mb-3">
                     <label class="form-label" for="email">Tài khoản</label>
@@ -180,11 +180,11 @@ require_once dirname(__DIR__) . '/config.php';
                         <input class="form-check-input" type="checkbox" id="checkbox">
                         <label class="form-check-label" for="checkbox">Ghi nhớ đăng nhập</label>
                     </div>
-                    <a href="<?php echo BASE_URL; ?>auth/quenmatkhau.php" style="color:#3b82f6; font-weight:600; font-size:clamp(0.8rem,1.8vw,0.85rem); text-decoration:none;">Quên mật khẩu?</a>
+                    <a href="<?= e(BASE_URL) ?>auth/quenmatkhau.php" style="color:#3b82f6; font-weight:600; font-size:clamp(0.8rem,1.8vw,0.85rem); text-decoration:none;">Quên mật khẩu?</a>
                 </div>
                 <button class="btn-auth" name="dangnhap" type="submit">Đăng nhập</button>
             </form>
-            <div class="auth-link">Chưa có tài khoản? <a href="<?php echo BASE_URL; ?>auth/dangki.php">Đăng ký ngay</a></div>
+            <div class="auth-link">Chưa có tài khoản? <a href="<?= e(BASE_URL) ?>auth/dangki.php">Đăng ký ngay</a></div>
         </div>
     </div>
 </main>

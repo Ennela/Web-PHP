@@ -105,9 +105,11 @@ function app_security_headers(): void
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
     header('Cache-Control: no-store');
+    // Nonces authorize scripts from trusted source templates, never arbitrary rendered HTML.
+    $nonce = csp_nonce();
     header("Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
         . "form-action 'self' https://sandbox.vnpayment.vn https://pay.vnpay.vn; "
-        . "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://kit.fontawesome.com; "
+        . "script-src 'self' 'nonce-$nonce' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://kit.fontawesome.com; script-src-attr 'none'; "
         . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://use.fontawesome.com https://ka-f.fontawesome.com https://afeld.github.io; "
         . "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://use.fontawesome.com https://ka-f.fontawesome.com; "
         . "img-src 'self' data: blob: https:; connect-src 'self' https://provinces.open-api.vn https://kit.fontawesome.com https://ka-f.fontawesome.com; "
@@ -186,7 +188,7 @@ function app_security_bootstrap(): ?string
     $project = dirname(__DIR__) . DIRECTORY_SEPARATOR;
     $relative = str_replace('\\', '/', substr($entry, strlen($project)));
     if (strpos($entry, $project) === 0 && (
-        preg_match('~^(?:includes|database|documents|scripts|scratch|deploy|vendor|\.git|\.codex|\.agents)(?:/|$)~i', $relative)
+        preg_match('~^(?:includes|database|documents|scripts|scratch|deploy|vendor|lib|\.git|\.codex|\.agents)(?:/|$)~i', $relative)
         || in_array($relative, ['config.php', 'admin/connect_db.php', 'admin/function.php', 'admin/pagination.php', 'vnpay_php/config.php'], true)
         || preg_match('~^(?:auth|admin)/uploads/~i', $relative)
     )) {

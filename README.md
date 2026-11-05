@@ -206,6 +206,7 @@ WEB-PHP/
 
 - **Bảo vệ CSRF toàn ứng dụng:** Token gắn với session cho form và AJAX; thao tác thay đổi dữ liệu dùng POST. Xem [cơ chế, callback và cách kiểm thử](./documents/CSRF_SECURITY.md).
 - **Cấu hình bảo mật:** Chặn file nhạy cảm, ẩn lỗi, HTTP security header, kiểm tra Host/proxy, cấu hình production và upload ảnh an toàn. Xem [hướng dẫn cấu hình và kiểm thử](./documents/SECURITY_CONFIGURATION.md).
+- **Bảo vệ XSS:** Escape đầu ra theo ngữ cảnh, lọc rich HTML bằng HTML Purifier, dùng DOM API an toàn và CSP nonce. Xem [cơ chế, demo và kiểm thử](./documents/XSS_SECURITY.md).
 
 ### Phía Khách hàng
 
@@ -243,6 +244,19 @@ WEB-PHP/
 ---
 
 ## Hướng dẫn cài đặt
+
+### Chạy local bằng FrankenPHP
+
+Khởi động MySQL và cấu hình kết nối trong `.env` local, sau đó chạy tại thư mục dự án:
+
+```sh
+./run.sh
+```
+
+Terminal sẽ hiện link `http://127.0.0.1:8000/` và trang quản trị `/admin/`.
+Trên macOS, giữ Cmd và bấm vào link để mở. Nếu server đã chạy, lệnh sẽ hiện lại link;
+nếu chưa chạy, lệnh khởi động bằng `Caddyfile`. Nhấn Control + C để dừng server mới khởi động.
+Script dùng `scratch/runtime/frankenphp`, bản `frankenphp` trong PATH hoặc đường dẫn `FRANKENPHP_BIN`.
 
 ### Môi trường Local (XAMPP)
 

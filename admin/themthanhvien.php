@@ -33,7 +33,7 @@ if (!isset($_SESSION['dangnhap1'])) {
         // Validate tài khoản & mật khẩu
         if (empty($taikhoan) || empty($matkhau_raw)) {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Vui lòng nhập Tài khoản và Mật khẩu!');
                 window.location.href = 'themthanhvien.php';
             </script>
@@ -43,7 +43,7 @@ if (!isset($_SESSION['dangnhap1'])) {
 
         if (strlen($matkhau_raw) < 6) {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Mật khẩu phải có ít nhất 6 ký tự!');
                 window.location.href = 'themthanhvien.php';
             </script>
@@ -59,7 +59,7 @@ if (!isset($_SESSION['dangnhap1'])) {
         if (mysqli_stmt_num_rows($checkStmt) > 0) {
             mysqli_stmt_close($checkStmt);
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Tài khoản này đã tồn tại! Vui lòng chọn tên khác.');
                 window.location.href = 'themthanhvien.php';
             </script>
@@ -72,7 +72,7 @@ if (!isset($_SESSION['dangnhap1'])) {
         $ngaysinh = strtotime($ngaysinh);
         if (!$check) {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Vui lòng nhập đúng định dạng của ngày sinh');
                 window.location.href = 'themthanhvien.php';
             </script>
@@ -91,7 +91,7 @@ if (!isset($_SESSION['dangnhap1'])) {
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Tạo thành viên thành công!');
                 window.location.href = 'quanlithanhvien.php';
             </script>
@@ -99,7 +99,7 @@ if (!isset($_SESSION['dangnhap1'])) {
         } else {
             mysqli_stmt_close($stmt);
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Dữ liệu đưa vào không hợp lệ, vui lòng kiểm tra lại');
                 window.location.href = 'themthanhvien.php';
             </script>
@@ -132,7 +132,7 @@ if (!isset($_SESSION['dangnhap1'])) {
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous" integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous" integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
         src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
 </head>
@@ -172,10 +172,10 @@ if (!isset($_SESSION['dangnhap1'])) {
                     <li class="flex-1 md:flex-none md:mr-3">
                         <div class="inline-block relative">
                             <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span class="pr-2"><i
+                                data-dropdown-toggle="myDropdown"><span class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                                 Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                                 <svg class="inline h-3 fill-current" viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -383,13 +383,20 @@ if (!isset($_SESSION['dangnhap1'])) {
     </div>
 
 
-    <script>
+    <script nonce="<?= e(csp_nonce()) ?>">
         /*Toggle dropdown list*/
         function toggleDD(myDropMenu) {
             document.getElementById(myDropMenu).classList.toggle("invisible");
         }
 
-        /*Filter dropdown options*/
+        document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.stopPropagation();
+                toggleDD(button.dataset.dropdownToggle);
+            });
+        });
+
+    /*Filter dropdown options*/
         function filterDD(myDropMenu, myDropMenuSearch) {
             var input, filter, ul, li, a, i;
             input = document.getElementById(myDropMenuSearch);
@@ -397,7 +404,7 @@ if (!isset($_SESSION['dangnhap1'])) {
             div = document.getElementById(myDropMenu);
             a = div.getElementsByTagName("a");
             for (i = 0; i < a.length; i++) {
-                if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                     a[i].style.display = "";
                 } else {
                     a[i].style.display = "none";
@@ -407,7 +414,7 @@ if (!isset($_SESSION['dangnhap1'])) {
 
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function (event) {
-            if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+            if (!event.target.closest('.drop-button, .drop-search')) {
                 var dropdowns = document.getElementsByClassName("dropdownlist");
                 for (var i = 0; i < dropdowns.length; i++) {
                     var openDropdown = dropdowns[i];

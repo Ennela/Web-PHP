@@ -410,7 +410,7 @@ if (isset($_POST['btn'])) {
 </main>
 
 <!-- Client-side Validation -->
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 (function() {
     const form = document.getElementById('contactForm');
     if (!form) return;
