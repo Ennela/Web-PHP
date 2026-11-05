@@ -53,8 +53,8 @@ require_once dirname(__DIR__) . '/config.php';
         extract(array_intersect_key($_SESSION['locsanpham1'], array_flip(['masp', 'tensp'])));//tự động lấy ra biến id và hoten
     }
 
-    $item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
-    $current_page = !empty($_GET['page']) ? $_GET['page'] : 1; //Trang hiện tại
+    $item_per_page = max(1, min(100, (int)($_GET['per_page'] ?? 6)));
+    $current_page = max(1, (int)($_GET['page'] ?? 1)); //Trang hiện tại
     $offset = ($current_page - 1) * $item_per_page;
     $totalRecords = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham`");
     $totalRecords = $totalRecords->num_rows;
@@ -106,7 +106,7 @@ require_once dirname(__DIR__) . '/config.php';
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -148,10 +148,10 @@ require_once dirname(__DIR__) . '/config.php';
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span
+                                data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span> <?php
-                                echo 'Xin chào, ' . $_SESSION['dangnhap1'] ?>
+                                echo e('Xin chào, ' . $_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -271,7 +271,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold uppercase" style="color:#64748b; font-size:0.82rem; letter-spacing:0.5px;">Tổng sản phẩm</h5>
-                            <h3 class="font-bold text-3xl" style="color:#1e293b;"><?= $totalRecords ?> <span style="font-size:1rem;color:#64748b;">sản phẩm</span></h3>
+                            <h3 class="font-bold text-3xl" style="color:#1e293b;"><?= e($totalRecords) ?> <span style="font-size:1rem;color:#64748b;">sản phẩm</span></h3>
                         </div>
                     </div>
                 </div>
@@ -290,10 +290,10 @@ require_once dirname(__DIR__) . '/config.php';
                         <?= csrf_field() ?>
                             <input type="text"
                                    placeholder="Mã sản phẩm ..." name="masp"
-                                   value="<?= !empty($masp) ? $masp : "" ?>"/>
+                                   value="<?= e(!empty($masp) ? $masp : "") ?>"/>
                             <input type="text"
                                    placeholder="Tên sản phẩm ..." name="tensp"
-                                   value="<?= !empty($tensp) ? $tensp : "" ?>"/>
+                                   value="<?= e(!empty($tensp) ? $tensp : "") ?>"/>
                             <button type="submit" class="btn-search">
                                 <i class="fas fa-search"></i> Tìm kiếm
                             </button>
@@ -302,7 +302,7 @@ require_once dirname(__DIR__) . '/config.php';
             </div>
 
             <div class="flex w-full px-6 pb-2 justify-end">
-                <div class="records-info"><i class="fas fa-info-circle" style="color:#3b82f6;"></i> Có tất cả <strong><?= $totalRecords ?></strong> sản phẩm trên <strong><?= $totalPages ?></strong> trang</div>
+                <div class="records-info"><i class="fas fa-info-circle" style="color:#3b82f6;"></i> Có tất cả <strong><?= e($totalRecords) ?></strong> sản phẩm trên <strong><?= e($totalPages) ?></strong> trang</div>
             </div>
             <div class="w-full p-6">
               <div class="table-wrapper animate-in" style="animation-delay: 0.2s;">
@@ -327,31 +327,31 @@ require_once dirname(__DIR__) . '/config.php';
                         while ($row = mysqli_fetch_array($result)) {
                             ?>
                             <tr>
-                                <td class="text-center"><?= $row['masp'] ?></td>
+                                <td class="text-center"><?= (int)$row['masp'] ?></td>
                                 <td><img height="100"
-                                         src="<?= $row['anhdaidien'] ?>"
+                                         src="<?= e(safe_url($row['anhdaidien'])) ?>"
                                          width="100"/></td>
-                                <td><?= $row['tensp'] ?></td>
-                                <td class="text-center" style="color:#2563eb; font-weight:700;"><?= number_format($row['giasanpham'], 0, ",", ".") ?></td>
-                                <td class="text-center" style="color:#94a3b8; text-decoration: line-through;"><?= $row['giagoc'] > 0 ? number_format($row['giagoc'], 0, ",", ".") : '--' ?></td>
-                                <td class="text-center"><?= $row['nhomsp'] ?? '--' ?></td>
-                                <td class="text-center font-bold"><?= $soldMap[$row['masp']] ?? 0 ?></td>
+                                <td><?= e($row['tensp']) ?></td>
+                                <td class="text-center" style="color:#2563eb; font-weight:700;"><?= e(number_format($row['giasanpham'], 0, ",", ".")) ?></td>
+                                <td class="text-center" style="color:#94a3b8; text-decoration: line-through;"><?= e($row['giagoc'] > 0 ? number_format($row['giagoc'], 0, ",", ".") : '--') ?></td>
+                                <td class="text-center"><?= e($row['nhomsp'] ?? '--') ?></td>
+                                <td class="text-center font-bold"><?= e($soldMap[$row['masp']] ?? 0) ?></td>
                                 <td class="text-center">
                                     <?php
                                     $totalStock = $stockMap[$row['masp']]['total'] ?? 0;
                                     $stockColorClass = $totalStock <= 0 ? 'background:#fee2e2;color:#991b1b;' : ($totalStock <= 20 ? 'background:#fef3c7;color:#92400e;' : 'background:#d1fae5;color:#065f46;');
                                     ?>
-                                    <span style="<?= $stockColorClass ?> padding:3px 10px; border-radius:50px; font-weight:700; font-size:0.8rem; display:inline-block;">
-                                        <?= $totalStock ?>
+                                    <span style="<?= e($stockColorClass) ?> padding:3px 10px; border-radius:50px; font-weight:700; font-size:0.8rem; display:inline-block;">
+                                        <?= e($totalStock) ?>
                                     </span>
                                 </td>
-                                <td class="text-center"><?= $row['ngaycapnhat'] ? date('d/m/Y H:i', $row['ngaycapnhat']) : '--' ?></td>
+                                <td class="text-center"><?= e($row['ngaycapnhat'] ? date('d/m/Y H:i', $row['ngaycapnhat']) : '--') ?></td>
                                 <td class="text-center doimau"><a
-                                            href="./edit_qlsanpham.php?masp=<?= $row['masp'] ?>">Sửa</a>
+                                            href="./edit_qlsanpham.php?masp=<?= (int)$row['masp'] ?>">Sửa</a>
                                 </td>
                                 <td class="text-center doimau"><form method="post" action="./delete_qlsanpham.php" style="display:inline;">
                                     <?= csrf_field() ?>
-                                        <input type="hidden" name="masp" value="<?= $row['masp'] ?>">
+                                        <input type="hidden" name="masp" value="<?= (int)$row['masp'] ?>">
                                         <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;">Xóa</button>
                                     </form>
                                 </td>
@@ -377,11 +377,18 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -391,7 +398,7 @@ require_once dirname(__DIR__) . '/config.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -401,7 +408,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

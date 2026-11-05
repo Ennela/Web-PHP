@@ -34,7 +34,7 @@ if ($dangxuat == 'dangxuat') {
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet"> <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -72,8 +72,8 @@ if ($dangxuat == 'dangxuat') {
 
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
-                        <button class="text-white drop-button focus:outline-none" onclick="toggleDD('myDropdown')"><span
-                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo $_SESSION['dangnhap1'] ?>
+                        <button class="text-white drop-button focus:outline-none" data-dropdown-toggle="myDropdown"><span
+                                    class="pr-2"><i class="em em-robot_face"></i></span> Xin chào, <?php echo e($_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                             </svg>
@@ -212,11 +212,18 @@ if ($dangxuat == 'dangxuat') {
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -226,7 +233,7 @@ if ($dangxuat == 'dangxuat') {
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -236,7 +243,7 @@ if ($dangxuat == 'dangxuat') {
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

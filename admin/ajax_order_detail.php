@@ -55,18 +55,18 @@ if (!$result || mysqli_num_rows($result) == 0) {
             ?>
             <tr style="border-bottom: 1px solid #f1f5f9;">
                 <td style="padding: 6px 8px;">
-                    <img src="./uploads/<?= htmlspecialchars($anh) ?>" alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                    <img src="<?= e(safe_url($anh)) ?>" alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
                 </td>
                 <td style="padding: 6px 8px; font-weight: 500; color: #1e293b;">
-                    <?= htmlspecialchars($row['tensp'] ?? 'Sản phẩm đã xóa') ?>
+                    <?= e($row['tensp'] ?? 'Sản phẩm đã xóa') ?>
                 </td>
                 <td style="padding: 6px 8px; text-align: center;">
                     <span style="display: inline-block; padding: 2px 6px; background: #e0e7ff; color: #3730a3; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">
-                        <?= !empty($row['size']) ? htmlspecialchars($row['size']) : 'N/A' ?>
+                        <?= !empty($row['size']) ? (int)$row['size'] : 'N/A' ?>
                     </span>
                 </td>
                 <td style="padding: 6px 8px; text-align: center; font-weight: 600;">
-                    <?= $row['quantity'] ?>
+                    <?= (int)$row['quantity'] ?>
                 </td>
                 <td style="padding: 6px 8px; text-align: right; color: #64748b;">
                     <?= number_format($row['price'], 0, ',', '.') ?>đ
@@ -87,3 +87,5 @@ if (!$result || mysqli_num_rows($result) == 0) {
         </tfoot>
     </table>
 </div>
+
+<?php mysqli_stmt_close($stmt); mysqli_close($con); ?>

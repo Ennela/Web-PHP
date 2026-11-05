@@ -166,7 +166,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
                     <div class="mb-4"><label class="form-label">Mật khẩu</label><input class="form-control" name="matkhau" type="password" placeholder="Nhập mật khẩu" required></div>
                     <button name="dangki" class="btn-auth" type="submit">Đăng ký</button>
                 </form>
-                <div class="auth-link">Đã có tài khoản? <a href="<?php echo BASE_URL; ?>auth/dangnhap.php">Đăng nhập</a></div>
+                <div class="auth-link">Đã có tài khoản? <a href="<?= e(BASE_URL) ?>auth/dangnhap.php">Đăng nhập</a></div>
             </div>
         </div>
     </main>

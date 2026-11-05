@@ -4,18 +4,18 @@
             <div class="col-6 col-md-3 mb-4 mb-md-0">
                 <h5>Bắt đầu</h5>
                 <ul>
-                    <li><a href="<?php echo BASE_URL; ?>home/trangchu.php">Trang chủ</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>auth/dangnhap.php">Đăng nhập</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>shop/giohang.php">Giỏ hàng</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>shop/tradonhang.php">Tra cứu đơn hàng</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>home/trangchu.php">Trang chủ</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>auth/dangnhap.php">Đăng nhập</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>shop/giohang.php">Giỏ hàng</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>shop/tradonhang.php">Tra cứu đơn hàng</a></li>
                 </ul>
             </div>
             <div class="col-6 col-md-3 mb-4 mb-md-0">
                 <h5>Thông tin</h5>
                 <ul>
-                    <li><a href="<?php echo BASE_URL; ?>home/lienhe.php">Liên lạc</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>home/vechungtoi.php">Giới thiệu</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>blog/baiviet.php">Blog</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>home/lienhe.php">Liên lạc</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>home/vechungtoi.php">Giới thiệu</a></li>
+                    <li><a href="<?= e(BASE_URL) ?>blog/baiviet.php">Blog</a></li>
                 </ul>
             </div>
             <div class="col-6 col-md-3 mb-4 mb-md-0">
@@ -41,12 +41,12 @@
     </div>
 </footer>
 
-<script src="<?php echo BASE_URL; ?>assets/bootstrap/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.10.0/baguetteBox.min.js"></script>
-<script src="<?php echo BASE_URL; ?>assets/js/vanilla-zoom.js"></script>
-<script src="<?php echo BASE_URL; ?>assets/js/theme.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>" src="<?= e(BASE_URL) ?>assets/bootstrap/js/bootstrap.min.js"></script>
+<script nonce="<?= e(csp_nonce()) ?>" src="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.10.0/baguetteBox.min.js"></script>
+<script nonce="<?= e(csp_nonce()) ?>" src="<?= e(BASE_URL) ?>assets/js/vanilla-zoom.js"></script>
+<script nonce="<?= e(csp_nonce()) ?>" src="<?= e(BASE_URL) ?>assets/js/theme.js"></script>
+<script nonce="<?= e(csp_nonce()) ?>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script nonce="<?= e(csp_nonce()) ?>">
     document.addEventListener("DOMContentLoaded", function() {
         const Toast = Swal.mixin({
             toast: true,
@@ -63,7 +63,7 @@
         <?php if (!empty($_SESSION['swal_error'])): ?>
             Toast.fire({
                 icon: 'error',
-                title: '<?php echo addslashes($_SESSION['swal_error']); ?>'
+                titleText: <?= js_value($_SESSION['swal_error']) ?>
             });
             <?php unset($_SESSION['swal_error']); ?>
         <?php endif; ?>
@@ -71,7 +71,7 @@
         <?php if (!empty($_SESSION['swal_success'])): ?>
             Toast.fire({
                 icon: 'success',
-                title: '<?php echo addslashes($_SESSION['swal_success']); ?>'
+                titleText: <?= js_value($_SESSION['swal_success']) ?>
             });
             <?php unset($_SESSION['swal_success']); ?>
         <?php endif; ?>
@@ -79,7 +79,7 @@
         <?php if (!empty($_SESSION['swal_warning'])): ?>
             Toast.fire({
                 icon: 'warning',
-                title: '<?php echo addslashes($_SESSION['swal_warning']); ?>'
+                titleText: <?= js_value($_SESSION['swal_warning']) ?>
             });
             <?php unset($_SESSION['swal_warning']); ?>
         <?php endif; ?>

@@ -61,7 +61,7 @@ if (isset($_POST['dangnhap'])) {
 <head>
     <title>Trang đăng nhập</title>
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a81368914c.js"></script>
+    <script nonce="<?= e(csp_nonce()) ?>" src="https://kit.fontawesome.com/a81368914c.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
 </head>
@@ -278,19 +278,28 @@ if (isset($_POST['dangnhap'])) {
     </div>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     // ===== Toast System =====
     function showToast(type, title, message) {
         const container = document.getElementById('toastContainer');
 
         const toast = document.createElement('div');
         toast.className = 'toast toast-' + type;
-        toast.innerHTML =
-            '<div class="toast-content">' +
-                '<div class="toast-title">' + title + '</div>' +
-                '<div class="toast-message">' + message + '</div>' +
-            '</div>' +
-            '<button class="toast-close" onclick="dismissToast(this)">&times;</button>';
+        const content = document.createElement('div');
+        content.className = 'toast-content';
+        const heading = document.createElement('div');
+        heading.className = 'toast-title';
+        heading.textContent = title;
+        const description = document.createElement('div');
+        description.className = 'toast-message';
+        description.textContent = message;
+        content.append(heading, description);
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'toast-close';
+        close.textContent = '\u00d7';
+        close.addEventListener('click', function () { dismissToast(close); });
+        toast.append(content, close);
 
         container.appendChild(toast);
         setTimeout(function() { dismissToast(toast.querySelector('.toast-close')); }, 4000);

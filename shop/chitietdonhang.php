@@ -18,7 +18,8 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
 
 // ===== BẮT BUỘC ĐĂNG NHẬP =====
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
-    echo "<script>alert('Vui lòng đăng nhập để xem chi tiết đơn hàng!'); window.location.href='" . BASE_URL . "auth/dangnhap.php';</script>";
+    $_SESSION['swal_warning'] = 'Vui lòng đăng nhập để xem chi tiết đơn hàng!';
+    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -26,7 +27,8 @@ $makh = intval($_SESSION['makh']);
 $orderId = intval($_GET['id'] ?? 0);
 
 if ($orderId <= 0) {
-    echo "<script>alert('Mã đơn hàng không hợp lệ!'); window.location.href='" . BASE_URL . "shop/tradonhang.php';</script>";
+    $_SESSION['swal_warning'] = 'Mã đơn hàng không hợp lệ!';
+    header('Location: ' . BASE_URL . 'shop/tradonhang.php');
     exit;
 }
 
@@ -36,7 +38,8 @@ $result = mysqli_query($con, $sql);
 $order = mysqli_fetch_assoc($result);
 
 if (!$order) {
-    echo "<script>alert('Bạn không có quyền xem đơn hàng này!'); window.location.href='" . BASE_URL . "shop/tradonhang.php';</script>";
+    $_SESSION['swal_warning'] = 'Bạn không có quyền xem đơn hàng này!';
+    header('Location: ' . BASE_URL . 'shop/tradonhang.php');
     exit;
 }
 
@@ -489,12 +492,12 @@ include BASE_PATH . 'includes/header.php';
     <!-- Hero -->
     <div class="detail-hero">
         <div class="container">
-            <a href="<?= BASE_URL ?>shop/tradonhang.php" class="back-link">
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php" class="back-link">
                 <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách đơn hàng
             </a>
             <h2 class="mt-3">
                 <i class="fas fa-receipt mr-2"></i> 
-                Đơn hàng <span style="color: #60a5fa;">#<?= !empty($order['order_code']) ? $order['order_code'] : $order['id'] ?></span>
+                Đơn hàng <span style="color: #60a5fa;">#<?= e(!empty($order['order_code']) ? $order['order_code'] : $order['id']) ?></span>
             </h2>
             <p class="mt-1">Ngày đặt: <?= date('d/m/Y H:i', $order['ngaytao']) ?></p>
         </div>
@@ -558,20 +561,20 @@ include BASE_PATH . 'includes/header.php';
                         <div class="info-card-body">
                             <div class="info-row">
                                 <span class="info-label"><i class="far fa-user mr-2"></i>Họ tên</span>
-                                <span class="info-value"><?= htmlspecialchars($order['tenkh']) ?></span>
+                                <span class="info-value"><?= e($order['tenkh']) ?></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label"><i class="fas fa-phone-alt mr-2"></i>Điện thoại</span>
-                                <span class="info-value"><?= htmlspecialchars($order['sdt']) ?></span>
+                                <span class="info-value"><?= e($order['sdt']) ?></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label"><i class="fas fa-map-marker-alt mr-2"></i>Địa chỉ</span>
-                                <span class="info-value"><?= htmlspecialchars($order['diachi']) ?></span>
+                                <span class="info-value"><?= e($order['diachi']) ?></span>
                             </div>
                             <?php if (!empty($order['note'])): ?>
                             <div class="info-row">
                                 <span class="info-label"><i class="far fa-sticky-note mr-2"></i>Ghi chú</span>
-                                <span class="info-value"><?= htmlspecialchars($order['note']) ?></span>
+                                <span class="info-value"><?= e($order['note']) ?></span>
                             </div>
                             <?php endif; ?>
                         </div>
@@ -592,7 +595,7 @@ include BASE_PATH . 'includes/header.php';
                             <?php if (!empty($order['vnpay_tranId'])): ?>
                             <div class="info-row">
                                 <span class="info-label">Mã giao dịch</span>
-                                <span class="info-value" style="color: #3b82f6;"><?= htmlspecialchars($order['vnpay_tranId']) ?></span>
+                                <span class="info-value" style="color: #3b82f6;"><?= e($order['vnpay_tranId']) ?></span>
                             </div>
                             <?php endif; ?>
                             <div class="info-row" style="background: #f0f9ff; margin: 10px -24px -20px; padding: 16px 24px; border-radius: 0 0 16px 16px;">
@@ -627,8 +630,8 @@ include BASE_PATH . 'includes/header.php';
                                     <tr>
                                         <td data-label="">
                                             <?php if (!empty($item['anhdaidien'])): ?>
-                                                <img src="<?= BASE_URL ?>admin/<?= htmlspecialchars($item['anhdaidien']) ?>" 
-                                                     class="product-thumb" alt="<?= htmlspecialchars($item['tensp'] ?? '') ?>">
+                                                <img src="<?= e(safe_url(BASE_URL . 'admin/' . $item['anhdaidien'])) ?>"
+                                                     class="product-thumb" alt="<?= e($item['tensp'] ?? '') ?>">
                                             <?php else: ?>
                                                 <div class="product-thumb" style="display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
                                                     <i class="fas fa-shoe-prints" style="color: #94a3b8;"></i>
@@ -636,12 +639,12 @@ include BASE_PATH . 'includes/header.php';
                                             <?php endif; ?>
                                         </td>
                                         <td data-label="Sản phẩm">
-                                            <span class="product-name"><?= htmlspecialchars($item['tensp'] ?? 'Sản phẩm #' . $item['masp']) ?></span>
+                                            <span class="product-name"><?= e($item['tensp'] ?? 'Sản phẩm #' . $item['masp']) ?></span>
                                         </td>
                                         <td data-label="Size" style="text-align: center;">
                                             <?php if (!empty($item['size'])): ?>
                                             <span style="background: #111; color: #fff; padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 0.85rem;">
-                                                <?= $item['size'] ?>
+                                                <?= (int)$item['size'] ?>
                                             </span>
                                             <?php else: ?>
                                             <span style="color: #94a3b8;">—</span>
@@ -649,7 +652,7 @@ include BASE_PATH . 'includes/header.php';
                                         </td>
                                         <td data-label="Số lượng" style="text-align: center;">
                                             <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 8px; font-weight: 600;">
-                                                <?= $item['quantity'] ?>
+                                                <?= (int)$item['quantity'] ?>
                                             </span>
                                         </td>
                                         <td data-label="Đơn giá" style="text-align: right;">
@@ -678,19 +681,19 @@ include BASE_PATH . 'includes/header.php';
             <!-- Action + Back buttons -->
             <div class="text-center mt-5 animate-in" style="animation-delay: 0.3s;">
                 <?php if ($currentStatus === 'SHIPPING'): ?>
-                <button class="btn-action-detail btn-receive-detail" onclick="orderDetailAction(<?= $order['id'] ?>, 'receive', this)">
+                <button class="btn-action-detail btn-receive-detail" data-order-id="<?= (int)$order['id'] ?>" data-order-action="receive">
                     <i class="fas fa-check-circle mr-2"></i> Xác nhận đã nhận hàng
                 </button>
                 <?php endif; ?>
                 <?php if (in_array($currentStatus, ['PENDING', 'CONFIRMED'])): ?>
-                <button class="btn-action-detail btn-cancel-detail" onclick="orderDetailAction(<?= $order['id'] ?>, 'cancel', this)">
+                <button class="btn-action-detail btn-cancel-detail" data-order-id="<?= (int)$order['id'] ?>" data-order-action="cancel">
                     <i class="fas fa-times mr-2"></i> Hủy đơn hàng
                 </button>
                 <?php endif; ?>
-                <a href="<?= BASE_URL ?>shop/tradonhang.php" class="btn-detail" style="padding: 14px 40px; font-size: 1rem;">
+                <a href="<?= e(BASE_URL) ?>shop/tradonhang.php" class="btn-detail" style="padding: 14px 40px; font-size: 1rem;">
                     <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách
                 </a>
-                <a href="<?= BASE_URL ?>home/trangchu.php" 
+                <a href="<?= e(BASE_URL) ?>home/trangchu.php"
                    style="background: transparent; color: #3b82f6; border: 2px solid #3b82f6; border-radius: 10px; padding: 12px 40px; font-weight: 600; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; transition: all 0.3s ease;">
                     <i class="fas fa-home"></i> Về trang chủ
                 </a>
@@ -744,7 +747,7 @@ include BASE_PATH . 'includes/header.php';
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 function orderDetailAction(orderId, action, btn) {
     let confirmMsg = action === 'receive' 
         ? 'Xác nhận bạn đã nhận được hàng thành công?' 
@@ -755,7 +758,7 @@ function orderDetailAction(orderId, action, btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang xử lý...';
     
-    fetch('<?= BASE_URL ?>shop/api_order_action.php', {
+    fetch(<?= js_value(BASE_URL . 'shop/api_order_action.php') ?>, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -784,4 +787,8 @@ function orderDetailAction(orderId, action, btn) {
             : '<i class="fas fa-times mr-2"></i> Hủy đơn hàng';
     });
 }
+
+document.querySelectorAll('[data-order-id][data-order-action]').forEach(button => {
+    button.addEventListener('click', () => orderDetailAction(Number.parseInt(button.dataset.orderId, 10), button.dataset.orderAction, button));
+});
 </script>

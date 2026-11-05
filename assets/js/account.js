@@ -11,6 +11,36 @@
         'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
     });
 
+    // Dynamic values are assigned through DOM properties, never parsed as HTML.
+    function createNode(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = String(text ?? '');
+        return element;
+    }
+
+    function recordId(value) {
+        const id = Number(value);
+        return Number.isSafeInteger(id) && id > 0 ? id : null;
+    }
+
+    function avatarUrl(value) {
+        if (typeof value !== 'string') return null;
+        try {
+            const directory = new URL('auth/uploads/avatars/', new URL(BASE, location.href));
+            const url = new URL(value, directory);
+            const filename = url.pathname.slice(directory.pathname.length);
+            if (url.origin === location.origin && !url.search && !url.hash
+                && url.pathname.startsWith(directory.pathname)
+                && /^[A-Za-z0-9][A-Za-z0-9._-]*\.(?:jpe?g|png|webp|gif)$/i.test(filename)) {
+                return url.href;
+            }
+        } catch (error) {
+            return null;
+        }
+        return null;
+    }
+
     // ============================================================
     // TOAST NOTIFICATION SYSTEM
     // ============================================================
@@ -23,10 +53,11 @@
         },
         show(message, type = 'success') {
             if (!this.container) this.init();
-            const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            const safeType = type === 'success' ? 'success' : 'error';
+            const icon = safeType === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
             const toast = document.createElement('div');
-            toast.className = `toast-item toast-${type}`;
-            toast.innerHTML = `<i class="${icon} toast-icon"></i><span>${message}</span>`;
+            toast.className = `toast-item toast-${safeType}`;
+            toast.append(createNode('i', icon + ' toast-icon'), createNode('span', '', message));
             this.container.appendChild(toast);
             setTimeout(() => {
                 toast.classList.add('toast-out');
@@ -44,10 +75,11 @@
     const tabContents = document.querySelectorAll('.account-tab-content');
 
     function switchTab(tabId) {
+        const activeNav = Array.from(navItems).find(item => item.dataset.tab === tabId);
+        if (!activeNav) return;
         navItems.forEach(n => n.classList.remove('active'));
         tabContents.forEach(t => t.classList.remove('active'));
 
-        const activeNav = document.querySelector(`.sidebar-nav-item[data-tab="${tabId}"]`);
         const activeTab = document.getElementById(tabId);
 
         if (activeNav) activeNav.classList.add('active');
@@ -271,7 +303,10 @@
                 .then(data => {
                     if (data.success) {
                         Toast.success(data.message);
-                        document.querySelectorAll('.avatar-img').forEach(img => img.src = data.avatar_url);
+                        const uploadedAvatar = avatarUrl(data.avatar_url);
+                        if (uploadedAvatar) {
+                            document.querySelectorAll('.avatar-img').forEach(img => img.src = uploadedAvatar);
+                        }
                     } else {
                         Toast.error(data.message);
                     }
@@ -594,44 +629,60 @@
 
     function renderAddresses(addresses) {
         if (!addressGrid) return;
-        let html = '';
+        addressGrid.replaceChildren();
+        const items = Array.isArray(addresses) ? addresses : [];
 
-        if (addresses.length === 0) {
-            html = `<div class="acc-empty-state">
-                <i class="fas fa-map-marker-alt"></i>
-                <p>Chưa có địa chỉ nào. Hãy thêm địa chỉ giao hàng!</p>
-            </div>`;
-        } else {
-            addresses.forEach(addr => {
-                const parts = [addr.diachi_cuthe, addr.phuong_xa, addr.quan_huyen, addr.tinh].filter(Boolean);
-                html += `
-                <div class="address-card ${addr.macdinh == 1 ? 'is-default' : ''}" data-id="${addr.id}">
-                    <div class="address-card-header">
-                        <div>
-                            <span class="address-card-name">${escHtml(addr.hoten)}</span>
-                            <span class="address-card-phone">${escHtml(addr.sdt)}</span>
-                        </div>
-                        ${addr.macdinh == 1 ? '<span class="address-badge address-badge-default"><i class="fas fa-check"></i> Mặc định</span>' : ''}
-                    </div>
-                    <div class="address-card-detail">${escHtml(parts.join(', '))}</div>
-                    <div class="address-card-actions">
-                        <button class="acc-btn-ghost addr-edit-btn" data-addr='${JSON.stringify(addr)}'><i class="fas fa-pen"></i> Sửa</button>
-                        <button class="acc-btn-ghost addr-delete-btn" data-id="${addr.id}"><i class="fas fa-trash"></i> Xóa</button>
-                        ${addr.macdinh != 1 ? `<button class="acc-btn-ghost addr-default-btn" data-id="${addr.id}"><i class="fas fa-star"></i> Đặt mặc định</button>` : ''}
-                    </div>
-                </div>`;
-            });
+        if (items.length === 0) {
+            const empty = createNode('div', 'acc-empty-state');
+            empty.append(createNode('i', 'fas fa-map-marker-alt'),
+                createNode('p', '', 'Chưa có địa chỉ nào. Hãy thêm địa chỉ giao hàng!'));
+            addressGrid.appendChild(empty);
         }
+        items.forEach(addr => {
+            const id = recordId(addr.id);
+            if (id === null) return;
+            const isDefault = Number(addr.macdinh) === 1;
+            const parts = [addr.diachi_cuthe, addr.phuong_xa, addr.quan_huyen, addr.tinh].filter(Boolean);
+            const card = createNode('div', 'address-card' + (isDefault ? ' is-default' : ''));
+            card.dataset.id = String(id);
+            const header = createNode('div', 'address-card-header');
+            const contact = createNode('div');
+            contact.append(createNode('span', 'address-card-name', addr.hoten),
+                createNode('span', 'address-card-phone', addr.sdt));
+            header.appendChild(contact);
+            if (isDefault) {
+                const badge = createNode('span', 'address-badge address-badge-default');
+                badge.append(createNode('i', 'fas fa-check'), document.createTextNode(' Mặc định'));
+                header.appendChild(badge);
+            }
+            const actions = createNode('div', 'address-card-actions');
+            const edit = createNode('button', 'acc-btn-ghost addr-edit-btn');
+            edit.type = 'button';
+            // Dataset assignment does not parse quotes or markup in address values.
+            edit.dataset.addr = JSON.stringify(addr);
+            edit.append(createNode('i', 'fas fa-pen'), document.createTextNode(' Sửa'));
+            const remove = createNode('button', 'acc-btn-ghost addr-delete-btn');
+            remove.type = 'button';
+            remove.dataset.id = String(id);
+            remove.append(createNode('i', 'fas fa-trash'), document.createTextNode(' Xóa'));
+            actions.append(edit, remove);
+            if (!isDefault) {
+                const setDefault = createNode('button', 'acc-btn-ghost addr-default-btn');
+                setDefault.type = 'button';
+                setDefault.dataset.id = String(id);
+                setDefault.append(createNode('i', 'fas fa-star'), document.createTextNode(' Đặt mặc định'));
+                actions.appendChild(setDefault);
+            }
+            card.append(header, createNode('div', 'address-card-detail', parts.join(', ')), actions);
+            addressGrid.appendChild(card);
+        });
 
-        // Add button card (max 5)
-        if (addresses.length < 5) {
-            html += `<div class="add-address-card" id="btnAddAddress">
-                <i class="fas fa-plus"></i>
-                <span>Thêm địa chỉ mới (${addresses.length}/5)</span>
-            </div>`;
+        if (items.length < 5) {
+            const addCard = createNode('div', 'add-address-card');
+            addCard.append(createNode('i', 'fas fa-plus'),
+                createNode('span', '', `Thêm địa chỉ mới (${items.length}/5)`));
+            addressGrid.appendChild(addCard);
         }
-
-        addressGrid.innerHTML = html;
     }
 
     // Delegate address actions
@@ -709,14 +760,17 @@
     function renderSizeGrid() {
         if (!sizeGrid) return;
         const sizes = SIZE_DATA[currentSizeSystem] || [];
-        sizeGrid.innerHTML = sizes.map(s => {
-            const isSaved = savedSizes.some(sv => sv.he_size === currentSizeSystem && sv.size_value === s);
-            const isSelected = selectedSize === s;
-            let cls = 'size-chip';
-            if (isSaved) cls += ' saved';
-            else if (isSelected) cls += ' selected';
-            return `<div class="${cls}" data-size="${s}">${s}</div>`;
-        }).join('');
+        sizeGrid.replaceChildren();
+        sizes.forEach(size => {
+            const isSaved = savedSizes.some(saved => saved.he_size === currentSizeSystem && saved.size_value === size);
+            const isSelected = selectedSize === size;
+            let className = 'size-chip';
+            if (isSaved) className += ' saved';
+            else if (isSelected) className += ' selected';
+            const chip = createNode('div', className, size);
+            chip.dataset.size = size;
+            sizeGrid.appendChild(chip);
+        });
     }
 
     // Size chip click
@@ -789,7 +843,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    savedSizes = data.data;
+                    savedSizes = Array.isArray(data.data) ? data.data : [];
                     renderSizeGrid();
                     renderSavedSizes();
                 }
@@ -799,44 +853,41 @@
 
     function renderSavedSizes() {
         if (!savedSizesList) return;
+        savedSizesList.replaceChildren();
         if (savedSizes.length === 0) {
-            savedSizesList.innerHTML = '<div class="acc-empty-state"><i class="fas fa-shoe-prints"></i><p>Chưa có size nào được lưu</p></div>';
+            const empty = createNode('div', 'acc-empty-state');
+            empty.append(createNode('i', 'fas fa-shoe-prints'),
+                createNode('p', '', 'Chưa có size nào được lưu'));
+            savedSizesList.appendChild(empty);
             return;
         }
 
-        savedSizesList.innerHTML = savedSizes.map(s => `
-            <div class="saved-size-item">
-                <div>
-                    <span class="saved-size-value">${escHtml(s.size_value)}</span>
-                    <span class="saved-size-system">${escHtml(s.he_size)}</span>
-                </div>
-                <span class="saved-size-note">${s.ghichu ? escHtml(s.ghichu) : ''}</span>
-                <button class="saved-size-delete" onclick="event.stopPropagation();" data-id="${s.id}"><i class="fas fa-times"></i></button>
-            </div>
-        `).join('');
-    }
-
-    // Delegate saved size delete
-    document.addEventListener('click', (e) => {
-        const delBtn = e.target.closest('.saved-size-delete');
-        if (delBtn) {
-            deleteSize(delBtn.dataset.id);
-        }
-    });
-
-    // ============================================================
-    // UTILITY
-    // ============================================================
-    function escHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        savedSizes.forEach(size => {
+            const id = recordId(size.id);
+            if (id === null) return;
+            const item = createNode('div', 'saved-size-item');
+            const value = createNode('div');
+            value.append(createNode('span', 'saved-size-value', size.size_value),
+                createNode('span', 'saved-size-system', size.he_size));
+            const remove = createNode('button', 'saved-size-delete');
+            remove.type = 'button';
+            remove.dataset.id = String(id);
+            remove.appendChild(createNode('i', 'fas fa-times'));
+            remove.addEventListener('click', event => {
+                event.stopPropagation();
+                deleteSize(id);
+            });
+            item.append(value, createNode('span', 'saved-size-note', size.ghichu || ''), remove);
+            savedSizesList.appendChild(item);
+        });
     }
 
     // ============================================================
     // INIT
     // ============================================================
+    [profileForm, pwForm, addressForm].forEach(form => {
+        form?.addEventListener('submit', event => event.preventDefault());
+    });
     loadAddresses();
     loadSizes();
     Toast.init();

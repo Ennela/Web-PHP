@@ -72,7 +72,7 @@ require_once dirname(__DIR__) . '/config.php';
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet"> <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -110,9 +110,9 @@ require_once dirname(__DIR__) . '/config.php';
 
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
-                        <button class="text-white drop-button focus:outline-none" onclick="toggleDD('myDropdown')"><span
+                        <button class="text-white drop-button focus:outline-none" data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
-                                        class="em em-robot_face"></i></span> <?php echo 'Xin chào, ' . $_SESSION['dangnhap1'] ?>
+                                        class="em em-robot_face"></i></span> <?php echo e('Xin chào, ' . $_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                             </svg>
@@ -230,7 +230,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold text-gray-600 uppercase">Tổng thu nhập tháng</h5>
-                            <h3 class="text-3xl font-bold"><?= number_format($tongdoanhthu['tong'] ?? 0, 0, ",", ".") ?> VND <span class="text-green-500"><i
+                            <h3 class="text-3xl font-bold"><?= e(number_format($tongdoanhthu['tong'] ?? 0, 0, ",", ".")) ?> VND <span class="text-green-500"><i
                                             class="fas fa-caret-up"></i></span></h3>
                         </div>
                     </div>
@@ -247,7 +247,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold text-gray-600 uppercase">Tài khoản admin</h5>
-                            <h3 class="text-3xl font-bold"><?= $tongthanhvien ?> <span class="text-pink-500"><i
+                            <h3 class="text-3xl font-bold"><?= e($tongthanhvien) ?> <span class="text-pink-500"><i
                                             class="fas fa-exchange-alt"></i></span></h3>
                         </div>
                     </div>
@@ -264,7 +264,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold text-gray-600 uppercase">Tài khoản khách hàng</h5>
-                            <h3 class="text-3xl font-bold"><?= $tongsokh ?> <span class="text-yellow-600"><i
+                            <h3 class="text-3xl font-bold"><?= e($tongsokh) ?> <span class="text-yellow-600"><i
                                             class="fas fa-caret-up"></i></span></h3>
                         </div>
                     </div>
@@ -281,7 +281,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold text-gray-600 uppercase">Số bài đăng</h5>
-                            <h3 class="text-3xl font-bold"><?= $tongbaidang ?> bài</h3>
+                            <h3 class="text-3xl font-bold"><?= e($tongbaidang) ?> bài</h3>
                         </div>
                     </div>
                 </div>
@@ -297,7 +297,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <h5 class="font-bold text-gray-600 uppercase">Tổng sản phẩm</h5>
-                            <h3 class="text-3xl font-bold"><?= $tongsanpham ?> sản phẩm</h3>
+                            <h3 class="text-3xl font-bold"><?= e($tongsanpham) ?> sản phẩm</h3>
                         </div>
                     </div>
                 </div>
@@ -328,7 +328,7 @@ require_once dirname(__DIR__) . '/config.php';
                 </div>
                 <div class="p-5">
                     <canvas class="chartjs" height="undefined" id="chartjs-1" width="undefined"></canvas>
-                    <script>
+                    <script nonce="<?= e(csp_nonce()) ?>">
                         new Chart(document.getElementById("chartjs-1"), {
                             "type": "bar",
                             "data": {
@@ -336,7 +336,7 @@ require_once dirname(__DIR__) . '/config.php';
                                 "datasets": [{
                                     "label": "Đơn hàng",
                                     "data": [
-                                        <?= $count1 ?>, <?= $count2 ?>, <?= $count3 ?>, <?= $count4 ?>, <?= $count5 ?>, <?= $count6 ?>, <?= $count7 ?>, <?= $count8 ?>, <?= $count9 ?>, <?= $count10 ?>, <?= $count11 ?>, <?= $count12 ?>
+                                        <?= (int)$count1 ?>, <?= (int)$count2 ?>, <?= (int)$count3 ?>, <?= (int)$count4 ?>, <?= (int)$count5 ?>, <?= (int)$count6 ?>, <?= (int)$count7 ?>, <?= (int)$count8 ?>, <?= (int)$count9 ?>, <?= (int)$count10 ?>, <?= (int)$count11 ?>, <?= (int)$count12 ?>
                                     ],
                                     "fill": false,
                                     "backgroundColor": ["rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)", "rgba(75, 19, 19, 0.2)"],
@@ -365,11 +365,18 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -379,7 +386,7 @@ require_once dirname(__DIR__) . '/config.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -389,7 +396,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

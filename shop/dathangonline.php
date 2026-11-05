@@ -228,23 +228,23 @@ include BASE_PATH . 'includes/header.php';
                             <h4 class="card-title text-info"><i class="fas fa-truck mr-2"></i> Thông tin Nhận hàng</h4>
                         </div>
                         <div class="card-body">
-                            <form method="post" action="<?php echo BASE_URL; ?>shop/dathangonline.php?action=submit">
+                            <form method="post" action="<?= e(BASE_URL) ?>shop/dathangonline.php?action=submit">
                                 <?= csrf_field() ?>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Họ tên người nhận <span class="text-danger">*</span></label>
-                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= htmlspecialchars($default_name) ?>"/>
+                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= e($default_name) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Số điện thoại <span class="text-danger">*</span></label>
-                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx" value="<?= htmlspecialchars($default_phone) ?>"/>
+                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx" value="<?= e($default_phone) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Email nhận xác nhận đơn hàng <span class="text-danger">*</span></label>
-                                    <input name="email_kh" required class="form-control" type="email" placeholder="example@gmail.com" value="<?= htmlspecialchars($default_email) ?>"/>
+                                    <input name="email_kh" required class="form-control" type="email" placeholder="example@gmail.com" value="<?= e($default_email) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."><?= htmlspecialchars($default_address) ?></textarea>
+                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."><?= e($default_address) ?></textarea>
                                 </div>
                                 <div class="form-group mb-4">
                                     <label class="font-weight-bold">Ghi chú (nếu có)</label>
@@ -268,8 +268,8 @@ include BASE_PATH . 'includes/header.php';
                                 <?php foreach($orderProducts as $sp): ?>
                                 <li class="list-group-item d-flex justify-content-between lh-condensed px-0">
                                     <div>
-                                        <h6 class="my-0"><?= htmlspecialchars($sp['tensp']) ?></h6>
-                                        <small class="text-muted">SL: <?= $sp['qty_in_cart'] ?><?php if (!empty($sp['order_size'])): ?> · Size: <?= $sp['order_size'] ?><?php endif; ?></small>
+                                        <h6 class="my-0"><?= e($sp['tensp']) ?></h6>
+                                        <small class="text-muted">SL: <?= (int)$sp['qty_in_cart'] ?><?php if (!empty($sp['order_size'])): ?> · Size: <?= (int)$sp['order_size'] ?><?php endif; ?></small>
                                     </div>
                                     <span class="text-muted"><?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>&nbsp;đ</span>
                                 </li>
