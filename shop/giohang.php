@@ -44,6 +44,10 @@ require_once dirname(__DIR__) . '/config.php';
 
             if (isset($_POST['quantity'])) {
                 foreach ($_POST['quantity'] as $masp => $quantity) {
+                    $masp = sql_int($masp);          // chống SQLi: ID sản phẩm phải là số nguyên dương
+                    if ($masp <= 0 || !is_scalar($quantity)) {
+                        continue;
+                    }
                     if ($quantity == 0) {
                         unset($_SESSION["giohang"][$masp]);
                     } else {
@@ -73,7 +77,10 @@ require_once dirname(__DIR__) . '/config.php';
                     }
                 }
             } elseif (isset($_GET['masp'])) {
-                $masp = $_GET['masp'];
+                $masp = sql_int($_GET['masp']);  // chống SQLi: ID sản phẩm phải là số nguyên dương
+                if ($masp <= 0) {
+                    return;
+                }
                 $quantity = isset($_GET['quantity']) ? (int)$_GET['quantity'] : 1;
                 $size = isset($_GET['size']) ? (int)$_GET['size'] : null;
 
@@ -109,7 +116,7 @@ require_once dirname(__DIR__) . '/config.php';
 
             case "delete":
                 if (isset($_GET['masp'])) {
-                    unset($_SESSION["giohang"][$_GET['masp']]);
+                    unset($_SESSION["giohang"][sql_int($_GET['masp'])]);
                 }
                 header('Location:./giohang.php');// cho đẹp đường dẫn
                 break;
@@ -125,7 +132,11 @@ require_once dirname(__DIR__) . '/config.php';
                     header('Location: ./giohang.php');
                     exit;
                 } elseif (isset($_POST['dathang'])) { //Đặt hàng sản phẩm
-                    $chuyen = $_POST['quantity'];
+                    $chuyen = [];
+                    foreach ((array)($_POST['quantity'] ?? []) as $k => $v) {
+                        $k = sql_int($k);
+                        if ($k > 0) { $chuyen[$k] = max(0, sql_int($v)); }
+                    }
                     $_SESSION['chuyen'] = $chuyen;
                     // Also pass sizes to checkout
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
@@ -133,7 +144,11 @@ require_once dirname(__DIR__) . '/config.php';
                     header('Location: ./infodathang.php');
                     exit;
                 } elseif (isset($_POST['thanhtoanonline'])) { //Đặt hàng sản phẩm
-                    $chuyen = $_POST['quantity'];
+                    $chuyen = [];
+                    foreach ((array)($_POST['quantity'] ?? []) as $k => $v) {
+                        $k = sql_int($k);
+                        if ($k > 0) { $chuyen[$k] = max(0, sql_int($v)); }
+                    }
                     $_SESSION['chuyen'] = $chuyen;
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
 
@@ -147,7 +162,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if (!empty($_SESSION["giohang"])) {
         $products = mysqli_query($con,
-            "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN (" . implode(",", array_keys($_SESSION["giohang"])) . ")");
+            "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN (" . sql_int_list(array_keys($_SESSION["giohang"])) . ")");
         
         // Query stock for all cart products
         $cartMasps = array_keys($_SESSION['giohang']);

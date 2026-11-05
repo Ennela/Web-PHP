@@ -29,6 +29,8 @@
                 // Đăng nhập thành công với bcrypt hash
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
+                $_SESSION['role'] = 'admin';
+                session_regenerate_id(true);
                 header('Location: trangchu.php');
                 exit;
             } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
@@ -41,6 +43,8 @@
 
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
+                $_SESSION['role'] = 'admin';
+                session_regenerate_id(true);
                 header('Location: trangchu.php');
                 exit;
             } else {

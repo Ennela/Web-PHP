@@ -1,6 +1,6 @@
 <?php
     
-    session_start();
+    require_once __DIR__ . '/admin_guard.php';
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
@@ -47,7 +47,7 @@
     include_once 'connect_db.php';
 include_once 'function.php';
     if (isset($_GET['id'])) {
-        $sql_query   = "SELECT * FROM tbl_qlthanhvien WHERE id=".$_GET['id'];
+        $sql_query   = "SELECT * FROM tbl_qlthanhvien WHERE id=".sql_int($_GET['id']);
         $result_set  = mysqli_query($con, $sql_query);
         $fetched_row = mysqli_fetch_array($result_set);
     }
@@ -66,13 +66,21 @@ include_once 'function.php';
         
         // sql query for inserting data into database
         
-        $sql_query
-            = "UPDATE tbl_qlthanhvien SET hoten='$hoten',gioitinh='$gioitinh',ngaysinh='$ngaysinh',diachicuthe='$diachicuthe',chucvu='$chucvu',motacongviec='$motacongviec' WHERE id="
-            .$_GET['id'];
+        // Prepared statement: du lieu nguoi dung duoc bind, khong noi chuoi vao SQL
+        foreach (['hoten', 'gioitinh', 'diachicuthe', 'chucvu', 'motacongviec'] as $__k) {
+            $$__k = is_scalar($$__k) ? (string)$$__k : '';
+        }
+        $__ngaysinh = (int)$ngaysinh;
+        $__id       = sql_int($_GET['id']);
+        $__stmt = mysqli_prepare($con,
+            "UPDATE tbl_qlthanhvien SET hoten=?, gioitinh=?, ngaysinh=?, diachicuthe=?, chucvu=?, motacongviec=? WHERE id=?");
+        mysqli_stmt_bind_param($__stmt, "ssisssi", $hoten, $gioitinh, $__ngaysinh, $diachicuthe, $chucvu, $motacongviec, $__id);
+        $__ok = mysqli_stmt_execute($__stmt);
+        mysqli_stmt_close($__stmt);
         // sql query for inserting data into database
 
         // sql query execution function
-        if (mysqli_query($con, $sql_query)) {
+        if ($__ok) {
             ?>
             <script type="text/javascript">
                 alert('D? li?u du?c chèn thành công ');

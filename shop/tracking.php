@@ -4,8 +4,8 @@ session_start();
 
 include BASE_PATH . 'includes/connect.php';
 
-$orderCode = isset($_GET['order']) ? mysqli_real_escape_string($con, $_GET['order']) : '';
-$token = isset($_GET['token']) ? mysqli_real_escape_string($con, $_GET['token']) : '';
+$orderCode = (isset($_GET['order']) && is_string($_GET['order'])) ? $_GET['order'] : '';
+$token = (isset($_GET['token']) && is_string($_GET['token'])) ? $_GET['token'] : '';
 
 $error = '';
 $orderData = null;
@@ -15,16 +15,23 @@ if (empty($orderCode) || empty($token)) {
     $error = "Đường dẫn không hợp lệ. Vui lòng kiểm tra lại link trong email của bạn.";
 } else {
     // Kiểm tra đơn hàng và token
-    $query = "SELECT * FROM `oder` WHERE `order_code` = '$orderCode' AND `token` = '$token' LIMIT 1";
-    $result = mysqli_query($con, $query);
+    // Prepared statement: order_code / token do người dùng cung cấp → bind, không nối chuỗi
+    $__stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND `token` = ? LIMIT 1");
+    mysqli_stmt_bind_param($__stmt, "ss", $orderCode, $token);
+    mysqli_stmt_execute($__stmt);
+    $result = mysqli_stmt_get_result($__stmt);
+    mysqli_stmt_close($__stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $orderData = mysqli_fetch_assoc($result);
 
         // Lấy chi tiết đơn hàng
-        $orderId = $orderData['id'];
-        $detailsQuery = "SELECT c.*, p.tensp, p.anhdaidien FROM `oder_chitiet` c JOIN `tbl_qlsanpham` p ON c.masp = p.masp WHERE c.madonhang = '$orderId'";
-        $detailsResult = mysqli_query($con, $detailsQuery);
+        $orderId = (int)$orderData['id'];
+        $__stmt2 = mysqli_prepare($con, "SELECT c.*, p.tensp, p.anhdaidien FROM `oder_chitiet` c JOIN `tbl_qlsanpham` p ON c.masp = p.masp WHERE c.madonhang = ?");
+        mysqli_stmt_bind_param($__stmt2, "i", $orderId);
+        mysqli_stmt_execute($__stmt2);
+        $detailsResult = mysqli_stmt_get_result($__stmt2);
+        mysqli_stmt_close($__stmt2);
         if ($detailsResult) {
             while ($row = mysqli_fetch_assoc($detailsResult)) {
                 $orderDetails[] = $row;

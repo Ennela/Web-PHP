@@ -1,6 +1,6 @@
 <?php
 
-    session_start();
+    require_once __DIR__ . '/admin_guard.php';
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
@@ -20,7 +20,7 @@
     include_once 'connect_db.php';
     include_once 'function.php';
     if (isset($_GET['id'])) {
-        $sql_query = "SELECT * FROM tbl_qlbaidang WHERE id=" . $_GET['id'];
+        $sql_query = "SELECT * FROM tbl_qlbaidang WHERE id=" . sql_int($_GET['id']);
         $result_set = mysqli_query($con, $sql_query);
         $fetched_row = mysqli_fetch_array($result_set);
     }
@@ -40,7 +40,7 @@
                 $anhdaidien = $result1['path'];
             }
             $sql_query1
-                = "UPDATE tbl_qlbaidang SET anhdaidien='$anhdaidien' WHERE id=" . $_GET['id'];
+                = "UPDATE tbl_qlbaidang SET anhdaidien='" . sql_esc($con, $anhdaidien) . "' WHERE id=" . sql_int($_GET['id']);
             $result_set1 = mysqli_query($con, $sql_query1);
 
 
@@ -54,7 +54,7 @@
                 $anhgiuoithieu1 = $result2['path'];
             }
             $sql_query2
-                = "UPDATE tbl_qlbaidang SET anhgiuoithieu1='$anhgiuoithieu1' WHERE id=" . $_GET['id'];
+                = "UPDATE tbl_qlbaidang SET anhgiuoithieu1='" . sql_esc($con, $anhgiuoithieu1) . "' WHERE id=" . sql_int($_GET['id']);
             $result_set2 = mysqli_query($con, $sql_query2);
         }
         if (isset($_FILES['anhgiuoithieu2']) && !empty($_FILES['anhgiuoithieu2']['name'][0])) {
@@ -66,18 +66,27 @@
                 $anhgiuoithieu2 = $result3['path'];
             }
             $sql_query3
-                = "UPDATE tbl_qlbaidang SET anhgiuoithieu2='$anhgiuoithieu2' WHERE id=" . $_GET['id'];
+                = "UPDATE tbl_qlbaidang SET anhgiuoithieu2='" . sql_esc($con, $anhgiuoithieu2) . "' WHERE id=" . sql_int($_GET['id']);
             $result_set3 = mysqli_query($con, $sql_query3);
 
         }
-        $sql_query
-            = "UPDATE tbl_qlbaidang SET nguoiphutrach='$nguoiphutrach',tieude='$tieude',chedo='$chedo',noidung='$noidung',ngaytao='"
-            . time() . "',ngaycapnhat='" . time() . "' WHERE id=" . $_GET['id'];
+        // Prepared statement: du lieu nguoi dung duoc bind, khong noi chuoi vao SQL
+        foreach (['tieude', 'chedo', 'noidung'] as $__k) {
+            $$__k = is_scalar($$__k) ? (string)$$__k : '';
+        }
+        $__nguoi = sql_int($nguoiphutrach);
+        $__now   = time();
+        $__id    = sql_int($_GET['id']);
+        $__stmt  = mysqli_prepare($con,
+            "UPDATE tbl_qlbaidang SET nguoiphutrach=?, tieude=?, chedo=?, noidung=?, ngaytao=?, ngaycapnhat=? WHERE id=?");
+        mysqli_stmt_bind_param($__stmt, "isssiii", $__nguoi, $tieude, $chedo, $noidung, $__now, $__now, $__id);
+        $__ok = mysqli_stmt_execute($__stmt);
+        mysqli_stmt_close($__stmt);
         // Truy v?n SQL d? chèn d? li?u vào co s? d? li?u'
 
         // sql query execution function
 
-        if (mysqli_query($con, $sql_query)) {
+        if ($__ok) {
 
             ?>
             <script type="text/javascript">

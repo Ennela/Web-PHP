@@ -14,20 +14,27 @@ require_once dirname(__DIR__) . '/config.php';
     }
 
     if(isset($_POST['dangnhap'])) {
-        $taikhoan = $_POST['taikhoan'];
-        $matkhau = $_POST['matkhau'];
+        $taikhoan = is_string($_POST['taikhoan'] ?? null) ? $_POST['taikhoan'] : '';
+        $matkhau = is_string($_POST['matkhau'] ?? null) ? $_POST['matkhau'] : '';
         if($taikhoan=='' || $matkhau ==''){
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
             header('Location: dangnhap.php');
             exit;
         }else{
-            $sql_select_admin = mysqli_query($con,"SELECT * FROM tbl_tkkhachhang WHERE username='$taikhoan' AND password='$matkhau' LIMIT 1");
+            // Prepared statement: chống SQL Injection (vd: ' OR '1'='1)
+            $__stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? AND password = ? LIMIT 1");
+            mysqli_stmt_bind_param($__stmt, "ss", $taikhoan, $matkhau);
+            mysqli_stmt_execute($__stmt);
+            $sql_select_admin = mysqli_stmt_get_result($__stmt);
+            mysqli_stmt_close($__stmt);
             $count = mysqli_num_rows($sql_select_admin);
             $row_dangnhap = mysqli_fetch_array($sql_select_admin);
             if($count>0){
+                session_regenerate_id(true);
                 $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
                 $_SESSION['makh'] = $row_dangnhap['makh'];
                 header('Location: ' . BASE_URL . 'home/trangchu.php');
+                exit;
 
             }else{
                 $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';

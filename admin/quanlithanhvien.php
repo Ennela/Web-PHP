@@ -1,6 +1,6 @@
 <?php
     
-    session_start();
+    require_once __DIR__ . '/admin_guard.php';
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
@@ -53,30 +53,11 @@
         exit;
     }
     if ( ! empty($_SESSION['locsanpham'])) {
-        $where = "";
-        foreach ($_SESSION['locsanpham'] as $field => $value) {
-            //tách mảng ra làm 2 $field và $value
-           
-            if ( ! empty($value)) {
-
-                switch ($field) {
-                    case 'hoten':
-                        
-                        $where .= ( ! empty($where)) ? " AND "."`".$field."` LIKE '%".$value."%'" : "`".$field."` LIKE '%".$value."%'";
-
-                        break;
-                    default:
-                        $where .= ( ! empty($where)) ? " AND "."`".$field."` = ".$value."" : "`".$field."` = ".$value."";
-                        break;
-                }
-            }
-        }
-        extract($_SESSION['locsanpham']);//tự động lấy ra biến id và hoten
+        // Whitelist ten cot + escape gia tri (chong SQL Injection)
+        list($where, $__filter) = sql_build_filter($con, 'tbl_qlthanhvien', $_SESSION['locsanpham'], ['hoten']);
+        extract($__filter, EXTR_SKIP);
     }
-    $item_per_page = ! empty($_GET['per_page']) ? $_GET['per_page'] : 6;
-    $current_page  = ! empty($_GET['page']) ? $_GET['page']
-        : 1; //Trang hiện tại
-    $offset        = ($current_page - 1) * $item_per_page;
+    list($item_per_page, $current_page, $offset) = sql_pagination($_GET['per_page'] ?? null, $_GET['page'] ?? null);
     $totalRecords = mysqli_query($con, "SELECT * FROM `tbl_qlthanhvien`");
     $totalRecords = $totalRecords->num_rows;
     $totalPages   = ceil($totalRecords / $item_per_page);
@@ -307,8 +288,13 @@
                                 <td class="text-center doimau"><a
                                             href="./edit_qlthanhvien.php?id=<?= $row['id'] ?>"><i class="fas fa-edit mr-1"></i>Sửa</a>
                                 </td>
-                                <td class="text-center doimau"><a
-                                            href="./delete_qlthanhvien.php?id=<?= $row['id'] ?>"><i class="fas fa-trash-alt mr-1"></i>Xóa</a>
+                                <td class="text-center doimau">
+                                    <form action="./delete_qlthanhvien.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thành viên này?');">
+                                        <input type="hidden" name="id" value="<?= htmlspecialchars($row['id']) ?>">
+                                        <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:600; padding:0; text-decoration:underline;">
+                                            <i class="fas fa-trash-alt mr-1"></i>Xóa
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             <?php

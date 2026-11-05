@@ -1,6 +1,6 @@
 <?php
     
-    session_start();
+    require_once __DIR__ . '/admin_guard.php';
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
@@ -82,14 +82,19 @@
             }
         }
         
-        $sql_query
-            = "INSERT INTO tbl_qlbaidang(nguoiphutrach,anhgiuoithieu1,anhgiuoithieu2,anhdaidien,tieude,chedo,noidung,ngaytao,ngaycapnhat) VALUES('$nguoiphutrach','$anhgiuoithieu1','$anhgiuoithieu2','$anhdaidien','$tieude','$chedo','$noidung','"
-            .time()."','".time()."')";
-        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
-        
-        // sql query execution function
+        // Prepared statement: dữ liệu người dùng được bind, không nối chuỗi vào SQL
+        foreach (['tieude', 'chedo', 'noidung'] as $__k) {
+            $$__k = is_scalar($$__k) ? (string)$$__k : '';
+        }
+        $__nguoi = sql_int($nguoiphutrach);
+        $__now   = time();
+        $__stmt  = mysqli_prepare($con,
+            "INSERT INTO tbl_qlbaidang(nguoiphutrach,anhgiuoithieu1,anhgiuoithieu2,anhdaidien,tieude,chedo,noidung,ngaytao,ngaycapnhat) VALUES(?,?,?,?,?,?,?,?,?)");
+        mysqli_stmt_bind_param($__stmt, "issssssii", $__nguoi, $anhgiuoithieu1, $anhgiuoithieu2, $anhdaidien, $tieude, $chedo, $noidung, $__now, $__now);
+        $__ok = mysqli_stmt_execute($__stmt);
+        mysqli_stmt_close($__stmt);
 
-        if (mysqli_query($con, $sql_query)) {
+        if ($__ok) {
             ?>
             <script type="text/javascript">
                 alert('Dữ liệu đã được đưa vào');

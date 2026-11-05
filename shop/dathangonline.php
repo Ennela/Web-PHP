@@ -15,11 +15,11 @@ $total = 0;
 $orderProducts = array();
 
 if (!empty($cart)) {
-    $ids = implode(",", array_keys($cart));
+    $ids = sql_int_list(array_keys($cart));
     if(!empty($ids)) {
          $query = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN ($ids)");
          while ($row = mysqli_fetch_array($query)) {
-             $qty = $cart[$row['masp']];
+             $qty = (int)($cart[$row['masp']] ?? 0);
              if ($qty > 0) {
                  $row['qty_in_cart'] = $qty;
                  $row['order_size'] = isset($cartSizes[$row['masp']]) ? (int)$cartSizes[$row['masp']] : null;
@@ -72,27 +72,37 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
         exit;
     }
 
-    $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
+    $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : null;
     require_once BASE_PATH . 'includes/order_helper.php';
     $orderCode = generateOrderCode($con);
-    $email_safe = mysqli_real_escape_string($con, $email_kh);
     $token = bin2hex(random_bytes(16));
-    $tenkh_safe = mysqli_real_escape_string($con, $tenkh);
-    $sdt_safe = mysqli_real_escape_string($con, $sdt);
-    $diachi_safe = mysqli_real_escape_string($con, $diachi);
-    $note_safe = mysqli_real_escape_string($con, $note);
-    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$token', '$tenkh_safe', '$sdt_safe', '$email_safe', '$diachi_safe', '$note_safe', '$total', '" . time() . "', 'PENDING', 'UNPAID', $makh_val)");
-    $orderID = $con->insert_id;
+    // Prepared statements: thông tin khách hàng được bind, không nối chuỗi vào SQL
+    $__tenkh  = is_scalar($tenkh)    ? (string)$tenkh    : '';
+    $__sdt    = is_scalar($sdt)      ? (string)$sdt      : '';
+    $__diachi = is_scalar($diachi)   ? (string)$diachi   : '';
+    $__note   = is_scalar($note)     ? (string)$note     : '';
+    $__email  = is_scalar($email_kh) ? (string)$email_kh : '';
+    $__tong   = (string)$total;
+    $__ngay   = time();
+    $__stmt = mysqli_prepare($con,
+        "INSERT INTO `oder` (`order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', ?)");
+    mysqli_stmt_bind_param($__stmt, "ssssssssii", $orderCode, $token, $__tenkh, $__sdt, $__email, $__diachi, $__note, $__tong, $__ngay, $makh_val);
+    $insertOrder = mysqli_stmt_execute($__stmt);
+    $orderID = mysqli_stmt_insert_id($__stmt);
+    mysqli_stmt_close($__stmt);
 
-    $insertString = "";
-    foreach ($orderProducts as $key => $sp) {
-        $sizeVal = !empty($sp['order_size']) ? "'" . (int)$sp['order_size'] . "'" : "NULL";
-        $insertString .= "(NULL, '$orderID', '{$sp['masp']}', '{$sp['qty_in_cart']}', $sizeVal, '{$sp['giasanpham']}', '" . time() . "', '" . time() . "')";
-        if ($key != count($orderProducts) - 1) {
-            $insertString .= ",";
-        }
+    $__stmtItem = mysqli_prepare($con,
+        "INSERT INTO `oder_chitiet` (`madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    foreach ($orderProducts as $sp) {
+        $__masp  = (int)$sp['masp'];
+        $__qty   = max(0, (int)$sp['qty_in_cart']);
+        $__size  = !empty($sp['order_size']) ? (int)$sp['order_size'] : null;
+        $__price = (string)$sp['giasanpham'];
+        $__t     = time();
+        mysqli_stmt_bind_param($__stmtItem, "iiiisii", $orderID, $__masp, $__qty, $__size, $__price, $__t, $__t);
+        mysqli_stmt_execute($__stmtItem);
     }
-    mysqli_query($con, "INSERT INTO `oder_chitiet` (`id`, `madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES " . $insertString . ";");
+    mysqli_stmt_close($__stmtItem);
 
     // Tồn kho đã được trừ trong validateAndDeductStock() ở trên
     unset($_SESSION['giohang']); 

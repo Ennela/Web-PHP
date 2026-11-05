@@ -2,7 +2,7 @@
 /**
  * AJAX endpoint for admin - returns HTML table with order detail (products + sizes).
  */
-session_start();
+require_once __DIR__ . '/admin_guard.php';
 if (empty($_SESSION['dangnhap1'])) {
     http_response_code(403);
     echo 'Không có quyền truy cập';

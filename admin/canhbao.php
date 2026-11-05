@@ -23,6 +23,8 @@ if (isset($_POST['dangnhap'])) {
             // Đăng nhập thành công với bcrypt hash
             $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
             $_SESSION['manv'] = $row_dangnhap['id'];
+            $_SESSION['role'] = 'admin';
+            session_regenerate_id(true);
             header('Location: trangchu.php');
             ob_end_flush();
             exit;
@@ -36,6 +38,8 @@ if (isset($_POST['dangnhap'])) {
 
             $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
             $_SESSION['manv'] = $row_dangnhap['id'];
+            $_SESSION['role'] = 'admin';
+            session_regenerate_id(true);
             header('Location: trangchu.php');
             ob_end_flush();
             exit;

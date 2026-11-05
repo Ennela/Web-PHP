@@ -4,10 +4,10 @@ session_start();
 
     include_once BASE_PATH . 'includes/connect.php';
     if (isset($_POST['dangki'])) {
-        $hoten = trim($_POST['hoten'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $taikhoan = trim($_POST['taikhoan'] ?? '');
-        $matkhau = trim($_POST['matkhau'] ?? '');
+        $hoten = is_string($_POST['hoten'] ?? null) ? trim($_POST['hoten']) : '';
+        $email = is_string($_POST['email'] ?? null) ? trim($_POST['email']) : '';
+        $taikhoan = is_string($_POST['taikhoan'] ?? null) ? trim($_POST['taikhoan']) : '';
+        $matkhau = is_string($_POST['matkhau'] ?? null) ? trim($_POST['matkhau']) : '';
 
         if ($hoten === '' || $email === '' || $taikhoan === '' || $matkhau === '') {
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
@@ -22,24 +22,35 @@ session_start();
             exit;
         }
 
-        // Check for duplicate username
-        $check_query = mysqli_query($con, "SELECT * FROM tbl_tkkhachhang WHERE username='$taikhoan' LIMIT 1");
+        // Check for duplicate username (prepared statement)
+        $__stmt = mysqli_prepare($con, "SELECT 1 FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
+        mysqli_stmt_bind_param($__stmt, "s", $taikhoan);
+        mysqli_stmt_execute($__stmt);
+        $check_query = mysqli_stmt_get_result($__stmt);
+        mysqli_stmt_close($__stmt);
         if (mysqli_num_rows($check_query) > 0) {
             $_SESSION['swal_error'] = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!';
             header('Location: dangki.php');
             exit;
         }
 
-        // Check for duplicate email
-        $check_email = mysqli_query($con, "SELECT * FROM tbl_tkkhachhang WHERE email='$email' LIMIT 1");
+        // Check for duplicate email (prepared statement)
+        $__stmt = mysqli_prepare($con, "SELECT 1 FROM tbl_tkkhachhang WHERE email = ? LIMIT 1");
+        mysqli_stmt_bind_param($__stmt, "s", $email);
+        mysqli_stmt_execute($__stmt);
+        $check_email = mysqli_stmt_get_result($__stmt);
+        mysqli_stmt_close($__stmt);
         if (mysqli_num_rows($check_email) > 0) {
             $_SESSION['swal_error'] = 'Email đã được sử dụng. Vui lòng dùng email khác!';
             header('Location: dangki.php');
             exit;
         }
 
-        $sql_query = "INSERT INTO tbl_tkkhachhang(hoten,email,username,password) VALUES('$hoten','$email','$taikhoan','$matkhau')";
-        if (mysqli_query($con, $sql_query)) {
+        $__stmt = mysqli_prepare($con, "INSERT INTO tbl_tkkhachhang(hoten,email,username,password) VALUES(?,?,?,?)");
+        mysqli_stmt_bind_param($__stmt, "ssss", $hoten, $email, $taikhoan, $matkhau);
+        $__ok = mysqli_stmt_execute($__stmt);
+        mysqli_stmt_close($__stmt);
+        if ($__ok) {
             $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
             header('Location: dangnhap.php');
             exit;

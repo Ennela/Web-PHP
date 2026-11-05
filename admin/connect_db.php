@@ -3,7 +3,7 @@
 // Uses Railway environment variables when available, falls back to local XAMPP defaults
 $host     = getenv('MYSQLHOST')     ?: '127.0.0.1';
 $user     = getenv('MYSQLUSER')     ?: 'root';
-$password = getenv('MYSQLPASSWORD') ?: '';
+$password = getenv('MYSQLPASSWORD') ?: '123456';
 $database = getenv('MYSQLDATABASE') ?: 'giaythethao2';
 $port     = getenv('MYSQLPORT')     ?: 3306;
 
@@ -13,3 +13,4 @@ if (mysqli_connect_errno()) {
     exit;
 }
 mysqli_set_charset($con, "utf8mb4");
+require_once dirname(__DIR__) . '/includes/sql_helper.php';

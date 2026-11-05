@@ -1,6 +1,6 @@
 <?php
 
-    session_start();
+    require_once __DIR__ . '/admin_guard.php';
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
@@ -27,31 +27,12 @@
         exit;
     }
     if (!empty($_SESSION['locsanpham1'])) {
-        $where = "";
-        foreach ($_SESSION['locsanpham1'] as $field => $value) {
-            //tách mảng ra làm 2 $field và $value
-
-            if (!empty($value)) {
-                switch ($field) {
-                    case 'tensp':
-
-                        $where .= (!empty($where)) ? " AND " . "`" . $field . "` LIKE '%" . $value . "%'" :
-                            "`" . $field . "` LIKE '%" . $value . "%'";
-
-                        break;
-                    default:
-                        $where .= (!empty($where)) ? " AND " . "`" . $field . "` = " . $value . "" :
-                            "`" . $field . "` = " . $value . "";
-                        break;
-                }
-            }
-        }
-        extract($_SESSION['locsanpham1']);//tự động lấy ra biến id và hoten
+        // Whitelist ten cot + escape gia tri (chong SQL Injection)
+        list($where, $__filter) = sql_build_filter($con, 'tbl_qlsanpham', $_SESSION['locsanpham1'], ['tensp']);
+        extract($__filter, EXTR_SKIP);
     }
 
-    $item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
-    $current_page = !empty($_GET['page']) ? $_GET['page'] : 1; //Trang hiện tại
-    $offset = ($current_page - 1) * $item_per_page;
+    list($item_per_page, $current_page, $offset) = sql_pagination($_GET['per_page'] ?? null, $_GET['page'] ?? null);
     $totalRecords = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham`");
     $totalRecords = $totalRecords->num_rows;
     $totalPages = ceil($totalRecords / $item_per_page);
@@ -341,8 +322,11 @@
                                 <td class="text-center doimau"><a
                                             href="./edit_qlsanpham.php?masp=<?= $row['masp'] ?>">Sửa</a>
                                 </td>
-                                <td class="text-center doimau"><a
-                                            href="./delete_qlsanpham.php?masp=<?= $row['masp'] ?>">Xóa</a>
+                                <td class="text-center doimau">
+                                    <form action="./delete_qlsanpham.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
+                                        <input type="hidden" name="masp" value="<?= htmlspecialchars($row['masp']) ?>">
+                                        <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:600; padding:0; text-decoration:underline;">Xóa</button>
+                                    </form>
                                 </td>
                             </tr>
                             <?php

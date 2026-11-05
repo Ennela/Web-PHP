@@ -1,6 +1,6 @@
 <?php
 
-    session_start();
+    require_once __DIR__ . '/admin_guard.php';
     if (!isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
@@ -22,7 +22,7 @@
     require_once dirname(__DIR__) . '/includes/inventory_helper.php';
 
     if (isset($_GET['masp'])) {
-        $sql_query = "SELECT * FROM tbl_qlsanpham WHERE masp=" . $_GET['masp'];
+        $sql_query = "SELECT * FROM tbl_qlsanpham WHERE masp=" . sql_int($_GET['masp']);
         $result_set = mysqli_query($con, $sql_query);
         $fetched_row = mysqli_fetch_array($result_set);
         // Load tồn kho hiện tại
@@ -48,7 +48,7 @@
                 $anhdaidien = $result1['path'];
             }
             $sql_query1
-                = "UPDATE tbl_qlsanpham SET anhdaidien='$anhdaidien' WHERE masp=" . $_GET['masp'];
+                = "UPDATE tbl_qlsanpham SET anhdaidien='" . sql_esc($con, $anhdaidien) . "' WHERE masp=" . sql_int($_GET['masp']);
 
             $result_set1 = mysqli_query($con, $sql_query1);
 
@@ -62,7 +62,7 @@
                 $anhgiuoithieu1 = $result2['path'];
             }
             $sql_query2
-                = "UPDATE tbl_qlsanpham SET anhgiuoithieu1='$anhgiuoithieu1' WHERE masp=" . $_GET['masp'];
+                = "UPDATE tbl_qlsanpham SET anhgiuoithieu1='" . sql_esc($con, $anhgiuoithieu1) . "' WHERE masp=" . sql_int($_GET['masp']);
 
             $result_set2 = mysqli_query($con, $sql_query2);
         }
@@ -75,17 +75,22 @@
                 $anhgiuoithieu2 = $result3['path'];
             }
             $sql_query3
-                = "UPDATE tbl_qlsanpham SET anhgiuoithieu2='$anhgiuoithieu2' WHERE masp=" . $_GET['masp'];
+                = "UPDATE tbl_qlsanpham SET anhgiuoithieu2='" . sql_esc($con, $anhgiuoithieu2) . "' WHERE masp=" . sql_int($_GET['masp']);
             $result_set3 = mysqli_query($con, $sql_query3);
         }
-        $sql_query
-            = "UPDATE tbl_qlsanpham SET tensp='$tensp',giasanpham='$giasanpham',giagoc='$giagoc',noidung='$noidung',ngaycapnhat='"
-            . time() . "',nhomsp='$nhomsp' WHERE masp=" . $_GET['masp'];
+        // Prepared statement: dữ liệu người dùng được bind, không nối chuỗi vào SQL
+        foreach (['tensp', 'giasanpham', 'giagoc', 'noidung', 'nhomsp'] as $__k) {
+            $$__k = is_scalar($$__k) ? (string)$$__k : '';
+        }
+        $__masp = sql_int($_GET['masp']);
+        $__now  = time();
+        $__stmt = mysqli_prepare($con,
+            "UPDATE tbl_qlsanpham SET tensp=?, giasanpham=?, giagoc=?, noidung=?, ngaycapnhat=?, nhomsp=? WHERE masp=?");
+        mysqli_stmt_bind_param($__stmt, "ssssisi", $tensp, $giasanpham, $giagoc, $noidung, $__now, $nhomsp, $__masp);
+        $__ok = mysqli_stmt_execute($__stmt);
+        mysqli_stmt_close($__stmt);
 
-        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
-        // sql query execution function
-
-        if (mysqli_query($con, $sql_query) && !isset($error)) {
+        if ($__ok && !isset($error)) {
 
             // === CẬP NHẬT TỒN KHO ===
             if (isset($_POST['stock']) && is_array($_POST['stock'])) {

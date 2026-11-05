@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once __DIR__ . '/admin_guard.php';
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 if (!isset($_SESSION['dangnhap1'])) {
     header('Location: canhbao.php');
@@ -61,7 +61,7 @@ if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
             mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
         }
     }
-    header('Location: quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . $_GET['page'] : ''));
+    header('Location: quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . sql_int($_GET['page'], 1) : ''));
     exit;
 }
 
@@ -74,30 +74,12 @@ if (
     exit;
 }
 if (!empty($_SESSION['locsanpham2'])) {
-    $where = "";
-    foreach ($_SESSION['locsanpham2'] as $field => $value) {
-        if (!empty($value)) {
-            switch ($field) {
-                case 'tenkh':
-                    $where .= (!empty($where)) ? " AND " . "`" . $field . "` LIKE '%" . $value . "%'" : "`" . $field . "` LIKE '%" . $value . "%'";
-                    break;
-                case 'status':
-                    $where .= (!empty($where)) ? " AND `status` = '" . mysqli_real_escape_string($con, $value) . "'" : "`status` = '" . mysqli_real_escape_string($con, $value) . "'";
-                    break;
-                default:
-                    $where .= (!empty($where)) ? " AND " . "`" . $field . "` = " . $value . "" : "`" . $field . "` = " . $value . "";
-                    break;
-
-            }
-        }
-    }
-    extract($_SESSION['locsanpham2']);
+    // Whitelist ten cot + escape gia tri (chong SQL Injection)
+        list($where, $__filter) = sql_build_filter($con, 'oder', $_SESSION['locsanpham2'], ['tenkh']);
+        extract($__filter, EXTR_SKIP);
 }
 
-$item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
-$current_page = !empty($_GET['page']) ? $_GET['page']
-    : 1;
-$offset = ($current_page - 1) * $item_per_page;
+list($item_per_page, $current_page, $offset) = sql_pagination($_GET['per_page'] ?? null, $_GET['page'] ?? null);
 $totalRecords = mysqli_query($con, "SELECT * FROM `oder`");
 $totalRecords = $totalRecords->num_rows;
 

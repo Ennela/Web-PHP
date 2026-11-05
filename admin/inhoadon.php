@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/admin_guard.php';
 if (empty($_SESSION['dangnhap1'])) {
     header('Location: canhbao.php');
     exit;

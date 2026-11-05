@@ -1,15 +1,10 @@
+<?php require_once __DIR__ . '/admin_guard.php'; ?>
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
 <head>
-    <title>Xoá sản phẩm</title>
+    <title>Xóa sản phẩm</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <style>
         .box-content {
             margin: 0 auto;
@@ -17,45 +12,63 @@ and open the template in the editor.
             border: 1px solid #ccc;
             text-align: center;
             padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-
-        #create_user form {
-            width: 200px;
-            margin: 40px auto;
+        h1 {
+            color: #dc2626;
         }
-
-        #create_user form input {
-            margin: 5px 0;
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            color: #2563eb;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 <?php
-    $error = false;
-    if (isset($_GET['masp']) && ! empty($_GET['masp'])) {
+    // Chặn mọi thao tác xóa qua URL GET
+    if (isset($_GET['masp'])) {
+        ?>
+        <div id="error-notify" class="box-content">
+            <h1>Không xóa thành công</h1>
+            <p>Thao tác xóa trực tiếp qua URL đã bị vô hiệu hóa vì lý do bảo mật!</p>
+            <a href="./quanlisanpham.php">Quay lại</a>
+        </div>
+        <?php
+        exit;
+    }
+
+    // Chỉ thực hiện khi gửi qua POST từ form có xác nhận
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['masp'])) {
         include './connect_db.php';
-        $result = mysqli_query($con,
-            "DELETE FROM `tbl_qlsanpham` WHERE `masp` = ".$_GET['masp']);
-        if ( ! $result) {
-            $error = "Không thể xóa sản phẩm.";
-        }
+        $__id   = sql_int($_POST['masp']);
+        $__stmt = mysqli_prepare($con, "DELETE FROM `tbl_qlsanpham` WHERE `masp` = ?");
+        mysqli_stmt_bind_param($__stmt, "i", $__id);
+        $result = mysqli_stmt_execute($__stmt);
+        mysqli_stmt_close($__stmt);
         mysqli_close($con);
-        if ($error !== false) {
+
+        if (!$result) {
             ?>
             <div id="error-notify" class="box-content">
-                <h1>Thông báo</h1>
-                <h4><?= $error ?></h4>
-                <a href="./index.php">Danh sách tài khoản</a>
-            </div>
-            <?php
-        } else { ?>
-            <div id="success-notify" class="box-content">
-                <h1>Xóa tài khoản thành công</h1>
+                <h1>Không xóa thành công</h1>
+                <p>Không thể xóa sản phẩm.</p>
                 <a href="./quanlisanpham.php">Quay lại</a>
             </div>
             <?php
-        } ?>
-        <?php
-    } ?>
+        } else {
+            ?>
+            <div id="success-notify" class="box-content">
+                <h1 style="color: #16a34a;">Xóa sản phẩm thành công</h1>
+                <a href="./quanlisanpham.php">Quay lại</a>
+            </div>
+            <?php
+        }
+    } else {
+        header('Location: quanlisanpham.php');
+        exit;
+    }
+?>
 </body>
 </html>
