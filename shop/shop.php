@@ -13,13 +13,13 @@ if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
 include BASE_PATH . 'includes/connect.php';
 
 // ===== UC1: Chọn danh mục sản phẩm =====
-$category = isset($_GET['category']) ? trim($_GET['category']) : '';
+$category = (isset($_GET['category']) && is_string($_GET['category'])) ? trim($_GET['category']) : '';
 
 // ===== UC3: Lọc & Sắp xếp =====
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$sort = isset($_GET['sort']) ? $_GET['sort'] : '';
-$price_min = isset($_GET['price_min']) && $_GET['price_min'] !== '' ? (int)$_GET['price_min'] : null;
-$price_max = isset($_GET['price_max']) && $_GET['price_max'] !== '' ? (int)$_GET['price_max'] : null;
+$search = (isset($_GET['search']) && is_string($_GET['search'])) ? trim($_GET['search']) : '';
+$sort = (isset($_GET['sort']) && is_string($_GET['sort'])) ? $_GET['sort'] : '';
+$price_min = isset($_GET['price_min']) && $_GET['price_min'] !== '' ? sql_int($_GET['price_min']) : null;
+$price_max = isset($_GET['price_max']) && $_GET['price_max'] !== '' ? sql_int($_GET['price_max']) : null;
 
 // Build WHERE clause
 $where_clauses = [];
@@ -69,9 +69,7 @@ switch ($sort) {
 }
 
 // ===== UC4: Phân trang =====
-$item_per_page = !empty($_GET['per_page']) ? (int)$_GET['per_page'] : 9;
-$current_page = !empty($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($current_page - 1) * $item_per_page;
+list($item_per_page, $current_page, $offset) = sql_pagination($_GET['per_page'] ?? null, $_GET['page'] ?? null, 9, 60);
 
 $products = mysqli_query($con,
     "SELECT * FROM `tbl_qlsanpham`" . $where_sql . $order_sql . " LIMIT " . $item_per_page . " OFFSET " . $offset);

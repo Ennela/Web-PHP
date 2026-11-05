@@ -75,7 +75,7 @@ $cartItems = [];
 $grandTotal = 0;
 
 if (!empty($_SESSION['giohang'])) {
-    $ids = implode(",", array_keys($_SESSION['giohang']));
+    $ids = sql_int_list(array_keys($_SESSION['giohang']));
     $result = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN ($ids)");
     while ($row = mysqli_fetch_assoc($result)) {
         $item = $_SESSION['giohang'][$row['masp']];
