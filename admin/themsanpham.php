@@ -1,18 +1,23 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/admin_guard.php';
     
-    require_once __DIR__ . '/admin_guard.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
 
 ?>
@@ -30,73 +35,23 @@
 
         $nhomsp  = $_POST['nhomsp'];
 
-        // ảnh đại diện
-        //lấy tên đưa vào data
-//        $anhtam =$_FILES['anhdaidien']['name'];
-        $folder = "uploads/";
-//        $anhdaidien = $folder .= $anhtam ;
-        $anhdaidien    = $folder.$_FILES['anhdaidien']['name'];
-        $anhgiuoithieu1 = $folder.$_FILES['anhgiuoithieu1']['name'];
-        $anhgiuoithieu2 = $folder.$_FILES['anhgiuoithieu2']['name'];
-        
-        $kiemtra = true;
-        
-        //kiểm tra file bị trùng
-//        if (file_exists($anhdaidien)) {
-//            $kiemtra = false;
-//        }
-//
-        //kiểm tra đuôi
-        $layduoi   = strtolower(pathinfo($anhdaidien, PATHINFO_EXTENSION));
-        $layduoi1  = strtolower(pathinfo($anhgiuoithieu1, PATHINFO_EXTENSION));
-        $layduoi2  = strtolower(pathinfo($anhgiuoithieu2, PATHINFO_EXTENSION));
-        $duoichuan = array('jpg', 'jpeg', 'png', 'gif');
-        
-        if ( ! in_array($layduoi, $duoichuan)
-            && ! in_array($layduoi1, $duoichuan)
-            && ! in_array($layduoi2, $duoichuan)
-        ) {
-            $kiemtra = false;
-            ?>
-            <script type="text/javascript">
-                alert('file ảnh lỗi lấy sai tệp');
-                window.location.href = 'themsanpham.php';
-            </script>
-            <?php
+        try {
+            $images = app_upload_admin_images($_FILES, true);
+        } catch (InvalidArgumentException | RuntimeException $error) {
+            app_fail(422, $error->getMessage());
         }
+        $anhdaidien = $images['anhdaidien'];
+        $anhgiuoithieu1 = $images['anhgiuoithieu1'] ?? '';
+        $anhgiuoithieu2 = $images['anhgiuoithieu2'] ?? '';
+
+        $sql_query
+            = "INSERT INTO tbl_qlsanpham(tensp,anhgiuoithieu1,anhgiuoithieu2,anhdaidien,giasanpham,giagoc,noidung,ngaytao,nhomsp) VALUES('$tensp','$anhgiuoithieu1','$anhgiuoithieu2','$anhdaidien','$giasanpham','$giagoc','$noidung','"
+            .time()."','$nhomsp')";
+        // Truy vấn SQL để chèn dữ liệu vào cơ sở dữ liệu'
         
-
-        if ($kiemtra) {
-            // Đảm bảo thư mục uploads tồn tại và có quyền ghi
-            $uploadDir = __DIR__ . '/uploads/';
-            if (!is_dir($uploadDir)) {
-                @mkdir($uploadDir, 0775, true);
-            }
-            
-            if (is_writable($uploadDir)) {
-                move_uploaded_file($_FILES['anhdaidien']['tmp_name'], $uploadDir . $_FILES['anhdaidien']['name']);
-                move_uploaded_file($_FILES['anhgiuoithieu1']['tmp_name'],
-                    $uploadDir . $_FILES['anhgiuoithieu1']['name']);
-                move_uploaded_file($_FILES['anhgiuoithieu2']['tmp_name'],
-                    $uploadDir . $_FILES['anhgiuoithieu2']['name']);
-            }
-        } else {
-
-        }
-
-
-        // Prepared statement: dữ liệu người dùng được bind, không nối chuỗi vào SQL
-        foreach (['tensp', 'giasanpham', 'giagoc', 'noidung', 'nhomsp'] as $__k) {
-            $$__k = is_scalar($$__k) ? (string)$$__k : '';
-        }
-        $__now  = time();
-        $__stmt = mysqli_prepare($con,
-            "INSERT INTO tbl_qlsanpham(tensp,anhgiuoithieu1,anhgiuoithieu2,anhdaidien,giasanpham,giagoc,noidung,ngaytao,nhomsp) VALUES(?,?,?,?,?,?,?,?,?)");
-        mysqli_stmt_bind_param($__stmt, "sssssssis", $tensp, $anhgiuoithieu1, $anhgiuoithieu2, $anhdaidien, $giasanpham, $giagoc, $noidung, $__now, $nhomsp);
-        $__ok = mysqli_stmt_execute($__stmt);
-        mysqli_stmt_close($__stmt);
-
-        if ($__ok) {
+        // sql query execution function
+        
+        if (mysqli_query($con, $sql_query)) {
             ?>
             <script type="text/javascript">
                 alert('Dữ liệu đã được đưa vào');
@@ -192,11 +147,14 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                                Đăng xuất</button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -285,6 +243,7 @@
             <div class="w-1/2 m-auto ">
                 <form enctype="multipart/form-data" method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                    <?= csrf_field() ?>
                     <label class="block">
                         <span class="text-gray-700">Tên sản phẩm:</span>
                         <input type="text" name="tensp"
@@ -316,19 +275,19 @@
                         <label for="avatar">Chọn ảnh đại diện: </label>
                         <input type="file"
                                id="avatar" name="anhdaidien"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh giới thiệu 1: </label>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu1"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh giới thiệu 2: </label>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu2"
-                               accept="image/png, image/jpeg">
+                               accept="image/jpeg, image/png, image/webp, image/gif">
                     </div>
 
 

@@ -1,24 +1,31 @@
+# Applies to Apache/XAMPP deployments as well as the Docker image.
+Options -Indexes -MultiViews -ExecCGI
+DirectoryIndex index.php
+ServerSignature Off
+
 RewriteEngine On
 
-# Chặn tải trực tiếp các file nhạy cảm / cấu hình
-<FilesMatch "(^\.env.*|^composer\.(json|lock)$|^Dockerfile$|^docker-entrypoint\.sh$|^README\.md$|\.(sql|md|sh|log|ini)$)">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Deny from all
-    </IfModule>
-</FilesMatch>
+# Never trust an arbitrary X-Forwarded-Proto header to construct redirects.
+# HTTPS/proxy handling belongs to the application's configured trusted proxies.
 
+# Deny dotfiles, source-only code, credentials, database dumps and build tooling.
+RewriteRule "(^|/)(\.[^/]+|database|documents|deploy|scripts|scratch|backups?|secrets|certs|vendor|node_modules|includes|vnpay_php)(/|$)" - [R=404,L,NC]
+RewriteRule "(^|/)(config\.php|connect_db\.php|function\.php|pagination\.php|Dockerfile|Caddyfile|docker-entrypoint\.sh|composer\.(json|lock)|package(-lock)?\.json|README[^/]*)(/|$)" - [R=404,L,NC]
+RewriteRule "\.(sql|log|ini|conf|ya?ml|toml|sh|bak|backup|old|orig|save|swp|pem|key|p12|pfx)([./]|$)|~$" - [R=404,L,NC]
 
-# Redirect to HTTPS (Railway proxies via X-Forwarded-Proto)
-RewriteCond %{HTTP:X-Forwarded-Proto} =http
-RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Uploaded content is public only when its filename is a raster image and does
+# not contain a script extension, including double extensions and PATH_INFO.
+RewriteRule "^(admin|auth)/uploads/.*\.(php[0-9]*|phtml|pht|phar|cgi|pl|py|rb|sh|shtml|html?|svg)([./]|$)" - [R=404,L,NC]
+RewriteCond %{REQUEST_URI} !\.(png|jpe?g|gif|webp|avif|ico|bmp)$ [NC]
+RewriteRule "^(admin|auth)/uploads(/|$)" - [R=404,L,NC]
 
-# If file or directory exists, serve it directly
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
 
-# Otherwise, route to index.php
-RewriteRule ^$ /index.php [L]
+ErrorDocument 403 "Access denied."
+ErrorDocument 404 "Not found."

@@ -1,13 +1,15 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 include BASE_PATH . 'includes/connect.php';
 
 // ── Handle logout ──
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
     header('Location: ' . BASE_URL . 'auth/dangnhap.php');
     exit;
@@ -92,10 +94,14 @@ include BASE_PATH . 'includes/header.php';
 
             <div class="sidebar-nav-divider"></div>
 
-            <a href="?login=dangxuat" class="sidebar-nav-item logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Đăng xuất</span>
-            </a>
+            <form method="post" action="<?= BASE_URL ?>auth/thongtintaikhoan.php">
+                <?= csrf_field() ?>
+                <input type="hidden" name="login" value="dangxuat">
+                <button type="submit" class="sidebar-nav-item logout" style="width:100%;background:transparent;border-top:0;border-right:0;border-bottom:0;text-align:left;font-family:inherit;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </form>
         </nav>
     </aside>
 
@@ -126,7 +132,8 @@ include BASE_PATH . 'includes/header.php';
                 </div>
 
                 <!-- Profile Form -->
-                <form id="profileForm" onsubmit="return false;">
+                <form method="post" id="profileForm" onsubmit="return false;">
+                    <?= csrf_field() ?>
                     <div class="acc-form-row">
                         <div class="acc-form-group">
                             <label class="acc-form-label">Họ và tên *</label>
@@ -204,7 +211,8 @@ include BASE_PATH . 'includes/header.php';
                     Cập nhật mật khẩu
                 </div>
 
-                <form id="passwordForm" onsubmit="return false;">
+                <form method="post" id="passwordForm" onsubmit="return false;">
+                    <?= csrf_field() ?>
                     <div class="acc-form-group">
                         <label class="acc-form-label">Mật khẩu hiện tại</label>
                         <div class="password-input-wrap">
@@ -405,7 +413,8 @@ include BASE_PATH . 'includes/header.php';
             <button class="acc-modal-close"><i class="fas fa-times"></i></button>
         </div>
         <div class="acc-modal-body">
-            <form id="addressForm" onsubmit="return false;">
+            <form method="post" id="addressForm" onsubmit="return false;">
+                <?= csrf_field() ?>
                 <div class="acc-form-row">
                     <div class="acc-form-group">
                         <label class="acc-form-label">Họ tên người nhận *</label>

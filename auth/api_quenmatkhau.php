@@ -6,7 +6,9 @@
  * Trả về JSON
  */
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 header('Content-Type: application/json; charset=utf-8');
 

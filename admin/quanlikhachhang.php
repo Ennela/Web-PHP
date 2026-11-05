@@ -1,35 +1,59 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/admin_guard.php';
     
-    require_once __DIR__ . '/admin_guard.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
     include './connect_db.php';
     
     if ( ! empty($_GET['action']) && $_GET['action'] == 'search'
         && ! empty($_POST)
     ) {
-        $_SESSION['locsanpham3'] = $_POST;
+        $_SESSION['locsanpham3'] = array_intersect_key($_POST, array_flip(['makh', 'hoten']));
         header('Location: quanlikhachhang.php');
         exit;
     }
     if ( ! empty($_SESSION['locsanpham3'])) {
-        // Whitelist ten cot + escape gia tri (chong SQL Injection)
-        list($where, $__filter) = sql_build_filter($con, 'tbl_tkkhachhang', $_SESSION['locsanpham3'], ['hoten']);
-        extract($__filter, EXTR_SKIP);
+        $where = "";
+        foreach (array_intersect_key($_SESSION['locsanpham3'], array_flip(['makh', 'hoten'])) as $field => $value) {
+            //tách mảng ra làm 2 $field và $value
+            
+            if ( ! empty($value)) {
+                switch ($field) {
+                    case 'hoten':
+                        $where .= ( ! empty($where)) ? " AND "."`".$field
+                            ."` LIKE '%".$value."%'"
+                            : "`".$field."` LIKE '%".$value."%'";
+                        break;
+                    default:
+                        $where .= ( ! empty($where)) ? " AND "."`".$field."` = "
+                            .$value."" : "`".$field."` = ".$value."";
+                        break;
+                }
+            }
+        }
+        extract(array_intersect_key($_SESSION['locsanpham3'], array_flip(['makh', 'hoten'])));//tự động lấy ra biến id và hoten
     }
     
-    list($item_per_page, $current_page, $offset) = sql_pagination($_GET['per_page'] ?? null, $_GET['page'] ?? null);
+    $item_per_page = ! empty($_GET['per_page']) ? $_GET['per_page'] : 6;
+    $current_page  = ! empty($_GET['page']) ? $_GET['page']
+        : 1; //Trang hiện tại
+    $offset        = ($current_page - 1) * $item_per_page;
     $totalRecords  = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang`");
     $totalRecords  = $totalRecords->num_rows;
     
@@ -129,11 +153,14 @@
                                         class="fa fa-user fa-fw"></i> Đăng nhập
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Đăng xuất</a>
+                                Đăng xuất</button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -241,6 +268,7 @@
             <div class="w-full px-6 pb-4 animate-in" style="animation-delay: 0.1s;">
                 <div class="search-bar">
                     <form action="quanlikhachhang.php?action=search" method="POST" class="flex items-center gap-3 flex-1">
+                        <?= csrf_field() ?>
                         <input type="text"
                                placeholder="Mã khách hàng ..." name="makh"
                                value="<?=!empty($makh)?$makh:""?>"/>
@@ -278,12 +306,10 @@
                                 <td class="text-center"><?= $row['hoten'] ?></td>
                                 <td class="text-center"><?= date('d/m/Y H:i',
                                         $row['ngaytao']) ?></td>
-                                <td class="text-center doimau">
-                                    <form action="./delete_qlkhachhang.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng này?');">
-                                        <input type="hidden" name="makh" value="<?= htmlspecialchars($row['makh']) ?>">
-                                        <button type="submit" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:600; padding:0; text-decoration:underline;">
-                                            <i class="fas fa-trash-alt mr-1"></i>Xóa
-                                        </button>
+                                <td class="text-center doimau"><form method="post" action="./delete_qlkhachhang.php" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                        <input type="hidden" name="makh" value="<?= $row['makh'] ?>">
+                                        <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;"><i class="fas fa-trash-alt mr-1"></i>Xoá</button>
                                     </form>
                                 </td>
 

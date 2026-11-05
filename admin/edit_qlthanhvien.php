@@ -1,18 +1,23 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/admin_guard.php';
     
-    require_once __DIR__ . '/admin_guard.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     if ( ! isset($_SESSION['dangnhap1'])) {
         header('Location: canhbao.php');
         exit;
     }
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: index.php');
+        exit;
     }
 
 ?>
@@ -46,41 +51,30 @@
 <?php
     include_once 'connect_db.php';
 include_once 'function.php';
-    if (isset($_GET['id'])) {
-        $sql_query   = "SELECT * FROM tbl_qlthanhvien WHERE id=".sql_int($_GET['id']);
-        $result_set  = mysqli_query($con, $sql_query);
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    $fetched_row = null;
+    if ($id > 0) {
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlthanhvien WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+        $result_set = mysqli_stmt_get_result($stmt);
         $fetched_row = mysqli_fetch_array($result_set);
+        mysqli_stmt_close($stmt);
     }
     if (isset($_POST['btn-save'])) {
-        // variables for input data
-        $hoten        = $_POST['hoten'];
-        $gioitinh     = $_POST['gioitinh'];
-        $ngaysinh     = $_POST['ngaysinh'];
-        $diachicuthe  = $_POST['diachicuthe'];
-        $chucvu       = $_POST['chucvu'];
-        $motacongviec = $_POST['motacongviec'];
+        $hoten        = $_POST['hoten'] ?? '';
+        $gioitinh     = $_POST['gioitinh'] ?? '';
+        $ngaysinh     = $_POST['ngaysinh'] ?? '';
+        $diachicuthe  = $_POST['diachicuthe'] ?? '';
+        $chucvu       = $_POST['chucvu'] ?? '';
+        $motacongviec = $_POST['motacongviec'] ?? '';
 
-        $ngaysinh = strtotime($ngaysinh);
+        $ngaysinh_ts = strtotime($ngaysinh) ?: 0;
 
-        // variables for input data
-        
-        // sql query for inserting data into database
-        
-        // Prepared statement: du lieu nguoi dung duoc bind, khong noi chuoi vao SQL
-        foreach (['hoten', 'gioitinh', 'diachicuthe', 'chucvu', 'motacongviec'] as $__k) {
-            $$__k = is_scalar($$__k) ? (string)$$__k : '';
-        }
-        $__ngaysinh = (int)$ngaysinh;
-        $__id       = sql_int($_GET['id']);
-        $__stmt = mysqli_prepare($con,
-            "UPDATE tbl_qlthanhvien SET hoten=?, gioitinh=?, ngaysinh=?, diachicuthe=?, chucvu=?, motacongviec=? WHERE id=?");
-        mysqli_stmt_bind_param($__stmt, "ssisssi", $hoten, $gioitinh, $__ngaysinh, $diachicuthe, $chucvu, $motacongviec, $__id);
-        $__ok = mysqli_stmt_execute($__stmt);
-        mysqli_stmt_close($__stmt);
-        // sql query for inserting data into database
-
-        // sql query execution function
-        if ($__ok) {
+        $stmt_up = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET hoten = ?, gioitinh = ?, ngaysinh = ?, diachicuthe = ?, chucvu = ?, motacongviec = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt_up, "ssssssi", $hoten, $gioitinh, $ngaysinh_ts, $diachicuthe, $chucvu, $motacongviec, $id);
+        if (mysqli_stmt_execute($stmt_up)) {
+            mysqli_stmt_close($stmt_up);
             ?>
             <script type="text/javascript">
                 alert('D? li?u du?c chèn thành công ');
@@ -155,11 +149,14 @@ include_once 'function.php';
                                         class="fa fa-user fa-fw"></i> Ðang nh?p
                             </a>
                             <div class="border border-gray-800"></div>
-                            <a class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
-                               href="?login=dangxuat"
+                            <form method="post" style="margin:0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="login" value="dangxuat">
+                                <button type="submit" class="block p-2 text-sm text-white no-underline hover:bg-blue-800 hover:no-underline"
                                style="width: 120px;"><i
                                         class="fas fa-sign-out-alt fa-fw"></i>
-                                Ðang xu?t</a>
+                                Ðang xu?t</button>
+                            </form>
                         </div>
                     </div>
                 </li>
@@ -251,6 +248,7 @@ include_once 'function.php';
             <div class="w-1/2 m-auto ">
                 <form method="post"
                       class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                    <?= csrf_field() ?>
                     <label class="block ">
                         <span class="text-gray-700">H? và tên:</span>
                         <input value="<?php

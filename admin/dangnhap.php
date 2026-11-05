@@ -1,9 +1,10 @@
 <?php
+require_once dirname(__DIR__) . '/config.php';
 
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     include './connect_db.php';
-?>
-<?php
     // session_destroy();
     // unset('dangnhap');
     if (isset($_POST['dangnhap'])) {
@@ -27,6 +28,8 @@
 
             if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
                 // Đăng nhập thành công với bcrypt hash
+                session_regenerate_id(true);
+                csrf_rotate_token();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
                 $_SESSION['role'] = 'admin';
@@ -41,6 +44,8 @@
                 mysqli_stmt_execute($updateStmt);
                 mysqli_stmt_close($updateStmt);
 
+                session_regenerate_id(true);
+                csrf_rotate_token();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
                 $_SESSION['role'] = 'admin';
@@ -133,6 +138,7 @@
 <div class="h-screen flex justify-center items-center">
     <div class="bg-white rounded-lg w-2/5 px-16 py-16">
         <form method="post">
+            <?= csrf_field() ?>
             <div class="flex font-bold justify-center">
                 <img class="h-20 w-20"
                      src="https://raw.githubusercontent.com/sefyudem/Responsive-Login-Form/master/img/avatar.svg">

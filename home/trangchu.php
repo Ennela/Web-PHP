@@ -1,19 +1,22 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 //if (!isset($_SESSION['dangnhap'])) {
 //
 //    header('Location: index.php');
 //}
-if (isset($_GET['login'])) {
-    $dangxuat = $_GET['login'];
+if (isset($_POST['login'])) {
+    $dangxuat = $_POST['login'];
 } else {
     $dangxuat = '';
 }
 if ($dangxuat == 'dangxuat') {
     session_destroy();
     header('Location: trangchu.php');
+    exit;
 }
 include BASE_PATH . 'includes/header.php';
 

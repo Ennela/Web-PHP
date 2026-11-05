@@ -1,11 +1,13 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 // Xử lý đăng xuất
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
     header('Location: ' . BASE_URL . 'home/trangchu.php');
     exit;
@@ -755,7 +757,10 @@ function orderDetailAction(orderId, action, btn) {
     
     fetch('<?= BASE_URL ?>shop/api_order_action.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
         body: JSON.stringify({ action: action, order_id: orderId })
     })
     .then(r => r.json())

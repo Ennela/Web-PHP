@@ -7,6 +7,10 @@
 
     const BASE = document.querySelector('meta[name="base-url"]')?.content || '/WEB-PHP/';
 
+    const csrfHeaders = () => ({
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+    });
+
     // ============================================================
     // TOAST NOTIFICATION SYSTEM
     // ============================================================
@@ -190,6 +194,7 @@
 
             fetch(BASE + 'auth/api_capnhat_thongtin.php', {
                 method: 'POST',
+                headers: csrfHeaders(),
                 body: formData
             })
                 .then(r => r.json())
@@ -259,6 +264,7 @@
 
             fetch(BASE + 'auth/api_upload_avatar.php', {
                 method: 'POST',
+                headers: csrfHeaders(),
                 body: fd
             })
                 .then(r => r.json())
@@ -357,6 +363,7 @@
 
             fetch(BASE + 'auth/api_doimatkhau.php', {
                 method: 'POST',
+                headers: csrfHeaders(),
                 body: fd
             })
                 .then(r => r.json())
@@ -551,6 +558,7 @@
 
             fetch(BASE + 'auth/api_diachi.php', {
                 method: 'POST',
+                headers: csrfHeaders(),
                 body: fd
             })
                 .then(r => r.json())
@@ -643,7 +651,7 @@
             const fd = new FormData();
             fd.append('action', 'delete');
             fd.append('id', deleteBtn.dataset.id);
-            fetch(BASE + 'auth/api_diachi.php', { method: 'POST', body: fd })
+            fetch(BASE + 'auth/api_diachi.php', { method: 'POST', headers: csrfHeaders(), body: fd })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) { Toast.success(data.message); loadAddresses(); }
@@ -659,7 +667,7 @@
             const fd = new FormData();
             fd.append('action', 'set_default');
             fd.append('id', defaultBtn.dataset.id);
-            fetch(BASE + 'auth/api_diachi.php', { method: 'POST', body: fd })
+            fetch(BASE + 'auth/api_diachi.php', { method: 'POST', headers: csrfHeaders(), body: fd })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) { Toast.success(data.message); loadAddresses(); }
@@ -747,7 +755,7 @@
 
             btnSaveSize.disabled = true;
 
-            fetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', body: fd })
+            fetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', headers: csrfHeaders(), body: fd })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -767,7 +775,7 @@
         const fd = new FormData();
         fd.append('action', 'delete');
         fd.append('id', id);
-        fetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', body: fd })
+        fetch(BASE + 'auth/api_sizegiay.php', { method: 'POST', headers: csrfHeaders(), body: fd })
             .then(r => r.json())
             .then(data => {
                 if (data.success) { Toast.success(data.message); loadSizes(); }

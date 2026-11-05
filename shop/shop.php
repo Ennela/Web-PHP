@@ -1,8 +1,10 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-if (isset($_GET['login']) && $_GET['login'] === 'dangxuat') {
+if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
     header('Location: shop.php');
     exit;
@@ -693,9 +695,14 @@ include BASE_PATH . 'includes/header.php';
                                 <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>" class="btn-editorial-outline" style="width: 48%;">
                                     <i class="fa fa-eye mb-1 d-block"></i> Chi Tiết
                                 </a>
-                                <a href="<?php echo BASE_URL; ?>shop/giohang.php?action=add&masp=<?= $row['masp'] ?>&quantity=1" class="btn-editorial-solid" style="width: 48%;">
-                                    <i class="fa fa-shopping-cart mb-1 d-block"></i> Mua Ngay
-                                </a>
+                                <form method="post" action="<?= BASE_URL ?>shop/giohang.php?action=add" style="width: 48%; margin: 0;">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="masp" value="<?= (int)$row['masp'] ?>">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn-editorial-solid" style="width: 100%; height: 100%;">
+                                        <i class="fa fa-shopping-cart mb-1 d-block"></i> Mua Ngay
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

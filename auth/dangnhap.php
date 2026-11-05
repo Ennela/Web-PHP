@@ -1,42 +1,58 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-    session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     include BASE_PATH . 'includes/connect.php';
 
-    if (isset($_GET['login'])) {
-        $dangxuat = $_GET['login'];
+    if (isset($_POST['login'])) {
+        $dangxuat = $_POST['login'];
     } else {
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
         header('Location: dangnhap.php');
+        exit;
     }
 
-    if(isset($_POST['dangnhap'])) {
-        $taikhoan = is_string($_POST['taikhoan'] ?? null) ? $_POST['taikhoan'] : '';
-        $matkhau = is_string($_POST['matkhau'] ?? null) ? $_POST['matkhau'] : '';
-        if($taikhoan=='' || $matkhau ==''){
+    if (isset($_POST['dangnhap'])) {
+        $taikhoan = trim($_POST['taikhoan'] ?? '');
+        $matkhau = trim($_POST['matkhau'] ?? '');
+        if ($taikhoan === '' || $matkhau === '') {
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
             header('Location: dangnhap.php');
             exit;
-        }else{
-            // Prepared statement: chống SQL Injection (vd: ' OR '1'='1)
-            $__stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? AND password = ? LIMIT 1");
-            mysqli_stmt_bind_param($__stmt, "ss", $taikhoan, $matkhau);
-            mysqli_stmt_execute($__stmt);
-            $sql_select_admin = mysqli_stmt_get_result($__stmt);
-            mysqli_stmt_close($__stmt);
-            $count = mysqli_num_rows($sql_select_admin);
-            $row_dangnhap = mysqli_fetch_array($sql_select_admin);
-            if($count>0){
+        } else {
+            $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
+            mysqli_stmt_bind_param($stmt, "s", $taikhoan);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row_dangnhap = mysqli_fetch_assoc($result);
+            mysqli_stmt_close($stmt);
+
+            $loginSuccess = false;
+            if ($row_dangnhap) {
+                if (password_verify($matkhau, $row_dangnhap['password'])) {
+                    $loginSuccess = true;
+                } elseif ($row_dangnhap['password'] === $matkhau) {
+                    $loginSuccess = true;
+                    $newHash = password_hash($matkhau, PASSWORD_BCRYPT);
+                    $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
+                    mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
+                    mysqli_stmt_execute($upStmt);
+                    mysqli_stmt_close($upStmt);
+                }
+            }
+
+            if ($loginSuccess) {
                 session_regenerate_id(true);
+                csrf_rotate_token();
                 $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
-                $_SESSION['makh'] = $row_dangnhap['makh'];
+                $_SESSION['makh'] = (int)$row_dangnhap['makh'];
                 header('Location: ' . BASE_URL . 'home/trangchu.php');
                 exit;
-
-            }else{
+            } else {
                 $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
                 header('Location: dangnhap.php');
                 exit;
@@ -150,6 +166,7 @@ require_once dirname(__DIR__) . '/config.php';
             <h2 class="auth-title">Đăng nhập</h2>
             <p class="auth-subtitle">Đăng nhập để trải nghiệm mua sắm</p>
             <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST">
+                <?= csrf_field() ?>
                 <div class="mb-3">
                     <label class="form-label" for="email">Tài khoản</label>
                     <input name="taikhoan" class="form-control" type="text" id="email" placeholder="Nhập tên đăng nhập">
@@ -172,4 +189,4 @@ require_once dirname(__DIR__) . '/config.php';
     </div>
 </main>
 
-<?php include BASE_PATH . 'includes/footer.php'; ?>
+<?php include BASE_PATH . 'includes/footer.php'; ?>

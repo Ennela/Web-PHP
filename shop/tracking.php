@@ -1,11 +1,13 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 include BASE_PATH . 'includes/connect.php';
 
-$orderCode = (isset($_GET['order']) && is_string($_GET['order'])) ? $_GET['order'] : '';
-$token = (isset($_GET['token']) && is_string($_GET['token'])) ? $_GET['token'] : '';
+$orderCode = isset($_GET['order']) ? mysqli_real_escape_string($con, $_GET['order']) : '';
+$token = isset($_GET['token']) ? mysqli_real_escape_string($con, $_GET['token']) : '';
 
 $error = '';
 $orderData = null;
@@ -14,30 +16,30 @@ $orderDetails = [];
 if (empty($orderCode) || empty($token)) {
     $error = "Đường dẫn không hợp lệ. Vui lòng kiểm tra lại link trong email của bạn.";
 } else {
-    // Kiểm tra đơn hàng và token
-    // Prepared statement: order_code / token do người dùng cung cấp → bind, không nối chuỗi
-    $__stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND `token` = ? LIMIT 1");
-    mysqli_stmt_bind_param($__stmt, "ss", $orderCode, $token);
-    mysqli_stmt_execute($__stmt);
-    $result = mysqli_stmt_get_result($__stmt);
-    mysqli_stmt_close($__stmt);
+    // Kiểm tra đơn hàng và token bằng prepared statement
+    $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND `token` = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "ss", $orderCode, $token);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $orderData = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
 
         // Lấy chi tiết đơn hàng
         $orderId = (int)$orderData['id'];
-        $__stmt2 = mysqli_prepare($con, "SELECT c.*, p.tensp, p.anhdaidien FROM `oder_chitiet` c JOIN `tbl_qlsanpham` p ON c.masp = p.masp WHERE c.madonhang = ?");
-        mysqli_stmt_bind_param($__stmt2, "i", $orderId);
-        mysqli_stmt_execute($__stmt2);
-        $detailsResult = mysqli_stmt_get_result($__stmt2);
-        mysqli_stmt_close($__stmt2);
+        $detailsStmt = mysqli_prepare($con, "SELECT c.*, p.tensp, p.anhdaidien FROM `oder_chitiet` c JOIN `tbl_qlsanpham` p ON c.masp = p.masp WHERE c.madonhang = ?");
+        mysqli_stmt_bind_param($detailsStmt, "i", $orderId);
+        mysqli_stmt_execute($detailsStmt);
+        $detailsResult = mysqli_stmt_get_result($detailsStmt);
         if ($detailsResult) {
             while ($row = mysqli_fetch_assoc($detailsResult)) {
                 $orderDetails[] = $row;
             }
         }
+        mysqli_stmt_close($detailsStmt);
     } else {
+        mysqli_stmt_close($stmt);
         $error = "Không tìm thấy đơn hàng hoặc token không đúng.";
     }
 }
