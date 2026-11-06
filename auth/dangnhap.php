@@ -1,5 +1,9 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
+    // A known page ID is accepted here, never an arbitrary URL or an admin destination.
+    $returnId = $_POST['return_to'] ?? $_GET['return_to'] ?? 'home';
+    $returnDestination = app_return_destination($returnId);
+    $loginDestination = BASE_URL . 'auth/dangnhap.php?return_to=' . rawurlencode($returnId);
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
@@ -12,7 +16,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: dangnhap.php');
+        app_redirect(BASE_URL . 'auth/dangnhap.php');
         exit;
     }
 
@@ -21,7 +25,7 @@ require_once dirname(__DIR__) . '/config.php';
         $matkhau = trim($_POST['matkhau'] ?? '');
         if ($taikhoan === '' || $matkhau === '') {
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
-            header('Location: dangnhap.php');
+            app_redirect($loginDestination);
             exit;
         } else {
             $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
@@ -50,11 +54,11 @@ require_once dirname(__DIR__) . '/config.php';
                 csrf_rotate_token();
                 $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
                 $_SESSION['makh'] = (int)$row_dangnhap['makh'];
-                header('Location: ' . BASE_URL . 'home/trangchu.php');
+                app_redirect($returnDestination, 303);
                 exit;
             } else {
                 $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
-                header('Location: dangnhap.php');
+                app_redirect($loginDestination);
                 exit;
             }
         }
@@ -167,6 +171,7 @@ require_once dirname(__DIR__) . '/config.php';
             <p class="auth-subtitle">Đăng nhập để trải nghiệm mua sắm</p>
             <form action="<?= e(BASE_URL) ?>auth/dangnhap.php" method="POST">
                 <?= csrf_field() ?>
+                <input type="hidden" name="return_to" value="<?= e($returnId) ?>">
                 <div class="mb-3">
                     <label class="form-label" for="email">Tài khoản</label>
                     <input name="taikhoan" class="form-control" type="text" id="email" placeholder="Nhập tên đăng nhập">

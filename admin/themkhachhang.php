@@ -4,7 +4,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 if (!isset($_SESSION['dangnhap1'])) {
-	header('Location: canhbao.php');
+	app_redirect(BASE_URL . 'admin/canhbao.php');
 	exit;
 }
 if (isset($_POST['login'])) {
@@ -14,7 +14,7 @@ if (isset($_POST['login'])) {
 }
 if ($dangxuat == 'dangxuat') {
 	session_destroy();
-	header('Location: index.php');
+	app_redirect(BASE_URL . 'admin/index.php');
         exit;
 }
 

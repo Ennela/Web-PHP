@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
         session_start();
     }
     if (!isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
+        app_redirect(BASE_URL . 'admin/canhbao.php');
         exit;
     }
     if (isset($_POST['login'])) {
@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: index.php');
+        app_redirect(BASE_URL . 'admin/index.php');
         exit;
     }
 
@@ -27,7 +27,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     if (!empty($_GET['action']) && $_GET['action'] == 'search' && !empty($_POST)) {
         $_SESSION['locsanpham1'] = array_intersect_key($_POST, array_flip(['masp', 'tensp']));
-        header('Location: quanlisanpham.php');
+        app_redirect(BASE_URL . 'admin/quanlisanpham.php');
         exit;
     }
     if (!empty($_SESSION['locsanpham1'])) {

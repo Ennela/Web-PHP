@@ -11,7 +11,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: shop.php');
+        app_redirect(BASE_URL . 'shop/shop.php');
         exit;
     }
     include BASE_PATH . 'includes/connect.php';

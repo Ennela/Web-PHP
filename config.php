@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/environment.php';
 app_load_local_environment(__DIR__ . '/.env');
 require_once __DIR__ . '/includes/xss.php';
+require_once __DIR__ . '/includes/redirect.php';
 require_once __DIR__ . '/includes/security.php';
 $canonical_url = app_security_bootstrap();
 $protocol = app_is_https() ? 'https' : 'http';

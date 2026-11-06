@@ -11,14 +11,14 @@ include BASE_PATH . 'includes/connect.php';
 // ── Handle logout ──
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
 // ── Check authentication ──
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
     $_SESSION['swal_warning'] = 'Vui lòng đăng nhập trước!';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -37,7 +37,7 @@ if ($orderQuery) {
 
 if (!$user) {
     $_SESSION['swal_error'] = 'Lỗi truy xuất! Vui lòng đăng nhập lại.';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 

@@ -15,7 +15,7 @@ if (isset($_POST['login'])) {
 }
 if ($dangxuat == 'dangxuat') {
     session_destroy();
-    header('Location: trangchu.php');
+    app_redirect(BASE_URL . 'home/trangchu.php');
     exit;
 }
 include BASE_PATH . 'includes/header.php';

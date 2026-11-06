@@ -39,7 +39,7 @@ if (!empty($cart)) {
 // Redirect if cart is empty
 if(empty($orderProducts)){
     $_SESSION['swal_warning'] = 'Giỏ hàng trống!';
-    header('Location: ' . BASE_URL . 'shop/giohang.php');
+    app_redirect(BASE_URL . 'shop/giohang.php');
     exit;
 }
 
@@ -52,7 +52,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
 
     if ($tenkh=='' || $sdt =='' || $diachi =='' || $email_kh =='') {
         $_SESSION['swal_error'] = 'Vui lòng nhập đầy đủ thông tin giao hàng (bao gồm Email)!';
-        header('Location: dathangonline.php');
+        app_redirect(BASE_URL . 'shop/dathangonline.php');
         exit;
     }
 
@@ -74,7 +74,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
         $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
         $errorText = implode('\n', $errorMsgs);
         $_SESSION['swal_error'] = "Không thể đặt hàng:\n" . $errorText;
-        header('Location: ' . BASE_URL . 'shop/giohang.php');
+        app_redirect(BASE_URL . 'shop/giohang.php');
         exit;
     }
 
@@ -159,7 +159,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
         $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
     }
 
-    header('Location: ' . $vnp_Url);
+    app_payment_redirect($vnp_Url);
     exit;
 }
 

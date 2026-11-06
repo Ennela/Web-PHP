@@ -17,7 +17,7 @@ if (isset($_GET['action'])) {
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: ' . BASE_URL . 'home/trangchu.php');
+        app_redirect(BASE_URL . 'home/trangchu.php');
         exit;
     }
     require_once BASE_PATH . 'includes/mail_helper.php';
@@ -87,7 +87,7 @@ if (isset($_GET['action'])) {
     // Redirect if cart is empty
     if (empty($orderProducts)) {
         $_SESSION['swal_warning'] = 'Giỏ hàng trống!';
-        header('Location: ' . BASE_URL . 'shop/giohang.php');
+        app_redirect(BASE_URL . 'shop/giohang.php');
         exit;
     }
 
@@ -104,7 +104,7 @@ if (isset($_GET['action'])) {
         }
         if ($_POST['tenkh'] == '' || $_POST['sdt'] == '' || $_POST['diachi'] == '' || empty($_POST['email']) || $_POST['quantity'] == '') {
             $_SESSION['swal_error'] = 'Mời bạn nhập đầy đủ thông tin';
-            header('Location: infodathang.php');
+            app_redirect(BASE_URL . 'shop/infodathang.php');
             exit;
         }
         $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
@@ -125,7 +125,7 @@ if (isset($_GET['action'])) {
             $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
             $errorText = implode('\n', $errorMsgs);
             $_SESSION['swal_error'] = "Không thể đặt hàng:\n" . $errorText;
-            header('Location: ' . BASE_URL . 'shop/giohang.php');
+            app_redirect(BASE_URL . 'shop/giohang.php');
             exit;
         }
         
@@ -165,7 +165,7 @@ if (isset($_GET['action'])) {
         }
         
         $_SESSION['swal_success'] = 'Đơn hàng đã đặt thành công!';
-        header('Location: giohang.php');
+        app_redirect(BASE_URL . 'shop/giohang.php');
         exit;
     }
 

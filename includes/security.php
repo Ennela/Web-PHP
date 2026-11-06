@@ -77,8 +77,44 @@ function app_trusted_proxy(): bool
 
 function app_is_https(): bool
 {
-    return (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
-        || (app_trusted_proxy() && ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    // A trusted TLS terminator describes the ORIGINAL client connection. Its
+    // explicit "http" must not be overridden by TLS on the proxy-to-app hop.
+    if (app_trusted_proxy()) {
+        return ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    }
+    return in_array(strtolower((string)($_SERVER['HTTPS'] ?? '')), ['on', '1'], true);
+}
+
+/** Production cannot opt out. Local HTTPS demos opt in explicitly. */
+function app_requires_https(): bool
+{
+    $setting = getenv('APP_REQUIRE_HTTPS');
+    $enabled = $setting === false ? false : filter_var($setting, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    if ($enabled === null) {
+        app_fail(503);
+    }
+    return app_is_production() || $enabled;
+}
+
+function app_validate_transport_configuration(): void
+{
+    app_requires_https(); // Validate even when production already requires TLS.
+    foreach (explode(',', getenv('TRUSTED_PROXIES') ?: '') as $range) {
+        $range = trim($range);
+        if ($range === '') {
+            continue;
+        }
+        $parts = explode('/', $range, 2);
+        if (!app_ip_in_range($parts[0], $range) || (isset($parts[1]) && (int)$parts[1] === 0)) {
+            // Trusting every client allows forged HTTPS headers; fail closed.
+            app_fail(503);
+        }
+    }
+    if (app_trusted_proxy()
+        && !in_array($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '', ['http', 'https'], true)) {
+        // The last trusted proxy must overwrite, not append client-supplied values.
+        app_fail(400, 'Thông tin kết nối không hợp lệ.');
+    }
 }
 
 /** Return a normalized host without a port; reject malformed Host headers. */
@@ -113,7 +149,8 @@ function app_security_headers(): void
         . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://use.fontawesome.com https://ka-f.fontawesome.com https://afeld.github.io; "
         . "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://use.fontawesome.com https://ka-f.fontawesome.com; "
         . "img-src 'self' data: blob: https:; connect-src 'self' https://provinces.open-api.vn https://kit.fontawesome.com https://ka-f.fontawesome.com; "
-        . "frame-src https://www.google.com https://maps.google.com; media-src 'self' blob:");
+        . "frame-src https://www.google.com https://maps.google.com; media-src 'self' blob:"
+        . (app_is_https() ? '; upgrade-insecure-requests' : ''));
     if (app_is_production() && app_is_https()) {
         header('Strict-Transport-Security: max-age=31536000');
     }
@@ -145,6 +182,7 @@ function app_security_bootstrap(): ?string
             app_fail(500);
         }
     });
+    app_validate_transport_configuration();
     app_security_headers();
 
     if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD', 'POST', 'OPTIONS'], true)) {
@@ -160,13 +198,14 @@ function app_security_bootstrap(): ?string
         if ($parsed === false || !isset($parsed['scheme'], $parsed['host'])
             || !in_array($parsed['scheme'], ['http', 'https'], true)
             || isset($parsed['user']) || isset($parsed['pass']) || isset($parsed['query']) || isset($parsed['fragment'])
+            || !app_redirect_path_valid($parsed['path'] ?? '/')
             || preg_match('/[\x00-\x20\x7f\\\\]/', $url)
             || ($urlHost = app_hostname($parsed['host'] . (isset($parsed['port']) ? ':' . $parsed['port'] : ''))) === null
-            || (app_is_production() && $parsed['scheme'] !== 'https')) {
+            || ((app_requires_https() || app_is_https()) && $parsed['scheme'] !== 'https')) {
             app_fail(503);
         }
         $canonical = rtrim($url, '/') . '/';
-    } elseif (app_is_production()) {
+    } elseif (app_requires_https()) {
         app_fail(503);
     }
 
@@ -195,18 +234,11 @@ function app_security_bootstrap(): ?string
         app_fail(404, 'Không tìm thấy trang.');
     }
 
-    if (app_is_production() && !app_is_https()) {
+    if (app_requires_https() && !app_is_https()) {
         if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true)) {
             app_fail(400, 'Vui lòng sử dụng kết nối HTTPS.');
         }
-        $parsed = parse_url($canonical);
-        $origin = $parsed['scheme'] . '://' . $parsed['host'] . (isset($parsed['port']) ? ':' . $parsed['port'] : '');
-        $uri = $_SERVER['REQUEST_URI'] ?? '/';
-        if (preg_match('/[\x00-\x20\x7f]/', $uri)) {
-            app_fail(400);
-        }
-        header('Location: ' . $origin . '/' . ltrim($uri, '/'), true, 308);
-        exit;
+        app_https_redirect($canonical, $_SERVER['REQUEST_URI'] ?? '/');
     }
     return $canonical;
 }
@@ -259,7 +291,7 @@ function secure_logout(?string $redirectUrl = null): void
     }
     if (!empty($redirectUrl)) {
         if (!headers_sent()) {
-            header('Location: ' . $redirectUrl);
+            app_redirect($redirectUrl);
         }
         exit;
     }
@@ -362,7 +394,7 @@ function require_user(?string $redirectUrl = null): void
             $base = defined('BASE_URL') ? BASE_URL : '/WEB-PHP/';
             $redirectUrl = $base . 'auth/dangnhap.php';
         }
-        header('Location: ' . $redirectUrl);
+        app_redirect($redirectUrl);
         exit;
     }
 }
@@ -392,7 +424,7 @@ function require_admin(?string $redirectUrl = null): void
             $base = defined('BASE_URL') ? BASE_URL : '/WEB-PHP/';
             $redirectUrl = $base . 'admin/canhbao.php';
         }
-        header('Location: ' . $redirectUrl);
+        app_redirect($redirectUrl);
         exit;
     }
 }

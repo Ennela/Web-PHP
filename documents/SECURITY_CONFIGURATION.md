@@ -59,7 +59,7 @@ MYSQLDATABASE=giaythethao2
 
 `APP_TRUSTED_HOSTS` nhận hostname không có port, cách nhau bằng dấu phẩy. Host từ `APP_URL` được thêm vào allowlist tự động; local còn cho phép localhost, 127.0.0.1 và IPv6 loopback. Production không tự cho phép localhost.
 
-Nếu HTTPS kết thúc ở reverse proxy, đặt `TRUSTED_PROXIES` bằng IP/CIDR thực tế của proxy, cách nhau bằng dấu phẩy. Ví dụ proxy cùng máy có thể là `127.0.0.1/32,::1/128`. Tránh `0.0.0.0/0` hoặc `::/0`; việc tin toàn bộ client sẽ làm mất ý nghĩa kiểm tra header proxy. Caddyfile trong repo phục vụ HTTP local; production phải có TLS trực tiếp hoặc tại proxy được tin cậy.
+Nếu HTTPS kết thúc ở reverse proxy, đặt `TRUSTED_PROXIES` bằng IP/CIDR thực tế của proxy, cách nhau bằng dấu phẩy. Ví dụ proxy cùng máy có thể là `127.0.0.1/32,::1/128`. Tránh `0.0.0.0/0` hoặc `::/0`; việc tin toàn bộ client sẽ làm mất ý nghĩa kiểm tra header proxy. Caddyfile mặc định phục vụ HTTP local. Demo HTTPS dùng `./run-https.sh`; production có mẫu `deploy/Caddyfile.production` hoặc TLS tại proxy được tin cậy. Xem [cấu hình và demo bảo vệ đường truyền](TRANSPORT_SECURITY.md).
 
 Tạo DB user riêng, chỉ cấp quyền cần thiết trên `giaythethao2`; tài khoản runtime không cần quyền quản trị toàn MySQL. Thực hiện migration bằng tài khoản triển khai riêng. Kiểm tra/đổi tài khoản quản trị mẫu trong database trước khi đưa dịch vụ ra Internet.
 

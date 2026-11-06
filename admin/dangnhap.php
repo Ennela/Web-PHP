@@ -32,7 +32,7 @@ require_once dirname(__DIR__) . '/config.php';
                 csrf_rotate_token();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
-                header('Location: trangchu.php');
+                app_redirect(BASE_URL . 'admin/trangchu.php');
                 exit;
             } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
                 // Fallback: mật khẩu cũ chưa hash — đăng nhập OK + tự động hash lại
@@ -46,7 +46,7 @@ require_once dirname(__DIR__) . '/config.php';
                 csrf_rotate_token();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
-                header('Location: trangchu.php');
+                app_redirect(BASE_URL . 'admin/trangchu.php');
                 exit;
             } else {
                 ?>

@@ -9,7 +9,7 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 // Xử lý đăng xuất
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: ' . BASE_URL . 'home/trangchu.php');
+    app_redirect(BASE_URL . 'home/trangchu.php');
     exit;
 }
 
@@ -19,7 +19,7 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
 // ===== BẮT BUỘC ĐĂNG NHẬP =====
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
     $_SESSION['swal_warning'] = 'Vui lòng đăng nhập để tra cứu đơn hàng!';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -28,7 +28,7 @@ $makh = intval($_SESSION['makh']);
 if (($_POST['action'] ?? '') === 'sync_shipping') {
     csrf_require_post();
     autoCompleteShippingOrders($con, $makh);
-    header('Location: ' . BASE_URL . 'shop/tradonhang.php', true, 303);
+    app_redirect(BASE_URL . 'shop/tradonhang.php', 303);
     exit;
 }
 

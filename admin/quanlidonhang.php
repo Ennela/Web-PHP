@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 if (!isset($_SESSION['dangnhap1'])) {
-    header('Location: canhbao.php');
+    app_redirect(BASE_URL . 'admin/canhbao.php');
     exit;
 }
 if (isset($_POST['login'])) {
@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
 }
 if ($dangxuat == 'dangxuat') {
     session_destroy();
-    header('Location: index.php');
+    app_redirect(BASE_URL . 'admin/index.php');
         exit;
 }
 include './connect_db.php';
@@ -65,7 +65,7 @@ if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
             mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
         }
     }
-    header('Location: quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . max(1, (int)$_GET['page']) : ''));
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . max(1, (int)$_GET['page']) : ''));
     exit;
 }
 
@@ -74,7 +74,7 @@ if (
     && !empty($_POST)
 ) {
     $_SESSION['locsanpham2'] = array_intersect_key($_POST, array_flip(['id', 'tenkh', 'status']));
-    header('Location: quanlidonhang.php');
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php');
     exit;
 }
 if (!empty($_SESSION['locsanpham2'])) {

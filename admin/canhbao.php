@@ -28,7 +28,7 @@ if (isset($_POST['dangnhap'])) {
             csrf_rotate_token();
             $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
             $_SESSION['manv'] = $row_dangnhap['id'];
-            header('Location: trangchu.php');
+            app_redirect(BASE_URL . 'admin/trangchu.php');
             ob_end_flush();
             exit;
         } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
@@ -43,7 +43,7 @@ if (isset($_POST['dangnhap'])) {
             csrf_rotate_token();
             $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
             $_SESSION['manv'] = $row_dangnhap['id'];
-            header('Location: trangchu.php');
+            app_redirect(BASE_URL . 'admin/trangchu.php');
             ob_end_flush();
             exit;
         } else {

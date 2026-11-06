@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: lienhe.php');
+    app_redirect(BASE_URL . 'home/lienhe.php');
     exit;
 }
 

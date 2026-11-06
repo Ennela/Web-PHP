@@ -4,7 +4,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 if (!isset($_SESSION['dangnhap1'])) {
-    header('Location: canhbao.php');
+    app_redirect(BASE_URL . 'admin/canhbao.php');
     exit;
 } else {
     if (isset($_POST['login'])) {
@@ -14,7 +14,7 @@ if (!isset($_SESSION['dangnhap1'])) {
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: themthanhvien.php');
+        app_redirect(BASE_URL . 'admin/themthanhvien.php');
         exit;
     }
     include_once 'connect_db.php';

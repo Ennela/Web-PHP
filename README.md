@@ -207,6 +207,8 @@ WEB-PHP/
 - **Bảo vệ CSRF toàn ứng dụng:** Token gắn với session cho form và AJAX; thao tác thay đổi dữ liệu dùng POST. Xem [cơ chế, callback và cách kiểm thử](./documents/CSRF_SECURITY.md).
 - **Cấu hình bảo mật:** Chặn file nhạy cảm, ẩn lỗi, HTTP security header, kiểm tra Host/proxy, cấu hình production và upload ảnh an toàn. Xem [hướng dẫn cấu hình và kiểm thử](./documents/SECURITY_CONFIGURATION.md).
 - **Bảo vệ XSS:** Escape đầu ra theo ngữ cảnh, lọc rich HTML bằng HTML Purifier, dùng DOM API an toàn và CSP nonce. Xem [cơ chế, demo và kiểm thử](./documents/XSS_SECURITY.md).
+- **Bảo vệ chuyển hướng:** Kiểm tra đích nội bộ, dùng mã trang cho bước quay lại sau đăng nhập và giới hạn endpoint VNPay. Xem [Unvalidated Redirects and Forwards: cơ chế, demo và kiểm thử](./documents/REDIRECT_SECURITY.md).
+- **Bảo vệ đường truyền:** HTTPS/TLS 1.2–1.3, cookie Secure, HSTS production, kiểm tra proxy và chứng chỉ dịch vụ ngoài. Chạy `./run-https.sh`; xem [hướng dẫn transport security và demo](./documents/TRANSPORT_SECURITY.md).
 
 ### Phía Khách hàng
 
@@ -257,6 +259,15 @@ Terminal sẽ hiện link `http://127.0.0.1:8000/` và trang quản trị `/admi
 Trên macOS, giữ Cmd và bấm vào link để mở. Nếu server đã chạy, lệnh sẽ hiện lại link;
 nếu chưa chạy, lệnh khởi động bằng `Caddyfile`. Nhấn Control + C để dừng server mới khởi động.
 Script dùng `scratch/runtime/frankenphp`, bản `frankenphp` trong PATH hoặc đường dẫn `FRANKENPHP_BIN`.
+
+### Demo HTTPS local
+
+```sh
+./run-https.sh
+```
+
+Mở `https://localhost:8443/`; thử HTTP redirect tại `http://localhost:8080/`.
+CA local chưa được tự cài vào máy. Xem [cách xác minh chứng chỉ, thiết lập trình duyệt và demo](./documents/TRANSPORT_SECURITY.md).
 
 ### Môi trường Local (XAMPP)
 

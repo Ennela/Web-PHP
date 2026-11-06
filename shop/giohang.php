@@ -11,7 +11,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: giohang.php');
+        app_redirect(BASE_URL . 'shop/giohang.php');
         exit;
     }
     include BASE_PATH . 'includes/connect.php';
@@ -108,25 +108,25 @@ require_once dirname(__DIR__) . '/config.php';
         switch ($_GET['action']) {
             case "add":
                 update_cart(true);
-                header('Location:./giohang.php');// cho đẹp đường dẫn
+                app_redirect(BASE_URL . 'shop/giohang.php');// cho đẹp đường dẫn
                 break;
 
             case "delete":
                 if (isset($_POST['masp'])) {
                     unset($_SESSION["giohang"][(int)$_POST['masp']]);
                 }
-                header('Location:./giohang.php');// cho đẹp đường dẫn
+                app_redirect(BASE_URL . 'shop/giohang.php');// cho đẹp đường dẫn
                 break;
             case "submit":
                 // Kiểm tra giỏ hàng trống
                 if (empty($_SESSION['giohang'])) {
                     $_SESSION['swal_warning'] = 'Giỏ hàng đang trống! Vui lòng thêm sản phẩm trước khi thanh toán.';
-                    header('Location: ./giohang.php');
+                    app_redirect(BASE_URL . 'shop/giohang.php');
                     exit;
                 }
                 if (isset($_POST['capnhat'])) { //Cập nhật số lượng và size sản phẩm
                     update_cart();
-                    header('Location: ./giohang.php');
+                    app_redirect(BASE_URL . 'shop/giohang.php');
                     exit;
                 } elseif (isset($_POST['dathang'])) { //Đặt hàng sản phẩm
                     $chuyen = $_POST['quantity'];
@@ -134,18 +134,18 @@ require_once dirname(__DIR__) . '/config.php';
                     // Also pass sizes to checkout
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
 
-                    header('Location: ./infodathang.php');
+                    app_redirect(BASE_URL . 'shop/infodathang.php');
                     exit;
                 } elseif (isset($_POST['thanhtoanonline'])) { //Đặt hàng sản phẩm
                     $chuyen = $_POST['quantity'];
                     $_SESSION['chuyen'] = $chuyen;
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
 
-                    header('Location: ./dathangonline.php');
+                    app_redirect(BASE_URL . 'shop/dathangonline.php');
                     exit;
                 }
                 // Fallback: nếu không khớp action nào
-                header('Location: ./giohang.php');
+                app_redirect(BASE_URL . 'shop/giohang.php');
                 exit;
         }
     }

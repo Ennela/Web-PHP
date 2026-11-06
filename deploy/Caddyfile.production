@@ -1,0 +1,29 @@
+{
+	admin off
+	auto_https disable_redirects
+	import Caddyfile.runtime
+}
+
+import Caddyfile.app
+
+# Set APP_DOMAIN to the public hostname only (no scheme, port or path),
+# APP_URL=https://that-hostname, APP_ENV=production and APP_ROOT to the app root.
+# Ports 80/443 and persistent Caddy certificate storage are required.
+https://{$APP_DOMAIN} {
+	tls {
+		protocols tls1.2 tls1.3
+	}
+	# Applied at the TLS listener, including static files and error responses.
+	header Strict-Transport-Security "max-age=31536000"
+	import app
+}
+
+http://{$APP_DOMAIN} {
+	header -Server
+	header Cache-Control no-store
+	route {
+		@read method GET HEAD
+		redir @read https://{$APP_DOMAIN}{uri} 308
+		respond "Use HTTPS before submitting data." 400
+	}
+}

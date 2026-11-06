@@ -5,7 +5,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 if (empty($_SESSION['dangnhap1'])) {
-    header('Location: canhbao.php');
+    app_redirect(BASE_URL . 'admin/canhbao.php');
     exit;
 }
 
@@ -14,7 +14,7 @@ include './connect_db.php';
 // Kiểm tra có ID đơn hàng không
 if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
     $_SESSION['swal_warning'] = 'Không tìm thấy đơn hàng!';
-    header('Location: quanlidonhang.php', true, 303);
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 
@@ -30,7 +30,7 @@ mysqli_stmt_close($stmtStatus);
 
 if (!$orderRow) {
     $_SESSION['swal_warning'] = 'Đơn hàng không tồn tại!';
-    header('Location: quanlidonhang.php', true, 303);
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 
@@ -38,7 +38,7 @@ if (!$orderRow) {
 $currentStatus = $orderRow['status'] ?? 'PENDING';
 if ($currentStatus === 'CANCELLED') {
     $_SESSION['swal_warning'] = 'Đơn hàng đã bị hủy, không thể in!';
-    header('Location: quanlidonhang.php', true, 303);
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 $statusUpdated = false;
@@ -57,7 +57,7 @@ $oder = mysqli_fetch_all($oder, MYSQLI_ASSOC);
 
 if (empty($oder)) {
     $_SESSION['swal_warning'] = 'Đơn hàng không tồn tại hoặc chưa có sản phẩm!';
-    header('Location: quanlidonhang.php', true, 303);
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 ?>
