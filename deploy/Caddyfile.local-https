@@ -1,0 +1,29 @@
+{
+	admin off
+	auto_https disable_redirects
+	skip_install_trust
+	import Caddyfile.runtime
+}
+
+import Caddyfile.app
+
+# This CA is local to the project. Installing trust is an explicit user action.
+https://localhost:{$LOCAL_HTTPS_PORT:8443} {
+	bind 127.0.0.1
+	tls internal {
+		protocols tls1.2 tls1.3
+	}
+	import app
+}
+
+# Never replay a credential-bearing HTTP POST onto HTTPS.
+http://localhost:{$LOCAL_HTTP_PORT:8080} {
+	bind 127.0.0.1
+	header -Server
+	header Cache-Control no-store
+	route {
+		@read method GET HEAD
+		redir @read https://localhost:{$LOCAL_HTTPS_PORT:8443}{uri} 308
+		respond "Use HTTPS before submitting data." 400
+	}
+}

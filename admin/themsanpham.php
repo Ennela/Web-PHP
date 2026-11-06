@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
         session_start();
     }
     if ( ! isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
+        app_redirect(BASE_URL . 'admin/canhbao.php');
         exit;
     }
     if (isset($_POST['login'])) {
@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: index.php');
+        app_redirect(BASE_URL . 'admin/index.php');
         exit;
     }
 
@@ -30,7 +30,7 @@ require_once dirname(__DIR__) . '/config.php';
 //        $anhdaidien     = $_POST['anhdaidien'];
         $giasanpham     = $_POST['giasanpham'];
         $giagoc     = $_POST['giagoc'];
-        $noidung = $_POST['noidung'];
+        $noidung = mysqli_real_escape_string($con, clean_html($_POST['noidung'] ?? ''));
 
         $nhomsp  = $_POST['nhomsp'];
 
@@ -52,14 +52,14 @@ require_once dirname(__DIR__) . '/config.php';
         
         if (mysqli_query($con, $sql_query)) {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Dữ liệu đã được đưa vào');
                 window.location.href = 'quanlisanpham.php';
             </script>
             <?php
         } else {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Dữ liệu đưa vào không hợp lệ vui lòng kiểm tra lại');
                 window.location.href = 'themsanpham.php';
             </script>
@@ -85,7 +85,7 @@ require_once dirname(__DIR__) . '/config.php';
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -126,11 +126,11 @@ require_once dirname(__DIR__) . '/config.php';
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span
+                                data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                             Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -316,11 +316,18 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -330,7 +337,7 @@ require_once dirname(__DIR__) . '/config.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -340,7 +347,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

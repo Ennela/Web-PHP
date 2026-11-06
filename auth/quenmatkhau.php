@@ -236,7 +236,7 @@ include BASE_PATH . 'includes/header.php';
                     <strong>30 phút</strong>.
                 </div>
 
-                <form method="post" id="forgotForm" onsubmit="return false;">
+                <form method="post" id="forgotForm">
                     <?= csrf_field() ?>
                     <div class="mb-4">
                         <label class="form-label" for="email_or_username">Email hoặc tên đăng nhập</label>
@@ -249,7 +249,7 @@ include BASE_PATH . 'includes/header.php';
                 </form>
 
                 <div class="auth-link">
-                    <a href="<?php echo BASE_URL; ?>auth/dangnhap.php"><i class="fas fa-arrow-left"></i> Quay lại đăng
+                    <a href="<?= e(BASE_URL) ?>auth/dangnhap.php"><i class="fas fa-arrow-left"></i> Quay lại đăng
                         nhập</a>
                 </div>
             </div>
@@ -259,7 +259,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="success-icon"><i class="fas fa-envelope-open-text"></i></div>
                 <h3>Đã gửi email!</h3>
                 <p id="successMessage">Vui lòng kiểm tra hộp thư (bao gồm thư mục Spam) để đặt lại mật khẩu.</p>
-                <a href="<?php echo BASE_URL; ?>auth/dangnhap.php" class="btn-auth"
+                <a href="<?= e(BASE_URL) ?>auth/dangnhap.php" class="btn-auth"
                     style="display:inline-block; text-decoration:none; width:auto; padding:12px 32px;">
                     <i class="fas fa-sign-in-alt"></i> Về trang đăng nhập
                 </a>
@@ -268,7 +268,7 @@ include BASE_PATH . 'includes/header.php';
     </div>
 </main>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('forgotForm');
         const btn = document.getElementById('btnSubmit');
@@ -292,7 +292,7 @@ include BASE_PATH . 'includes/header.php';
             const fd = new FormData();
             fd.append('email_or_username', input);
 
-            fetch('<?php echo BASE_URL; ?>auth/api_quenmatkhau.php', {
+            fetch(<?= js_value(BASE_URL . 'auth/api_quenmatkhau.php') ?>, {
                 method: 'POST',
                 headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content },
                 body: fd
@@ -304,7 +304,7 @@ include BASE_PATH . 'includes/header.php';
                         formState.style.display = 'none';
                         successState.classList.add('active');
                     } else {
-                        Swal.fire({ icon: 'error', title: data.message || 'Có lỗi xảy ra', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+                        Swal.fire({ icon: 'error', titleText: data.message || 'Có lỗi xảy ra', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
                         btn.disabled = false;
                         btn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi yêu cầu';
                     }

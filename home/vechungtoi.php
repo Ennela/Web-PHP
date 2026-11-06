@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: vechungtoi.php');
+    app_redirect(BASE_URL . 'home/vechungtoi.php');
     exit;
 }
 
@@ -392,7 +392,7 @@ include BASE_PATH . 'includes/header.php';
             <div class="row">
                 <div class="col-6 col-md-3">
                     <div class="stat-item fade-in-up">
-                        <div class="stat-number" data-count="<?= $countProducts ?>">0</div>
+                        <div class="stat-number" data-count="<?= (int)$countProducts ?>">0</div>
                         <div class="stat-label">Sản phẩm</div>
                     </div>
                 </div>
@@ -404,13 +404,13 @@ include BASE_PATH . 'includes/header.php';
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="stat-item fade-in-up">
-                        <div class="stat-number" data-count="<?= $countPosts ?>">0</div>
+                        <div class="stat-number" data-count="<?= (int)$countPosts ?>">0</div>
                         <div class="stat-label">Bài viết</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="stat-item fade-in-up">
-                        <div class="stat-number" data-count="<?= $countMembers ?>">0</div>
+                        <div class="stat-number" data-count="<?= (int)$countMembers ?>">0</div>
                         <div class="stat-label">Thành viên</div>
                     </div>
                 </div>
@@ -471,7 +471,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/kien.jpg"
+                            <img class="card-img-top w-100 d-block" src="<?= e(BASE_URL) ?>images/kien.jpg"
                                 alt="Nguyễn Văn Kiên" />
                         </div>
                         <div class="team-info">
@@ -486,7 +486,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/ha.jpg"
+                            <img class="card-img-top w-100 d-block" src="<?= e(BASE_URL) ?>images/ha.jpg"
                                 alt="Đỗ Quang Hà" />
                         </div>
                         <div class="team-info">
@@ -501,7 +501,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member fade-in-up">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/nhan.jpg"
+                            <img class="card-img-top w-100 d-block" src="<?= e(BASE_URL) ?>images/nhan.jpg"
                                 alt="Nguyễn Bá Nhân" />
                         </div>
                         <div class="team-info">
@@ -522,14 +522,14 @@ include BASE_PATH . 'includes/header.php';
         <div class="container fade-in-up">
             <h2>Sẵn sàng khám phá?</h2>
             <p>Ghé thăm cửa hàng của chúng tôi để tìm đôi giày hoàn hảo cho phong cách của bạn.</p>
-            <a href="<?php echo BASE_URL; ?>shop/shop.php" class="btn-cta">
+            <a href="<?= e(BASE_URL) ?>shop/shop.php" class="btn-cta">
                 <i class="fas fa-shopping-bag"></i> Khám phá ngay
             </a>
         </div>
     </section>
 </main>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     // === Scroll Animations ===
     (function () {
         const fadeEls = document.querySelectorAll('.fade-in-up');

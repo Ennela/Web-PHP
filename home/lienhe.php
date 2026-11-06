@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: lienhe.php');
+    app_redirect(BASE_URL . 'home/lienhe.php');
     exit;
 }
 
@@ -410,7 +410,7 @@ if (isset($_POST['btn'])) {
 </main>
 
 <!-- Client-side Validation -->
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 (function() {
     const form = document.getElementById('contactForm');
     if (!form) return;

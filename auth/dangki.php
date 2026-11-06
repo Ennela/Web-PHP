@@ -13,14 +13,14 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
         if ($hoten === '' || $email === '' || $taikhoan === '' || $matkhau === '') {
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
-            header('Location: dangki.php');
+            app_redirect(BASE_URL . 'auth/dangki.php');
             exit;
         }
 
         // Validate email format
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION['swal_error'] = 'Địa chỉ email không hợp lệ!';
-            header('Location: dangki.php');
+            app_redirect(BASE_URL . 'auth/dangki.php');
             exit;
         }
 
@@ -32,7 +32,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         if (mysqli_num_rows($resUser) > 0) {
             mysqli_stmt_close($stmtUser);
             $_SESSION['swal_error'] = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!';
-            header('Location: dangki.php');
+            app_redirect(BASE_URL . 'auth/dangki.php');
             exit;
         }
         mysqli_stmt_close($stmtUser);
@@ -45,7 +45,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         if (mysqli_num_rows($resEmail) > 0) {
             mysqli_stmt_close($stmtEmail);
             $_SESSION['swal_error'] = 'Email đã được sử dụng. Vui lòng dùng email khác!';
-            header('Location: dangki.php');
+            app_redirect(BASE_URL . 'auth/dangki.php');
             exit;
         }
         mysqli_stmt_close($stmtEmail);
@@ -57,11 +57,11 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         if (mysqli_stmt_execute($stmtInsert)) {
             mysqli_stmt_close($stmtInsert);
             $_SESSION['swal_success'] = 'Đăng ký tài khoản thành công!';
-            header('Location: dangnhap.php');
+            app_redirect(BASE_URL . 'auth/dangnhap.php');
             exit;
         } else {
             $_SESSION['swal_error'] = 'Xảy ra lỗi trong khi đăng ký. Vui lòng thử lại!';
-            header('Location: dangki.php');
+            app_redirect(BASE_URL . 'auth/dangki.php');
             exit;
         }
     }
@@ -166,7 +166,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
                     <div class="mb-4"><label class="form-label">Mật khẩu</label><input class="form-control" name="matkhau" type="password" placeholder="Nhập mật khẩu" required></div>
                     <button name="dangki" class="btn-auth" type="submit">Đăng ký</button>
                 </form>
-                <div class="auth-link">Đã có tài khoản? <a href="<?php echo BASE_URL; ?>auth/dangnhap.php">Đăng nhập</a></div>
+                <div class="auth-link">Đã có tài khoản? <a href="<?= e(BASE_URL) ?>auth/dangnhap.php">Đăng nhập</a></div>
             </div>
         </div>
     </main>

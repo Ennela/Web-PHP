@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 if (!isset($_SESSION['dangnhap1'])) {
-    header('Location: canhbao.php');
+    app_redirect(BASE_URL . 'admin/canhbao.php');
     exit;
 }
 if (isset($_POST['login'])) {
@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
 }
 if ($dangxuat == 'dangxuat') {
     session_destroy();
-    header('Location: index.php');
+    app_redirect(BASE_URL . 'admin/index.php');
         exit;
 }
 include './connect_db.php';
@@ -65,7 +65,7 @@ if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
             mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
         }
     }
-    header('Location: quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . $_GET['page'] : ''));
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php' . (!empty($_GET['page']) ? '?page=' . max(1, (int)$_GET['page']) : ''));
     exit;
 }
 
@@ -74,7 +74,7 @@ if (
     && !empty($_POST)
 ) {
     $_SESSION['locsanpham2'] = array_intersect_key($_POST, array_flip(['id', 'tenkh', 'status']));
-    header('Location: quanlidonhang.php');
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php');
     exit;
 }
 if (!empty($_SESSION['locsanpham2'])) {
@@ -98,9 +98,8 @@ if (!empty($_SESSION['locsanpham2'])) {
     extract(array_intersect_key($_SESSION['locsanpham2'], array_flip(['id', 'tenkh', 'status'])));
 }
 
-$item_per_page = !empty($_GET['per_page']) ? $_GET['per_page'] : 6;
-$current_page = !empty($_GET['page']) ? $_GET['page']
-    : 1;
+$item_per_page = max(1, min(100, (int)($_GET['per_page'] ?? 6)));
+$current_page = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($current_page - 1) * $item_per_page;
 $totalRecords = mysqli_query($con, "SELECT * FROM `oder`");
 $totalRecords = $totalRecords->num_rows;
@@ -457,10 +456,10 @@ function getAdminStatusInfo($status) {
                     <li class="flex-1 md:flex-none md:mr-3">
                         <div class="inline-block relative">
                             <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span class="pr-2"><i
+                                data-dropdown-toggle="myDropdown"><span class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                                 Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                                 <svg class="inline h-3 fill-current" viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -582,7 +581,7 @@ function getAdminStatusInfo($status) {
                     <!--Metric Card-->
                     <?php if (!empty($_SESSION['admin_error'])): ?>
                     <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; margin-bottom:16px; color:#991b1b; font-weight:600; font-size:0.88rem;">
-                        <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> <?= htmlspecialchars($_SESSION['admin_error']) ?>
+                        <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> <?= e($_SESSION['admin_error']) ?>
                     </div>
                     <?php unset($_SESSION['admin_error']); endif; ?>
                     <div
@@ -596,7 +595,7 @@ function getAdminStatusInfo($status) {
                             <div class="flex-1 text-right md:text-center">
                                 <h5 class="font-bold uppercase text-gray-600">Số đơn
                                     hàng</h5>
-                                <h3 class="font-bold text-3xl"><?= $totalRecords ?> đơn</h3>
+                                <h3 class="font-bold text-3xl"><?= e($totalRecords) ?> đơn</h3>
                             </div>
                         </div>
                     </div>
@@ -610,17 +609,17 @@ function getAdminStatusInfo($status) {
                             <?= csrf_field() ?>
                             <div class="flex ">
                                 <input type="text" class="border-2 border-gray-200 rounded px-2 py-2 w-30"
-                                    placeholder="Nhập id ..." name="id" value="<?= !empty($id) ? $id : "" ?>" />
+                                    placeholder="Nhập id ..." name="id" value="<?= e(!empty($id) ? $id : "") ?>" />
                                 <input type="text" class="border-2 border-gray-200 rounded mr-2 px-2 ml-2 py-2 w-30"
                                     placeholder="Nhập tên khách hàng ..." name="tenkh"
-                                    value="<?= !empty($tenkh) ? $tenkh : "" ?>" />
+                                    value="<?= e(!empty($tenkh) ? $tenkh : "") ?>" />
                                 <select name="status" class="border-2 border-gray-200 rounded px-2 py-2 mr-2 w-40" style="font-size:0.85rem;">
                                     <option value="">-- Trạng thái --</option>
-                                    <option value="PENDING" <?= (!empty($status) && $status == 'PENDING') ? 'selected' : '' ?>>Chờ xử lý</option>
-                                    <option value="CONFIRMED" <?= (!empty($status) && $status == 'CONFIRMED') ? 'selected' : '' ?>>Đã xác nhận</option>
-                                    <option value="SHIPPING" <?= (!empty($status) && $status == 'SHIPPING') ? 'selected' : '' ?>>Đang giao hàng</option>
-                                    <option value="DELIVERED" <?= (!empty($status) && $status == 'DELIVERED') ? 'selected' : '' ?>>Đã giao hàng</option>
-                                    <option value="CANCELLED" <?= (!empty($status) && $status == 'CANCELLED') ? 'selected' : '' ?>>Đã hủy</option>
+                                    <option value="PENDING" <?= e((!empty($status) && $status == 'PENDING') ? 'selected' : '') ?>>Chờ xử lý</option>
+                                    <option value="CONFIRMED" <?= e((!empty($status) && $status == 'CONFIRMED') ? 'selected' : '') ?>>Đã xác nhận</option>
+                                    <option value="SHIPPING" <?= e((!empty($status) && $status == 'SHIPPING') ? 'selected' : '') ?>>Đang giao hàng</option>
+                                    <option value="DELIVERED" <?= e((!empty($status) && $status == 'DELIVERED') ? 'selected' : '') ?>>Đã giao hàng</option>
+                                    <option value="CANCELLED" <?= e((!empty($status) && $status == 'CANCELLED') ? 'selected' : '') ?>>Đã hủy</option>
                                 </select>
                                 <button type="submit" value="Tìm"
                                     class=" rounded px-4 mr-2 text-white bg-blue-500 border-l  ">
@@ -633,8 +632,8 @@ function getAdminStatusInfo($status) {
 
                 </div>
                 <div class="flex w-full mr-8 justify-end">
-                    <div>Có tất cả <strong><?= $totalRecords ?></strong> đơn hàng trên
-                        <strong><?= $totalPages ?></strong>
+                    <div>Có tất cả <strong><?= e($totalRecords) ?></strong> đơn hàng trên
+                        <strong><?= e($totalPages) ?></strong>
                         trang</div>
                 </div>
                 <div class="w-full p-6">
@@ -659,46 +658,46 @@ function getAdminStatusInfo($status) {
                                 $statusInfo = getAdminStatusInfo($row['status'] ?? 'PENDING');
                                 ?>
                                 <tr>
-                                    <td class="text-center font-bold" style="color:#3b82f6;"><?= !empty($row['order_code']) ? $row['order_code'] : '#' . $row['id'] ?></td>
-                                    <td><?= htmlspecialchars($row['tenkh']) ?></td>
-                                    <td class="text-center"><?= htmlspecialchars($row['sdt']) ?></td>
-                                    <td><?= htmlspecialchars($row['diachi']) ?></td>
-                                    <td class="text-center font-bold" style="color:#2563eb;"><?= number_format($row['tongtien'], 0, ',', '.') ?>&nbsp;đ</td>
-                                    <td class="text-center"><?= date('d/m/Y H:i', $row['ngaytao']) ?></td>
+                                    <td class="text-center font-bold" style="color:#3b82f6;"><?= e(!empty($row['order_code']) ? $row['order_code'] : '#' . $row['id']) ?></td>
+                                    <td><?= e($row['tenkh']) ?></td>
+                                    <td class="text-center"><?= e($row['sdt']) ?></td>
+                                    <td><?= e($row['diachi']) ?></td>
+                                    <td class="text-center font-bold" style="color:#2563eb;"><?= e(number_format($row['tongtien'], 0, ',', '.')) ?>&nbsp;đ</td>
+                                    <td class="text-center"><?= e(date('d/m/Y H:i', $row['ngaytao'])) ?></td>
                                     <td class="text-center">
-                                        <span class="status-badge status-<?= $statusInfo['color'] ?>">
-                                            <i class="fas <?= $statusInfo['icon'] ?>"></i>
-                                            <?= $statusInfo['label'] ?>
+                                        <span class="status-badge status-<?= e($statusInfo['color']) ?>">
+                                            <i class="fas <?= e($statusInfo['icon']) ?>"></i>
+                                            <?= e($statusInfo['label']) ?>
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <form method="POST" action="quanlidonhang.php<?= !empty($_GET['page']) ? '?page=' . $_GET['page'] : '' ?>" class="status-form">
+                                        <form method="POST" action="quanlidonhang.php<?= e(!empty($_GET['page']) ? '?page=' . max(1, (int)$_GET['page']) : '') ?>" class="status-form">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="action" value="update_status">
-                                            <input type="hidden" name="order_id" value="<?= $row['id'] ?>">
-                                            <select name="new_status" class="status-select" onchange="this.form.submit()">
-                                                <option value="PENDING"   <?= ($row['status'] ?? '') == 'PENDING'   ? 'selected' : '' ?>>Chờ xử lý</option>
-                                                <option value="CONFIRMED" <?= ($row['status'] ?? '') == 'CONFIRMED' ? 'selected' : '' ?>>Đã xác nhận</option>
-                                                <option value="SHIPPING"  <?= ($row['status'] ?? '') == 'SHIPPING'  ? 'selected' : '' ?>>Đang giao</option>
-                                                <option value="DELIVERED" <?= ($row['status'] ?? '') == 'DELIVERED' ? 'selected' : '' ?>>Đã giao</option>
-                                                <option value="CANCELLED" <?= ($row['status'] ?? '') == 'CANCELLED' ? 'selected' : '' ?>>Đã hủy</option>
+                                            <input type="hidden" name="order_id" value="<?= (int)$row['id'] ?>">
+                                            <select name="new_status" class="status-select">
+                                                <option value="PENDING"   <?= e(($row['status'] ?? '') == 'PENDING'   ? 'selected' : '') ?>>Chờ xử lý</option>
+                                                <option value="CONFIRMED" <?= e(($row['status'] ?? '') == 'CONFIRMED' ? 'selected' : '') ?>>Đã xác nhận</option>
+                                                <option value="SHIPPING"  <?= e(($row['status'] ?? '') == 'SHIPPING'  ? 'selected' : '') ?>>Đang giao</option>
+                                                <option value="DELIVERED" <?= e(($row['status'] ?? '') == 'DELIVERED' ? 'selected' : '') ?>>Đã giao</option>
+                                                <option value="CANCELLED" <?= e(($row['status'] ?? '') == 'CANCELLED' ? 'selected' : '') ?>>Đã hủy</option>
                                             </select>
                                         </form>
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn-detail" onclick="toggleDetail(<?= $row['id'] ?>, this)">Xem</button>
+                                        <button class="btn-detail" type="button" data-order-detail="<?= (int)$row['id'] ?>">Xem</button>
                                     </td>
                                     <td class="text-center doimau"> <form method="post" action="inhoadon.php" target="_blank" style="display:inline;">
                                         <?= csrf_field() ?>
-                                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                            <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
                                             <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;">In</button>
                                         </form>
                                     </td>
                                 </tr>
-                                <tr class="detail-row" id="detail-row-<?= $row['id'] ?>">
+                                <tr class="detail-row" id="detail-row-<?= (int)$row['id'] ?>">
                                     <td colspan="10">
-                                        <div class="detail-content" id="detail-<?= $row['id'] ?>">
-                                            <div id="detail-loading-<?= $row['id'] ?>">Đang tải...</div>
+                                        <div class="detail-content" id="detail-<?= (int)$row['id'] ?>">
+                                            <div id="detail-loading-<?= (int)$row['id'] ?>">Đang tải...</div>
                                         </div>
                                     </td>
                                 </tr>
@@ -720,13 +719,20 @@ function getAdminStatusInfo($status) {
     </div>
 
 
-    <script>
+    <script nonce="<?= e(csp_nonce()) ?>">
         /*Toggle dropdown list*/
         function toggleDD(myDropMenu) {
             document.getElementById(myDropMenu).classList.toggle("invisible");
         }
 
-        /*Filter dropdown options*/
+        document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.stopPropagation();
+                toggleDD(button.dataset.dropdownToggle);
+            });
+        });
+
+    /*Filter dropdown options*/
         function filterDD(myDropMenu, myDropMenuSearch) {
             var input, filter, ul, li, a, i;
             input = document.getElementById(myDropMenuSearch);
@@ -734,7 +740,7 @@ function getAdminStatusInfo($status) {
             div = document.getElementById(myDropMenu);
             a = div.getElementsByTagName("a");
             for (i = 0; i < a.length; i++) {
-                if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                     a[i].style.display = "";
                 } else {
                     a[i].style.display = "none";
@@ -744,7 +750,7 @@ function getAdminStatusInfo($status) {
 
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function (event) {
-            if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+            if (!event.target.closest('.drop-button, .drop-search')) {
                 var dropdowns = document.getElementsByClassName("dropdownlist");
                 for (var i = 0; i < dropdowns.length; i++) {
                     var openDropdown = dropdowns[i];
@@ -754,6 +760,14 @@ function getAdminStatusInfo($status) {
                 }
             }
         }
+    document.querySelectorAll('.status-form .status-select').forEach(function (select) {
+        select.addEventListener('change', function () { select.form.submit(); });
+    });
+    document.querySelectorAll('[data-order-detail]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            toggleDetail(Number.parseInt(button.dataset.orderDetail, 10), button);
+        });
+    });
     // Toggle order detail
     function toggleDetail(orderId, btn) {
         var detailRow = document.getElementById('detail-row-' + orderId);

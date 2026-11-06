@@ -23,5 +23,5 @@ try {
     http_response_code(409);
     exit('Không thể xóa bản ghi đang được sử dụng.');
 }
-header('Location: quanlibaidang.php', true, 303);
+app_redirect(BASE_URL . 'admin/quanlibaidang.php', 303);
 exit;

@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
         session_start();
     }
     if ( ! isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
+        app_redirect(BASE_URL . 'admin/canhbao.php');
         exit;
     }
     if (isset($_POST['login'])) {
@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: index.php');
+        app_redirect(BASE_URL . 'admin/index.php');
         exit;
     }
 
@@ -38,7 +38,7 @@ require_once dirname(__DIR__) . '/config.php';
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -75,7 +75,7 @@ include_once 'function.php';
         if (mysqli_stmt_execute($stmt_up)) {
             mysqli_stmt_close($stmt_up);
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('D? li?u du?c chèn thành công ');
                 window.location.href = 'quanlithanhvien.php';
             </script>
@@ -85,7 +85,7 @@ include_once 'function.php';
             else
             {
         ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('X?y ra l?i trong khi chèn d? li?u c?a b?n');
             </script>
             <?php
@@ -93,7 +93,7 @@ include_once 'function.php';
         // sql query execution function
     }
     if (isset($_POST['btn-cancel'])) {
-        header("Location: quanlithanhvien.php");
+        app_redirect(BASE_URL . "admin/quanlithanhvien.php");
     }
 ?>
 <!--Nav-->
@@ -128,11 +128,11 @@ include_once 'function.php';
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span
+                                data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                             Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -251,7 +251,7 @@ include_once 'function.php';
                     <label class="block ">
                         <span class="text-gray-700">H? và tên:</span>
                         <input value="<?php
-                            echo $fetched_row['hoten']; ?>" name="hoten"
+                            echo e($fetched_row['hoten']); ?>" name="hoten"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
                                type="text">
@@ -280,7 +280,7 @@ include_once 'function.php';
                     </label>
                     <label class="block mt-2">
                         <span class="text-gray-700">Ngày sinh(DD-MM-YYYY): </span>
-                        <input value="<?= date('d-m-Y ', $fetched_row['ngaysinh']) ?>" name="ngaysinh"
+                        <input value="<?= e(date('d-m-Y ', $fetched_row['ngaysinh'])) ?>" name="ngaysinh"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
                                type="text">
@@ -289,7 +289,7 @@ include_once 'function.php';
                     <label class="block mt-2">
                         <span class=" text-gray-700">Ð?a ch? c? th?:</span>
                         <input value="<?php
-                            echo $fetched_row['diachicuthe']; ?>" type="text"
+                            echo e($fetched_row['diachicuthe']); ?>" type="text"
                                name="diachicuthe"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder=""
@@ -303,8 +303,8 @@ include_once 'function.php';
                         <select value="1" type="text"
                                 name="chucvu"
                                 class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full">
-                            <option value="Qu?n lí" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Qu?n lí') ? 'selected' : '' ?>>Qu?n lí</option>
-                            <option value="Nhân viên" <?= (isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Nhân viên') ? 'selected' : '' ?>>Nhân viên</option>
+                            <option value="Qu?n lí" <?= e((isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Qu?n lí') ? 'selected' : '') ?>>Qu?n lí</option>
+                            <option value="Nhân viên" <?= e((isset($fetched_row['chucvu']) && $fetched_row['chucvu'] == 'Nhân viên') ? 'selected' : '') ?>>Nhân viên</option>
                         </select>
                     </label>
 
@@ -316,7 +316,7 @@ include_once 'function.php';
                                   name="motacongviec"
                                   class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
                                   placeholder=""
-                                  rows="3"><?php echo $fetched_row['motacongviec']; ?></textarea>
+                                  rows="3"><?php echo e($fetched_row['motacongviec']); ?></textarea>
                     </label>
                     <div class="mt-3 text-right">
                         <button name="btn-cancel"
@@ -337,11 +337,18 @@ include_once 'function.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -351,7 +358,7 @@ include_once 'function.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -361,7 +368,7 @@ include_once 'function.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

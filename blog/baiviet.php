@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: baiviet.php');
+    app_redirect(BASE_URL . 'blog/baiviet.php');
     exit;
 }
 
@@ -278,10 +278,10 @@ include_once BASE_PATH . 'includes/header.php';
 
             <!-- UC3: Tìm kiếm bài viết -->
             <div class="blog-search-bar">
-                <form method="GET" action="<?php echo BASE_URL; ?>blog/baiviet.php" class="blog-search-form">
+                <form method="GET" action="<?= e(BASE_URL) ?>blog/baiviet.php" class="blog-search-form">
                     <input type="text" name="search" class="blog-search-input" 
                            placeholder="Tìm kiếm bài viết..." 
-                           value="<?= htmlspecialchars($search) ?>">
+                           value="<?= e($search) ?>">
                     <button type="submit" class="blog-search-btn">
                         <i class="fas fa-search"></i> Tìm
                     </button>
@@ -292,9 +292,9 @@ include_once BASE_PATH . 'includes/header.php';
             <div class="search-result-info">
                 <span>
                     <i class="fas fa-search"></i>
-                    Kết quả cho "<strong><?= htmlspecialchars($search) ?></strong>" — <?= $totalRecords ?> bài viết
+                    Kết quả cho "<strong><?= e($search) ?></strong>" — <?= (int)$totalRecords ?> bài viết
                 </span>
-                <a href="<?php echo BASE_URL; ?>blog/baiviet.php" class="search-clear-link">
+                <a href="<?= e(BASE_URL) ?>blog/baiviet.php" class="search-clear-link">
                     <i class="fas fa-times"></i> Xóa tìm kiếm
                 </a>
             </div>
@@ -308,22 +308,20 @@ include_once BASE_PATH . 'includes/header.php';
                                 <div class="row align-items-center">
                                     <div class="col-md-5 mb-4 mb-md-0">
                                         <div style="overflow: hidden; border-radius: 8px;">
-                                            <img class="img-fluid w-100" style="object-fit:cover; height: 250px; transition: transform 0.5s;" 
-                                                 src="<?php echo BASE_URL; ?>admin/<?= $row['anhdaidien'] ?>" 
-                                                 alt="<?= htmlspecialchars($row['tieude']) ?>"
-                                                 onmouseover="this.style.transform='scale(1.05)'" 
-                                                 onmouseout="this.style.transform='scale(1)'">
+                                            <img class="img-fluid w-100 blog-hover-image" style="object-fit:cover; height: 250px; transition: transform 0.5s;"
+                                                 src="<?= e(safe_url(BASE_URL . 'admin/' . $row['anhdaidien'])) ?>"
+                                                 alt="<?= e($row['tieude']) ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-7 ps-md-4">
                                         <div class="blog-post-meta">
                                             <span><i class="far fa-calendar-alt me-1"></i> <?= date('d/m/Y H:i', $row['ngaycapnhat']) ?></span>
                                             <span class="mx-2">|</span>
-                                            <span><i class="far fa-user me-1"></i> <?= htmlspecialchars($row['nguoiphutrach']) ?></span>
+                                            <span><i class="far fa-user me-1"></i> <?= e($row['nguoiphutrach']) ?></span>
                                         </div>
-                                        <h3 class="blog-post-title"><?= htmlspecialchars($row['tieude']) ?></h3>
-                                        <p class="blog-post-excerpt"><?= htmlspecialchars(substr(strip_tags($row['noidung']), 0, 150)) ?>...</p>
-                                        <a href="<?php echo BASE_URL; ?>blog/chitietbaiviet.php?id=<?= $row['id'] ?>" class="btn-editorial-outline">
+                                        <h3 class="blog-post-title"><?= e($row['tieude']) ?></h3>
+                                        <p class="blog-post-excerpt"><?= e(substr(strip_tags($row['noidung']), 0, 150)) ?>...</p>
+                                        <a href="<?= e(BASE_URL) ?>blog/chitietbaiviet.php?id=<?= (int)$row['id'] ?>" class="btn-editorial-outline">
                                             Đọc tiếp <i class="fas fa-arrow-right ms-1"></i>
                                         </a>
                                     </div>
@@ -334,7 +332,7 @@ include_once BASE_PATH . 'includes/header.php';
                         <div class="blog-empty">
                             <i class="far fa-newspaper d-block"></i>
                             <h4>Không tìm thấy bài viết nào</h4>
-                            <p>Hãy thử từ khóa khác hoặc <a href="<?php echo BASE_URL; ?>blog/baiviet.php">xem tất cả bài viết</a>.</p>
+                            <p>Hãy thử từ khóa khác hoặc <a href="<?= e(BASE_URL) ?>blog/baiviet.php">xem tất cả bài viết</a>.</p>
                         </div>
                     <?php endif; ?>
                     
@@ -343,25 +341,25 @@ include_once BASE_PATH . 'includes/header.php';
                     <div class="d-flex justify-content-center mt-5">
                         <div id="pagination">
                             <?php if ($current_page > 3): ?>
-                                <a class="page-item" href="?<?= buildBlogQueryString(['page' => 1]) ?>">First</a>
+                                <a class="page-item" href="?<?= e(buildBlogQueryString(['page' => 1])) ?>">First</a>
                             <?php endif; ?>
                             <?php if ($current_page > 1): ?>
-                                <a class="page-item" href="?<?= buildBlogQueryString(['page' => $current_page - 1]) ?>">Prev</a>
+                                <a class="page-item" href="?<?= e(buildBlogQueryString(['page' => $current_page - 1])) ?>">Prev</a>
                             <?php endif; ?>
                             <?php for ($num = 1; $num <= $totalPages; $num++): ?>
                                 <?php if ($num > $current_page - 3 && $num < $current_page + 3): ?>
                                     <?php if ($num != $current_page): ?>
-                                        <a class="page-item" href="?<?= buildBlogQueryString(['page' => $num]) ?>"><?= $num ?></a>
+                                        <a class="page-item" href="?<?= e(buildBlogQueryString(['page' => $num])) ?>"><?= (int)$num ?></a>
                                     <?php else: ?>
-                                        <strong class="current-page page-item"><?= $num ?></strong>
+                                        <strong class="current-page page-item"><?= (int)$num ?></strong>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             <?php endfor; ?>
                             <?php if ($current_page < $totalPages - 1): ?>
-                                <a class="page-item" href="?<?= buildBlogQueryString(['page' => $current_page + 1]) ?>">Next</a>
+                                <a class="page-item" href="?<?= e(buildBlogQueryString(['page' => $current_page + 1])) ?>">Next</a>
                             <?php endif; ?>
                             <?php if ($current_page < $totalPages - 3): ?>
-                                <a class="page-item" href="?<?= buildBlogQueryString(['page' => $totalPages]) ?>">Last</a>
+                                <a class="page-item" href="?<?= e(buildBlogQueryString(['page' => $totalPages])) ?>">Last</a>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -371,5 +369,8 @@ include_once BASE_PATH . 'includes/header.php';
         </div>
     </section>
 </main>
+<style>
+.blog-hover-image:hover { transform: scale(1.05); }
+</style>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>
