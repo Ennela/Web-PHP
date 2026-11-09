@@ -64,6 +64,7 @@ foreach ($events as $event) {
 
     if (empty($email)) continue;
 
+    $maskedEmail = function_exists('app_mask_email') ? app_mask_email((string)$email) : '***';
     $emailSafe  = mysqli_real_escape_string($con, strtolower(trim($email)));
     $eventSafe  = mysqli_real_escape_string($con, $eventType);
     $msgIdSafe  = mysqli_real_escape_string($con, $messageId);
@@ -77,10 +78,10 @@ foreach ($events as $event) {
             if ($hardBounce) {
                 // Đưa vào blacklist — ngừng gửi vĩnh viễn
                 addToBlacklist($email, 'hard_bounce');
-                error_log("MAILJET_WEBHOOK: HARD BOUNCE → Blacklisted. Email=$email");
+                error_log("MAILJET_WEBHOOK: HARD BOUNCE → Blacklisted. Email=$maskedEmail");
             } else {
                 // Soft bounce — ghi log nhưng chưa block
-                error_log("MAILJET_WEBHOOK: Soft bounce. Email=$email Error=$errorInfo");
+                error_log("MAILJET_WEBHOOK: Soft bounce. Email=$maskedEmail Error=$errorInfo");
             }
 
             // Log vào bảng webhook
@@ -92,7 +93,7 @@ foreach ($events as $event) {
         case 'spam':
             // Blacklist NGAY LẬP TỨC — bảo vệ Sender Reputation
             addToBlacklist($email, 'spam_complaint');
-            error_log("MAILJET_WEBHOOK: SPAM COMPLAINT → Blacklisted immediately. Email=$email");
+            error_log("MAILJET_WEBHOOK: SPAM COMPLAINT → Blacklisted immediately. Email=$maskedEmail");
             
             logWebhookEvent($con, $emailSafe, 'spam', $msgIdSafe, $errorInfo, $timestamp);
             $processed++;
@@ -101,7 +102,7 @@ foreach ($events as $event) {
         // ━━━ BLOCKED: Mailjet chặn email (reputation quá thấp) ━━━
         case 'blocked':
             addToBlacklist($email, 'blocked');
-            error_log("MAILJET_WEBHOOK: BLOCKED → Blacklisted. Email=$email");
+            error_log("MAILJET_WEBHOOK: BLOCKED → Blacklisted. Email=$maskedEmail");
 
             logWebhookEvent($con, $emailSafe, 'blocked', $msgIdSafe, $errorInfo, $timestamp);
             $processed++;
@@ -115,14 +116,14 @@ foreach ($events as $event) {
                 "UPDATE `tbl_tkkhachhang` SET `email_marketing_opt_out` = 1 
                  WHERE LOWER(`email`) = '$emailSafe'"
             );
-            error_log("MAILJET_WEBHOOK: UNSUBSCRIBE. Email=$email");
+            error_log("MAILJET_WEBHOOK: UNSUBSCRIBE. Email=$maskedEmail");
 
             logWebhookEvent($con, $emailSafe, 'unsub', $msgIdSafe, '', $timestamp);
             $processed++;
             break;
 
         default:
-            error_log("MAILJET_WEBHOOK: Unknown event type '$eventType' for Email=$email");
+            error_log("MAILJET_WEBHOOK: Unknown event type '$eventType' for Email=$maskedEmail");
             break;
     }
 }

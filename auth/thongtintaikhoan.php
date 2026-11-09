@@ -25,12 +25,19 @@ if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
 $makh = intval($_SESSION['makh']);
 $query = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang` WHERE `makh` = '$makh' LIMIT 1");
 $user = mysqli_fetch_array($query);
+if ($user) {
+    $user['sdt'] = app_decrypt_field($user['sdt'] ?? '', 'tbl_tkkhachhang.sdt');
+    $user['diachi'] = app_decrypt_field($user['diachi'] ?? '', 'tbl_tkkhachhang.diachi');
+}
 
 // UC5: Lịch sử mua hàng
 $orders = [];
 $orderQuery = mysqli_query($con, "SELECT * FROM `oder` WHERE `makh` = $makh ORDER BY `ngaytao` DESC LIMIT 20");
 if ($orderQuery) {
     while ($orderRow = mysqli_fetch_assoc($orderQuery)) {
+        $orderRow['sdt'] = app_decrypt_field($orderRow['sdt'] ?? '', 'oder.sdt');
+        $orderRow['diachi'] = app_decrypt_field($orderRow['diachi'] ?? '', 'oder.diachi');
+        $orderRow['note'] = app_decrypt_field($orderRow['note'] ?? '', 'oder.note');
         $orders[] = $orderRow;
     }
 }

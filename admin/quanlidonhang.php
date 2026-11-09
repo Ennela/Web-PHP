@@ -656,6 +656,9 @@ function getAdminStatusInfo($status) {
                         <tbody>
                             <?php
                             while ($row = mysqli_fetch_array($result)) {
+                                $row['sdt'] = app_decrypt_field($row['sdt'] ?? '', 'oder.sdt');
+                                $row['diachi'] = app_decrypt_field($row['diachi'] ?? '', 'oder.diachi');
+                                $row['note'] = app_decrypt_field($row['note'] ?? '', 'oder.note');
                                 $statusInfo = getAdminStatusInfo($row['status'] ?? 'PENDING');
                                 ?>
                                 <tr>

@@ -155,7 +155,7 @@ CREATE TABLE `tbl_dangnhap` (
 
 LOCK TABLES `tbl_dangnhap` WRITE;
 /*!40000 ALTER TABLE `tbl_dangnhap` DISABLE KEYS */;
-INSERT INTO `tbl_dangnhap` VALUES (9,'Nguyễn Văn Kiên','noah2005','kudo-kun',NULL,NULL,NULL);
+INSERT INTO `tbl_dangnhap` VALUES (9,'Nguyễn Văn Kiên','noah2005','$argon2id$v=19$m=65536,t=4,p=1$UVg0TUhNaFJhL0VnajVZcg$sb/rIkI9vfMfdPIVCfurfq8QPx8agmqBTjzgtimbo2o',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `tbl_dangnhap` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -252,7 +252,7 @@ CREATE TABLE `tbl_qlthanhvien` (
 
 LOCK TABLES `tbl_qlthanhvien` WRITE;
 /*!40000 ALTER TABLE `tbl_qlthanhvien` DISABLE KEYS */;
-INSERT INTO `tbl_qlthanhvien` VALUES (1,'Nguyễn Văn Kiên','Nam',1119218400,'Hà Nội',NULL,NULL,NULL,'Quản lí','Super Admin',1775183812,1775183812,'noah2005','kudo-kun'),(2,'Đỗ Quang Hà','',1775944800,'',NULL,NULL,NULL,'Quản lí','',1775183812,1775183812,'ha','ha123'),(3,'Nguyễn Bá Nhân','',1775944800,'',NULL,NULL,NULL,'Quản lí','',1775183812,1775183812,'nhan','nhan123');
+INSERT INTO `tbl_qlthanhvien` VALUES (1,'Nguyễn Văn Kiên','Nam',1119218400,'Hà Nội',NULL,NULL,NULL,'Quản lí','Super Admin',1775183812,1775183812,'noah2005','$argon2id$v=19$m=65536,t=4,p=1$UVg0TUhNaFJhL0VnajVZcg$sb/rIkI9vfMfdPIVCfurfq8QPx8agmqBTjzgtimbo2o'),(2,'Đỗ Quang Hà','',1775944800,'',NULL,NULL,NULL,'Quản lí','',1775183812,1775183812,'ha','$argon2id$v=19$m=65536,t=4,p=1$Q3hkdHl6S0M1VXBVSm1FUA$VJX1VFrTzhsXaoOj3YEsxSlxwsnZ16o8sN5RMh4Y/3U'),(3,'Nguyễn Bá Nhân','',1775944800,'',NULL,NULL,NULL,'Quản lí','',1775183812,1775183812,'nhan','$argon2id$v=19$m=65536,t=4,p=1$ZVNGb3Jnb2tJZS9sLk9ZQg$ttEI4ZDwvvQpjsqtjmNU1wanDZrvztXv7/7yieCuIsg');
 /*!40000 ALTER TABLE `tbl_qlthanhvien` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -308,7 +308,7 @@ CREATE TABLE `tbl_tkkhachhang` (
 
 LOCK TABLES `tbl_tkkhachhang` WRITE;
 /*!40000 ALTER TABLE `tbl_tkkhachhang` DISABLE KEYS */;
-INSERT INTO `tbl_tkkhachhang` VALUES (1,'test05','kudo-kun','test1',NULL);
+INSERT INTO `tbl_tkkhachhang` VALUES (1,'test05','$argon2id$v=19$m=65536,t=4,p=1$UVg0TUhNaFJhL0VnajVZcg$sb/rIkI9vfMfdPIVCfurfq8QPx8agmqBTjzgtimbo2o','test1',NULL);
 /*!40000 ALTER TABLE `tbl_tkkhachhang` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -29,7 +29,7 @@ function app_load_local_environment(string $path): void
         $value = trim($value);
         // Only application settings are allowed: never PATH, PHP_INI_SCAN_DIR,
         // library-loading settings, or arbitrary process environment variables.
-        if (!preg_match('/\A(?:APP_[A-Z0-9_]+|MYSQL(?:HOST|USER|PASSWORD|DATABASE|PORT)|MAIL(?:JET)?_[A-Z0-9_]+|BRAND_[A-Z0-9_]+|VNPAY_[A-Z0-9_]+|TRUSTED_PROXIES)\z/', $name)
+        if (!preg_match('/\A(?:APP_[A-Z0-9_]+|MYSQL(?:HOST|USER|PASSWORD|DATABASE|PORT|_[A-Z0-9_]+)|MAIL(?:JET)?_[A-Z0-9_]+|BRAND_[A-Z0-9_]+|VNPAY_[A-Z0-9_]+|TRUSTED_PROXIES)\z/', $name)
             || getenv($name) !== false
             || strpos($value, "\0") !== false) {
             continue;

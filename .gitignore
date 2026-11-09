@@ -26,9 +26,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
+# Environment variables & local secret keyrings
 .env
 .env.local
+.secrets/
+backups/
+backup/
+*.key
+*.pem
+*.p12
+*.pfx
 
 # Backup files
 *.bak

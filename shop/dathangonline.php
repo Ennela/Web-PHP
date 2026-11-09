@@ -83,12 +83,14 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $orderCode = generateOrderCode($con);
     $email_safe = mysqli_real_escape_string($con, $email_kh);
     $token = bin2hex(random_bytes(16));
+    $tokenHash = app_hash_token($token);
     $tenkh_safe = mysqli_real_escape_string($con, $tenkh);
-    $sdt_safe = mysqli_real_escape_string($con, $sdt);
-    $diachi_safe = mysqli_real_escape_string($con, $diachi);
-    $note_safe = mysqli_real_escape_string($con, $note);
-    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$token', '$tenkh_safe', '$sdt_safe', '$email_safe', '$diachi_safe', '$note_safe', '$total', '" . time() . "', 'PENDING', 'UNPAID', $makh_val)");
+    $sdt_safe = mysqli_real_escape_string($con, (string)app_encrypt($sdt, 'oder.sdt'));
+    $diachi_safe = mysqli_real_escape_string($con, (string)app_encrypt($diachi, 'oder.diachi'));
+    $note_safe = mysqli_real_escape_string($con, (string)app_encrypt($note, 'oder.note'));
+    $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$tokenHash', '$tenkh_safe', '$sdt_safe', '$email_safe', '$diachi_safe', '$note_safe', '$total', '" . time() . "', 'PENDING', 'UNPAID', $makh_val)");
     $orderID = $con->insert_id;
+    $_SESSION['vnpay_order_tokens'][(int)$orderID] = $token;
 
     $insertString = "";
     foreach ($orderProducts as $key => $sp) {
@@ -177,8 +179,8 @@ if (!empty($_SESSION['makh'])) {
     if ($customer_query && mysqli_num_rows($customer_query) > 0) {
         $customer_row = mysqli_fetch_assoc($customer_query);
         $default_name = $customer_row['hoten'] ?? '';
-        $default_phone = $customer_row['sdt'] ?? '';
-        $default_address = $customer_row['diachi'] ?? '';
+        $default_phone = app_decrypt_field($customer_row['sdt'] ?? '', 'tbl_tkkhachhang.sdt');
+        $default_address = app_decrypt_field($customer_row['diachi'] ?? '', 'tbl_tkkhachhang.diachi');
         $default_email = $customer_row['email'] ?? '';
     }
     
@@ -187,7 +189,8 @@ if (!empty($_SESSION['makh'])) {
     if ($address_query && mysqli_num_rows($address_query) > 0) {
         $address_row = mysqli_fetch_assoc($address_query);
         $default_name = $address_row['hoten'];
-        $default_phone = $address_row['sdt'];
+        $default_phone = app_decrypt_field($address_row['sdt'] ?? '', 'tbl_diachi.sdt');
+        $address_row['diachi_cuthe'] = app_decrypt_field($address_row['diachi_cuthe'] ?? '', 'tbl_diachi.diachi_cuthe');
         
         $addr_parts = [];
         if (!empty($address_row['diachi_cuthe'])) $addr_parts[] = $address_row['diachi_cuthe'];
