@@ -80,13 +80,14 @@ if (!isset($_SESSION['dangnhap1'])) {
             exit;
         }
 
-        // Hash mật khẩu bằng bcrypt
-        $matkhau_hash = password_hash($matkhau_raw, PASSWORD_BCRYPT);
+        // Hash mật khẩu bằng Argon2id / Bcrypt và mã hóa địa chỉ cụ thể
+        $matkhau_hash = app_hash_password($matkhau_raw);
+        $diachicuthe_enc = (string)app_encrypt($diachicuthe, 'tbl_qlthanhvien.diachicuthe');
 
         // Insert bằng prepared statement
         $stmt = mysqli_prepare($con, "INSERT INTO tbl_qlthanhvien(hoten, chucvu, ngaytao, ngaycapnhat, diachicuthe, ngaysinh, gioitinh, motacongviec, taikhoan, matkhau) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $now = time();
-        mysqli_stmt_bind_param($stmt, "ssiisisiss", $hoten, $chucvu, $now, $now, $diachicuthe, $ngaysinh, $gioitinh, $motacongviec, $taikhoan, $matkhau_hash);
+        mysqli_stmt_bind_param($stmt, "ssiisisiss", $hoten, $chucvu, $now, $now, $diachicuthe_enc, $ngaysinh, $gioitinh, $motacongviec, $taikhoan, $matkhau_hash);
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);

@@ -49,7 +49,7 @@ if (!empty($sdt) && !preg_match('/^(0|\+84)[0-9]{9,10}$/', $sdt)) {
     $errors[] = 'Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0 hoặc +84)';
 }
 
-if (!empty($gioitinh) && !in_array($gioitinh, ['Nam', 'Nữ', 'Khác'])) {
+if (!empty($gioitinh) && !in_array($gioitinh, ['Nam', 'Nữ', 'Khác'], true)) {
     $errors[] = 'Giới tính không hợp lệ';
 }
 
@@ -65,27 +65,23 @@ if (!empty($errors)) {
     exit;
 }
 
-// === UPDATE ===
-$hoten_safe = mysqli_real_escape_string($con, $hoten);
-$email_safe = mysqli_real_escape_string($con, $email);
-$sdt_safe = mysqli_real_escape_string($con, $sdt);
-$ngaysinh_safe = !empty($ngaysinh) ? "'" . mysqli_real_escape_string($con, $ngaysinh) . "'" : "NULL";
-$gioitinh_safe = !empty($gioitinh) ? "'" . mysqli_real_escape_string($con, $gioitinh) . "'" : "NULL";
+// === ENCRYPT SENSITIVE PII & UPDATE VIA PREPARED STATEMENT ===
+$sdt_enc = $sdt !== '' ? (string)app_encrypt($sdt, 'tbl_tkkhachhang.sdt') : '';
+$ngaysinh_val = $ngaysinh !== '' ? $ngaysinh : null;
+$gioitinh_val = $gioitinh !== '' ? $gioitinh : null;
 $now = time();
 
-$sql = "UPDATE `tbl_tkkhachhang` SET 
-    `hoten` = '$hoten_safe',
-    `email` = '$email_safe',
-    `sdt` = '$sdt_safe',
-    `ngaysinh` = $ngaysinh_safe,
-    `gioitinh` = $gioitinh_safe,
-    `last_updated` = $now
-    WHERE `makh` = $makh";
+$stmt = mysqli_prepare(
+    $con,
+    "UPDATE `tbl_tkkhachhang` SET `hoten` = ?, `email` = ?, `sdt` = ?, `ngaysinh` = ?, `gioitinh` = ?, `last_updated` = ? WHERE `makh` = ?"
+);
+mysqli_stmt_bind_param($stmt, "sssssii", $hoten, $email, $sdt_enc, $ngaysinh_val, $gioitinh_val, $now, $makh);
+$updated = mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
 
-if (mysqli_query($con, $sql)) {
-    // Cập nhật session
+if ($updated) {
     $_SESSION['dangnhap'] = $hoten;
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Cập nhật thông tin thành công!',

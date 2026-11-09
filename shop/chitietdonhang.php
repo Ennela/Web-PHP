@@ -34,6 +34,11 @@ if ($orderId <= 0) {
 $sql = "SELECT * FROM `oder` WHERE `id` = $orderId AND `makh` = $makh";
 $result = mysqli_query($con, $sql);
 $order = mysqli_fetch_assoc($result);
+if ($order) {
+    $order['sdt'] = app_decrypt_field($order['sdt'] ?? '', 'oder.sdt');
+    $order['diachi'] = app_decrypt_field($order['diachi'] ?? '', 'oder.diachi');
+    $order['note'] = app_decrypt_field($order['note'] ?? '', 'oder.note');
+}
 
 if (!$order) {
     echo "<script>alert('Bạn không có quyền xem đơn hàng này!'); window.location.href='" . BASE_URL . "shop/tradonhang.php';</script>";

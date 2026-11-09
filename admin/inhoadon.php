@@ -56,6 +56,9 @@ if (empty($oder)) {
     echo "<script>alert('Đơn hàng không tồn tại hoặc chưa có sản phẩm!'); window.location.href='quanlidonhang.php';</script>";
     exit;
 }
+$oder[0]['sdt'] = app_decrypt_field($oder[0]['sdt'] ?? '', 'oder.sdt');
+$oder[0]['diachi'] = app_decrypt_field($oder[0]['diachi'] ?? '', 'oder.diachi');
+$oder[0]['note'] = app_decrypt_field($oder[0]['note'] ?? '', 'oder.note');
 ?>
 <!DOCTYPE html>
 <!--

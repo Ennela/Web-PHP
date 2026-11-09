@@ -12,12 +12,17 @@ $token = trim($_GET['token'] ?? '');
 $validToken = false;
 $errorMessage = '';
 
-if (empty($token) || strlen($token) !== 64) {
+if (empty($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
     $errorMessage = 'Link đặt lại mật khẩu không hợp lệ.';
 } else {
-    $tokenSafe = mysqli_real_escape_string($con, $token);
-    $query = mysqli_query($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE `reset_token` = '$tokenSafe' AND `reset_token_expiry` >= " . time() . " LIMIT 1");
-    $user = mysqli_fetch_assoc($query);
+    $tokenHash = app_hash_token($token);
+    $now = time();
+    $stmt = mysqli_prepare($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE (`reset_token` = ? OR `reset_token` = ?) AND `reset_token_expiry` >= ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "ssi", $tokenHash, $token, $now);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($res);
+    mysqli_stmt_close($stmt);
 
     if (!$user) {
         $errorMessage = 'Link đặt lại mật khẩu đã hết hạn hoặc đã được sử dụng. Vui lòng yêu cầu lại.';

@@ -26,7 +26,7 @@ $mk_xacnhan  = $_POST['matkhau_xacnhan'] ?? '';
 // ── Validate ──
 $errors = [];
 
-if (empty($token) || strlen($token) !== 64) {
+if (empty($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
     echo json_encode(['success' => false, 'message' => 'Token không hợp lệ']);
     exit;
 }
@@ -45,24 +45,31 @@ if (!empty($errors)) {
     exit;
 }
 
-// ── Validate token trong DB ──
-$tokenSafe = mysqli_real_escape_string($con, $token);
-$query = mysqli_query($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE `reset_token` = '$tokenSafe' AND `reset_token_expiry` >= " . time() . " LIMIT 1");
-$user = mysqli_fetch_assoc($query);
+// ── Validate token trong DB (băm SHA-256 + prepared statement) ──
+$tokenHash = app_hash_token($token);
+$now = time();
+$stmtCheck = mysqli_prepare($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE (`reset_token` = ? OR `reset_token` = ?) AND `reset_token_expiry` >= ? LIMIT 1");
+mysqli_stmt_bind_param($stmtCheck, "ssi", $tokenHash, $token, $now);
+mysqli_stmt_execute($stmtCheck);
+$resCheck = mysqli_stmt_get_result($stmtCheck);
+$user = mysqli_fetch_assoc($resCheck);
+mysqli_stmt_close($stmtCheck);
 
 if (!$user) {
     echo json_encode(['success' => false, 'message' => 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.']);
     exit;
 }
 
-// ── Update mật khẩu & xóa token ──
+// ── Update mật khẩu bằng Argon2id/Bcrypt hash & xóa token ──
 $makh = intval($user['makh']);
-$mk_moi_safe = mysqli_real_escape_string($con, $mk_moi);
-$now = time();
+$hashedPassword = app_hash_password($mk_moi);
 
-$sql = "UPDATE `tbl_tkkhachhang` SET `password` = '$mk_moi_safe', `reset_token` = NULL, `reset_token_expiry` = NULL, `last_updated` = $now WHERE `makh` = $makh";
+$stmtUpdate = mysqli_prepare($con, "UPDATE `tbl_tkkhachhang` SET `password` = ?, `reset_token` = NULL, `reset_token_expiry` = NULL, `last_updated` = ? WHERE `makh` = ?");
+mysqli_stmt_bind_param($stmtUpdate, "sii", $hashedPassword, $now, $makh);
+$updated = mysqli_stmt_execute($stmtUpdate);
+mysqli_stmt_close($stmtUpdate);
 
-if (mysqli_query($con, $sql)) {
+if ($updated) {
     $_SESSION['swal_success'] = 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.';
     echo json_encode(['success' => true, 'message' => 'Đặt lại mật khẩu thành công!', 'redirect' => BASE_URL . 'auth/dangnhap.php']);
 } else {

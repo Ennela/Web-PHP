@@ -7,8 +7,8 @@
 function generateOrderCode($con) {
     $maxAttempts = 20;
     for ($i = 0; $i < $maxAttempts; $i++) {
-        // Sinh số ngẫu nhiên từ 100000000 đến 999999999 (đúng 9 chữ số)
-        $code = str_pad(mt_rand(100000000, 999999999), 9, '0', STR_PAD_LEFT);
+        // Sinh số ngẫu nhiên an toàn mật mã từ 100000000 đến 999999999 (đúng 9 chữ số)
+        $code = str_pad((string)random_int(100000000, 999999999), 9, '0', STR_PAD_LEFT);
         
         // Kiểm tra trùng trong DB
         $check = mysqli_query($con, "SELECT 1 FROM `oder` WHERE `order_code` = '" . mysqli_real_escape_string($con, $code) . "' LIMIT 1");
@@ -16,6 +16,6 @@ function generateOrderCode($con) {
             return $code;
         }
     }
-    // Fallback: dùng timestamp + random (cực hiếm khi xảy ra)
-    return substr(time() . mt_rand(100, 999), -9);
+    // Fallback: dùng timestamp + CSPRNG (cực hiếm khi xảy ra)
+    return substr(time() . random_int(100, 999), -9);
 }

@@ -67,6 +67,11 @@ $statusMessage = '';
 if ($orderId > 0) {
     $orderResult = mysqli_query($con, "SELECT * FROM `oder` WHERE `id` = $orderId LIMIT 1");
     $order = mysqli_fetch_assoc($orderResult);
+    if ($order) {
+        $order['sdt'] = app_decrypt_field($order['sdt'] ?? '', 'oder.sdt');
+        $order['diachi'] = app_decrypt_field($order['diachi'] ?? '', 'oder.diachi');
+        $order['note'] = app_decrypt_field($order['note'] ?? '', 'oder.note');
+    }
 }
 
 if ($order) {
@@ -124,7 +129,17 @@ if ($order) {
                 }
 
                 $orderCodeDisplay = !empty($order['order_code']) ? $order['order_code'] : $orderId;
-                $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCodeDisplay . "&token=" . ($order['token'] ?? '');
+                $rawTrackingToken = $_SESSION['vnpay_order_tokens'][(int)$orderId] ?? '';
+                unset($_SESSION['vnpay_order_tokens'][(int)$orderId]);
+                if ($rawTrackingToken === '') {
+                    $rawTrackingToken = bin2hex(random_bytes(16));
+                    $newTokenHash = app_hash_token($rawTrackingToken);
+                    $stmtTk = mysqli_prepare($con, "UPDATE `oder` SET `token` = ? WHERE `id` = ?");
+                    mysqli_stmt_bind_param($stmtTk, "si", $newTokenHash, $orderId);
+                    mysqli_stmt_execute($stmtTk);
+                    mysqli_stmt_close($stmtTk);
+                }
+                $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCodeDisplay . "&token=" . $rawTrackingToken;
 
                 $emailData = getOrderConfirmationTemplate([
                     'customerName'  => $orderTenkh,

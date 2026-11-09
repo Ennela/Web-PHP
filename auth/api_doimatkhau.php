@@ -63,7 +63,7 @@ mysqli_stmt_close($stmt);
 
 $currentPasswordMatch = false;
 if ($user) {
-    if (password_verify($mk_hientai, $user['password']) || $user['password'] === $mk_hientai) {
+    if (app_verify_password($mk_hientai, $user['password'] ?? '')) {
         $currentPasswordMatch = true;
     }
 }
@@ -74,7 +74,7 @@ if (!$currentPasswordMatch) {
 }
 
 // Update mật khẩu mới bằng bcrypt hash
-$hashedPassword = password_hash($mk_moi, PASSWORD_BCRYPT);
+$hashedPassword = app_hash_password($mk_moi);
 $now = time();
 $updateStmt = mysqli_prepare($con, "UPDATE `tbl_tkkhachhang` SET `password` = ?, `last_updated` = ? WHERE `makh` = ?");
 mysqli_stmt_bind_param($updateStmt, "sii", $hashedPassword, $now, $makh);

@@ -4,6 +4,8 @@
 if (!defined('SECURITY_MODULE_LOADED')) {
     define('SECURITY_MODULE_LOADED', true);
 
+require_once __DIR__ . '/crypto.php';
+
 function app_is_production(): bool
 {
     return in_array(getenv('APP_ENV') ?: 'local', ['production', 'staging'], true);
@@ -186,7 +188,7 @@ function app_security_bootstrap(): ?string
     $project = dirname(__DIR__) . DIRECTORY_SEPARATOR;
     $relative = str_replace('\\', '/', substr($entry, strlen($project)));
     if (strpos($entry, $project) === 0 && (
-        preg_match('~^(?:includes|database|documents|scripts|scratch|deploy|vendor|\.git|\.codex|\.agents)(?:/|$)~i', $relative)
+        preg_match('~^(?:includes|database|documents|scripts|scratch|deploy|vendor|backups|tests|\.secrets|\.git|\.codex|\.agents)(?:/|$)~i', $relative)
         || in_array($relative, ['config.php', 'admin/connect_db.php', 'admin/function.php', 'admin/pagination.php', 'vnpay_php/config.php'], true)
         || preg_match('~^(?:auth|admin)/uploads/~i', $relative)
     )) {

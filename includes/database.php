@@ -34,7 +34,23 @@ function app_database_connection(): mysqli
     try {
         $connection = mysqli_init();
         mysqli_options($connection, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
-        mysqli_real_connect($connection, $host, $user, $password, $database, (int)$port);
+
+        $flags = 0;
+        $sslCa = trim((string)(getenv('MYSQL_SSL_CA') ?: ''));
+        $sslRequired = filter_var(getenv('MYSQL_SSL_REQUIRED') ?: '0', FILTER_VALIDATE_BOOLEAN);
+        $sslVerify = filter_var(getenv('MYSQL_SSL_VERIFY') ?: '1', FILTER_VALIDATE_BOOLEAN);
+
+        if ($sslCa !== '' || $sslRequired) {
+            if ($sslCa !== '') {
+                mysqli_ssl_set($connection, null, null, $sslCa, null, null);
+            }
+            $flags |= MYSQLI_CLIENT_SSL;
+            if (defined('MYSQLI_OPT_SSL_VERIFY_SERVER_CERT')) {
+                mysqli_options($connection, MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, $sslVerify);
+            }
+        }
+
+        mysqli_real_connect($connection, $host, $user, $password, $database, (int)$port, null, $flags);
         mysqli_set_charset($connection, 'utf8mb4');
         return $connection;
     } catch (mysqli_sql_exception $error) {

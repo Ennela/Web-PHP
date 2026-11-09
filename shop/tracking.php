@@ -6,25 +6,30 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 include BASE_PATH . 'includes/connect.php';
 
-$orderCode = isset($_GET['order']) ? mysqli_real_escape_string($con, $_GET['order']) : '';
-$token = isset($_GET['token']) ? mysqli_real_escape_string($con, $_GET['token']) : '';
+$orderCode = trim((string)($_GET['order'] ?? ''));
+$token = trim((string)($_GET['token'] ?? ''));
 
 $error = '';
 $orderData = null;
 $orderDetails = [];
 
-if (empty($orderCode) || empty($token)) {
+if ($orderCode === '' || $token === '') {
     $error = "Đường dẫn không hợp lệ. Vui lòng kiểm tra lại link trong email của bạn.";
 } else {
-    // Kiểm tra đơn hàng và token bằng prepared statement
-    $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND `token` = ? LIMIT 1");
-    mysqli_stmt_bind_param($stmt, "ss", $orderCode, $token);
+    $tokenHash = app_hash_token($token);
+    // Kiểm tra đơn hàng và token hash bằng prepared statement
+    $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND (`token` = ? OR `token` = ?) LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "sss", $orderCode, $tokenHash, $token);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $orderData = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
+
+        $orderData['sdt'] = app_decrypt_field($orderData['sdt'] ?? '', 'oder.sdt');
+        $orderData['diachi'] = app_decrypt_field($orderData['diachi'] ?? '', 'oder.diachi');
+        $orderData['note'] = app_decrypt_field($orderData['note'] ?? '', 'oder.note');
 
         // Lấy chi tiết đơn hàng
         $orderId = (int)$orderData['id'];
@@ -115,7 +120,6 @@ include BASE_PATH . 'includes/header.php';
     .tracking-page .text-danger {
         font-size: clamp(1.1rem, 3vw, 1.5rem) !important;
     }
-    /* Responsive table for products */
     .tracking-page .table td {
         vertical-align: middle;
         padding: clamp(8px, 2vw, 12px);
@@ -131,13 +135,11 @@ include BASE_PATH . 'includes/header.php';
     .tracking-page .table small {
         font-size: clamp(0.7rem, 1.5vw, 0.82rem);
     }
-    /* Alert responsive */
     .tracking-page .alert {
         font-size: clamp(0.85rem, 2vw, 1rem);
         border-radius: 12px;
         padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px);
     }
-    /* Mobile: stack info rows */
     @media (max-width: 575.98px) {
         .tracking-page .row.mb-4 > .col-sm-6 {
             margin-bottom: 16px;

@@ -23,11 +23,17 @@ $makh = intval($_SESSION['makh']);
 
 // === GET: Lấy danh sách ===
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $result = mysqli_query($con, "SELECT * FROM `tbl_diachi` WHERE `makh` = $makh ORDER BY `macdinh` DESC, `ngaytao` DESC");
+    $stmt = mysqli_prepare($con, "SELECT * FROM `tbl_diachi` WHERE `makh` = ? ORDER BY `macdinh` DESC, `ngaytao` DESC");
+    mysqli_stmt_bind_param($stmt, "i", $makh);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
     $addresses = [];
     while ($row = mysqli_fetch_assoc($result)) {
+        $row['sdt'] = app_decrypt_field($row['sdt'] ?? '', 'tbl_diachi.sdt');
+        $row['diachi_cuthe'] = app_decrypt_field($row['diachi_cuthe'] ?? '', 'tbl_diachi.diachi_cuthe');
         $addresses[] = $row;
     }
+    mysqli_stmt_close($stmt);
     echo json_encode(['success' => true, 'data' => $addresses]);
     exit;
 }
@@ -43,7 +49,6 @@ $action = $_POST['action'] ?? '';
 switch ($action) {
     // --- THÊM ---
     case 'add':
-        // Kiểm tra giới hạn 5
         $countQ = mysqli_query($con, "SELECT COUNT(*) AS cnt FROM `tbl_diachi` WHERE `makh` = $makh");
         $countR = mysqli_fetch_assoc($countQ);
         if ($countR['cnt'] >= 5) {
@@ -59,7 +64,6 @@ switch ($action) {
         $diachi_cuthe = trim($_POST['diachi_cuthe'] ?? '');
         $macdinh = intval($_POST['macdinh'] ?? 0);
 
-        // Validate
         if (empty($hoten) || empty($sdt) || empty($diachi_cuthe)) {
             echo json_encode(['success' => false, 'message' => 'Họ tên, SĐT và địa chỉ cụ thể là bắt buộc']);
             exit;
@@ -70,34 +74,30 @@ switch ($action) {
             exit;
         }
 
-        // Nếu đặt mặc định, bỏ mặc định các cái khác
         if ($macdinh) {
             mysqli_query($con, "UPDATE `tbl_diachi` SET `macdinh` = 0 WHERE `makh` = $makh");
         }
 
-        // Nếu là địa chỉ đầu tiên, tự động đặt mặc định
         if ($countR['cnt'] == 0) {
             $macdinh = 1;
         }
 
         $now = time();
-        $sql = sprintf(
-            "INSERT INTO `tbl_diachi` (`makh`, `hoten`, `sdt`, `tinh`, `quan_huyen`, `phuong_xa`, `diachi_cuthe`, `macdinh`, `ngaytao`, `ngaycapnhat`) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', %d, %d, %d)",
-            $makh,
-            mysqli_real_escape_string($con, $hoten),
-            mysqli_real_escape_string($con, $sdt),
-            mysqli_real_escape_string($con, $tinh),
-            mysqli_real_escape_string($con, $quan_huyen),
-            mysqli_real_escape_string($con, $phuong_xa),
-            mysqli_real_escape_string($con, $diachi_cuthe),
-            $macdinh,
-            $now, $now
-        );
+        $sdt_enc = (string)app_encrypt($sdt, 'tbl_diachi.sdt');
+        $diachi_cuthe_enc = (string)app_encrypt($diachi_cuthe, 'tbl_diachi.diachi_cuthe');
 
-        if (mysqli_query($con, $sql)) {
+        $stmt = mysqli_prepare(
+            $con,
+            "INSERT INTO `tbl_diachi` (`makh`, `hoten`, `sdt`, `tinh`, `quan_huyen`, `phuong_xa`, `diachi_cuthe`, `macdinh`, `ngaytao`, `ngaycapnhat`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        mysqli_stmt_bind_param($stmt, "issssssiii", $makh, $hoten, $sdt_enc, $tinh, $quan_huyen, $phuong_xa, $diachi_cuthe_enc, $macdinh, $now, $now);
+
+        if (mysqli_stmt_execute($stmt)) {
             $newId = mysqli_insert_id($con);
+            mysqli_stmt_close($stmt);
             echo json_encode(['success' => true, 'message' => 'Thêm địa chỉ thành công!', 'id' => $newId]);
         } else {
+            mysqli_stmt_close($stmt);
             echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
@@ -128,20 +128,20 @@ switch ($action) {
         }
 
         $now = time();
-        $sql = sprintf(
-            "UPDATE `tbl_diachi` SET `hoten`='%s', `sdt`='%s', `tinh`='%s', `quan_huyen`='%s', `phuong_xa`='%s', `diachi_cuthe`='%s', `ngaycapnhat`=%d WHERE `id`=%d AND `makh`=%d",
-            mysqli_real_escape_string($con, $hoten),
-            mysqli_real_escape_string($con, $sdt),
-            mysqli_real_escape_string($con, $tinh),
-            mysqli_real_escape_string($con, $quan_huyen),
-            mysqli_real_escape_string($con, $phuong_xa),
-            mysqli_real_escape_string($con, $diachi_cuthe),
-            $now, $id, $makh
-        );
+        $sdt_enc = (string)app_encrypt($sdt, 'tbl_diachi.sdt');
+        $diachi_cuthe_enc = (string)app_encrypt($diachi_cuthe, 'tbl_diachi.diachi_cuthe');
 
-        if (mysqli_query($con, $sql)) {
+        $stmt = mysqli_prepare(
+            $con,
+            "UPDATE `tbl_diachi` SET `hoten` = ?, `sdt` = ?, `tinh` = ?, `quan_huyen` = ?, `phuong_xa` = ?, `diachi_cuthe` = ?, `ngaycapnhat` = ? WHERE `id` = ? AND `makh` = ?"
+        );
+        mysqli_stmt_bind_param($stmt, "ssssssiii", $hoten, $sdt_enc, $tinh, $quan_huyen, $phuong_xa, $diachi_cuthe_enc, $now, $id, $makh);
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
             echo json_encode(['success' => true, 'message' => 'Cập nhật địa chỉ thành công!']);
         } else {
+            mysqli_stmt_close($stmt);
             echo json_encode(['success' => false, 'message' => 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.']);
         }
         break;
@@ -154,17 +154,15 @@ switch ($action) {
             exit;
         }
 
-        // Kiểm tra xem có phải mặc định không
         $chk = mysqli_query($con, "SELECT `macdinh` FROM `tbl_diachi` WHERE `id` = $id AND `makh` = $makh");
         $chkRow = mysqli_fetch_assoc($chk);
 
         if (mysqli_query($con, "DELETE FROM `tbl_diachi` WHERE `id` = $id AND `makh` = $makh")) {
-            // Nếu xóa cái mặc định, set cái đầu tiên còn lại làm mặc định
             if ($chkRow && $chkRow['macdinh'] == 1) {
                 $firstQ = mysqli_query($con, "SELECT `id` FROM `tbl_diachi` WHERE `makh` = $makh ORDER BY `ngaytao` DESC LIMIT 1");
                 $firstR = mysqli_fetch_assoc($firstQ);
                 if ($firstR) {
-                    mysqli_query($con, "UPDATE `tbl_diachi` SET `macdinh` = 1 WHERE `id` = " . $firstR['id']);
+                    mysqli_query($con, "UPDATE `tbl_diachi` SET `macdinh` = 1 WHERE `id` = " . intval($firstR['id']));
                 }
             }
             echo json_encode(['success' => true, 'message' => 'Xóa địa chỉ thành công!']);
@@ -181,9 +179,7 @@ switch ($action) {
             exit;
         }
 
-        // Bỏ mặc định cũ
         mysqli_query($con, "UPDATE `tbl_diachi` SET `macdinh` = 0 WHERE `makh` = $makh");
-        // Đặt mặc định mới
         if (mysqli_query($con, "UPDATE `tbl_diachi` SET `macdinh` = 1 WHERE `id` = $id AND `makh` = $makh")) {
             echo json_encode(['success' => true, 'message' => 'Đã đặt làm địa chỉ mặc định!']);
         } else {

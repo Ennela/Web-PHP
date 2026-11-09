@@ -26,22 +26,11 @@ require_once dirname(__DIR__) . '/config.php';
             $row_dangnhap = mysqli_fetch_assoc($result);
             mysqli_stmt_close($stmt);
 
-            if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
-                // Đăng nhập thành công với bcrypt hash
-                session_regenerate_id(true);
-                csrf_rotate_token();
-                $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
-                $_SESSION['manv'] = $row_dangnhap['id'];
-                header('Location: trangchu.php');
-                exit;
-            } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
-                // Fallback: mật khẩu cũ chưa hash — đăng nhập OK + tự động hash lại
-                $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
-                $updateStmt = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET matkhau = ? WHERE id = ?");
-                mysqli_stmt_bind_param($updateStmt, "si", $hashedPassword, $row_dangnhap['id']);
-                mysqli_stmt_execute($updateStmt);
-                mysqli_stmt_close($updateStmt);
-
+            $needsRehash = false;
+            if ($row_dangnhap && app_verify_password($matkhau, $row_dangnhap['matkhau'] ?? '', $needsRehash)) {
+                if ($needsRehash) {
+                    app_upgrade_password_hash($con, 'tbl_qlthanhvien', 'id', (int)$row_dangnhap['id'], 'matkhau', $matkhau);
+                }
                 session_regenerate_id(true);
                 csrf_rotate_token();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
