@@ -64,7 +64,7 @@ class PublicServerTests(unittest.TestCase):
         paths = [
             '.env', '.env.example', '.git/config', '.git/HEAD', '.htaccess',
             '%2eenv.example', '%2egit/config', 'database/giaythethao2.sql',
-            'database/railway_migration_v2.sql', 'documents/CSRF_SECURITY.md',
+            'database/schema_full.sql', 'documents/CSRF_SECURITY.md',
             'scripts/test_csrf.py', 'scratch/backups/giaythethao2-before-migration.sql',
             'scratch/runtime/frankenphp', 'includes/connect.php', 'includes/security.php',
             'config.php', 'config.php/extra', 'admin/connect_db.php', 'admin/function.php',

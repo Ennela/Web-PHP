@@ -111,7 +111,7 @@ frankenphp run --config /srv/web-php/deploy/Caddyfile.production
 
 Cần DNS đúng, cổng 80/443 đến máy chủ, quyền lắng nghe cổng và nơi lưu chứng chỉ Caddy bền vững. Caddy quản lý chứng chỉ công khai và gia hạn; cấu hình giới hạn TLS 1.2/1.3. Nguồn: [Caddy TLS](https://caddyserver.com/docs/caddyfile/directives/tls), [Automatic HTTPS](https://caddyserver.com/docs/automatic-https). Các biến database/email/thanh toán vẫn phải được cấu hình riêng. Không chạy cấu hình production trên local chỉ để thử TLS.
 
-### Docker Apache / Railway qua reverse proxy
+### Docker Apache qua reverse proxy (Cloudflare Tunnel)
 
 Docker hiện dùng Apache HTTP phía sau proxy, không tự cấp chứng chỉ công khai. Proxy/hosting phải cung cấp TLS 1.2/1.3, chứng chỉ hợp lệ, ép HTTPS cho cả file tĩnh và trang PHP, và HSTS trên phản hồi HTTPS. Không công khai cổng HTTP backend để người dùng có thể đi vòng qua proxy.
 

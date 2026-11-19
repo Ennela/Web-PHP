@@ -1,6 +1,6 @@
 # Website Bán Giày Thể Thao
 
-Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai trên XAMPP và Railway. Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
+Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai bằng Docker + Cloudflare Tunnel (XAMPP khi phát triển). Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
 
 
 ---
@@ -54,7 +54,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 | **Email** | Mailjet HTTP API v3.1 | Gửi email giao dịch (xác nhận đơn hàng, đặt lại mật khẩu, liên hệ) qua REST API. Free tier 200 email/ngày, gửi được đến mọi địa chỉ email mà không cần verify domain. |
 | **Thông báo UI** | SweetAlert2 | Hiển thị thông báo (Toast Notifications) không chặn màn hình, thay thế hoàn toàn `alert()` mặc định của trình duyệt. |
 | **Bảo mật** | bcrypt (password_hash/password_verify) | Mã hóa mật khẩu người dùng và admin bằng bcrypt, chống SQL injection bằng prepared statements. |
-| **Triển khai** | Docker & Railway | Đóng gói ứng dụng linh hoạt, tự động bind cổng và biến môi trường, tối ưu hóa quá trình CI/CD. |
+| **Triển khai** | Docker Compose & Cloudflare Tunnel | Đóng gói app, MySQL 8 (TLS) và tunnel thành một stack chạy trên máy cá nhân, không cần mở cổng router. |
 
 ---
 
@@ -158,8 +158,7 @@ WEB-PHP/
 │
 ├── database/                  # Cơ sở dữ liệu SQL
 │   ├── giaythethao2.sql       # Dump toàn bộ database ban đầu
-│   ├── railway_migration.sql  # Migration database v1
-│   ├── railway_migration_v2.sql # Migration database v2
+│   ├── schema_full.sql        # Schema hợp nhất cho MySQL 8 (dump gốc + nâng cấp), dùng cho Docker
 │   ├── migration_tonkho.sql   # Migration thêm bảng tồn kho theo size
 │   ├── migration_quenmatkhau.sql # Migration thêm token reset mật khẩu
 │   ├── migration_email_system.sql # Migration bảng email blacklist & log webhook
@@ -171,7 +170,7 @@ WEB-PHP/
 │   ├── RECORD_2026_04_03.md   # Báo cáo tiến độ phân tích và code
 │   └── ... (các tài liệu đặc tả SRS chi tiết khác)
 │
-├── Dockerfile                 # File Docker cấu hình container cho Railway
+├── Dockerfile                 # Image app (PHP/Apache); stack đầy đủ ở docker-compose.yml
 └── docker-entrypoint.sh       # Script khởi động tự động trên môi trường cloud
 ```
 
@@ -197,7 +196,6 @@ WEB-PHP/
 | `tbl_sizegiay` | Size giày yêu thích của khách hàng (he_size EU/US/CM, size_value, ghichu). |
 | `tbl_thuvienanh` | Thư viện ảnh bổ sung của sản phẩm. |
 | `tbl_email_blacklist` | Danh sách email bị chặn (bounce, spam_complaint, blocked) để ngừng gửi mail tự động. |
-| `tbl_email_logs` | Nhật ký chi tiết gửi email (to_email, subject, status, error, sent_at). |
 | `tbl_email_webhook_log` | Nhật ký nhận các sự kiện phản hồi từ Webhook của Mailjet (event_type, message_id, error_info, event_time). |
 
 ---
@@ -273,7 +271,7 @@ CA local chưa được tự cài vào máy. Xem [cách xác minh chứng chỉ,
 
 1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`.
 2. **Khởi động XAMPP** (Apache + MySQL).
-3. **Database:** Truy cập phpMyAdmin, import file `database/railway_migration_v2.sql` để khởi tạo CSDL.
+3. **Database:** Truy cập phpMyAdmin, import file `database/schema_full.sql` (cần MySQL 8; môi trường được kiểm thử là Docker) để khởi tạo CSDL.
 4. Cấu hình kết nối DB trong `includes/connect.php` và `admin/connect_db.php` (mặc định: localhost, root, không mật khẩu).
 5. **Truy cập:**
    - Trang khách hàng: `http://localhost/WEB-PHP/`
@@ -330,21 +328,6 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 - Đổi URL trả về VNPAY và URL webhook Mailjet sang domain mới ở phía nhà cung cấp.
 - Checklist bảo mật: [documents/DEPLOY_SECURITY_CHECKLIST.md](./documents/DEPLOY_SECURITY_CHECKLIST.md).
 
-### Triển khai lên Railway (Cloud) — cũ, không còn dùng
-
-Dự án đã được cấu hình sẵn `Dockerfile` + `docker-entrypoint.sh` để triển khai tự động:
-
-1. Khởi tạo dự án trên Railway.
-2. Thêm dịch vụ MySQL, thực thi file `database/railway_migration_v2.sql`.
-3. Liên kết kho GitHub chứa dự án vào dịch vụ Web trên Railway.
-4. Cấu hình các biến môi trường (Environment Variables):
-   - `MYSQLHOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`, `MYSQLPORT` (tự động khi liên kết MySQL service)
-   - `MAILJET_API_KEY` — API Key (Public) từ [Mailjet](https://www.mailjet.com) (miễn phí 200 email/ngày)
-   - `MAILJET_SECRET_KEY` — Secret Key (Private) từ Mailjet
-   - `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` (nếu dùng VNPAY production)
-5. Railway sẽ tự động build từ `Dockerfile` và cấp phát tên miền.
-6. **CI/CD:** Mỗi lần `git push`, Railway tự động build & deploy.
-
 ---
 
 ## Kiến trúc Email
@@ -393,7 +376,7 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 | [SRS_USECASE_DIAGRAMS.MD](./documents/SRS_USECASE_DIAGRAMS.MD) | Sơ đồ Use Case tổng hợp (Mermaid) |
 
 ---
-> **Deploy:** [https://kienhanhan.up.railway.app](https://kienhanhan.up.railway.app)
+> **Deploy:** [https://shop.doquangha.id.vn](https://shop.doquangha.id.vn)
 >
 > **Video demo:** [Google Drive](https://drive.google.com/file/d/1UZFdJLBt1ztZObS_CWFB_YAro2ERURke/view)
 

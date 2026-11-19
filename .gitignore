@@ -42,9 +42,9 @@ backup/
 *.swp
 *~
 
-# File export của Database — cho phép giaythethao2.sql (schema/seed data cho Railway)
+# File export của Database — cho phép giaythethao2.sql (schema/seed data cho Docker)
 # Nếu có dump runtime thì thêm tên cụ thể vào đây
-# *.sql  ← đã bỏ ignore để push schema lên GitHub cho Railway import
+# *.sql  ← đã bỏ ignore để push schema lên GitHub
 
 # IDE NetBeans
 nbproject/

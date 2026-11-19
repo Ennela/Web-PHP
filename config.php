@@ -16,7 +16,7 @@ if (strpos($dir, $docRoot) === 0) {
     $base_dir = '/WEB-PHP/'; 
 }
 
-// On Railway / Docker, DocumentRoot IS the app root → base_dir = "/"
+// In Docker, DocumentRoot IS the app root → base_dir = "/"
 if ($base_dir === '/' || $base_dir === '//') {
     $base_dir = '/';
 }

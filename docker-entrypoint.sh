@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-# Validate the dynamic Railway port before writing it into Apache configuration.
+# Validate the port before writing it into Apache configuration.
 app_port=${PORT:-80}
 case "$app_port" in
     ''|*[!0-9]*) echo 'PORT must be an integer between 1 and 65535.' >&2; exit 1 ;;
