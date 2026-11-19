@@ -218,7 +218,15 @@ function auth_password_policy_errors(string $password): array
 
 function auth_client_ip(): string
 {
-    return substr((string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'), 0, 45);
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    // Sau Cloudflare Tunnel/proxy tin cậy, REMOTE_ADDR là proxy: lấy IP khách thật từ CF-Connecting-IP.
+    if (function_exists('app_trusted_proxy') && app_trusted_proxy()) {
+        $cf = trim((string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+        if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP)) {
+            $ip = $cf;
+        }
+    }
+    return substr($ip, 0, 45);
 }
 
 function auth_throttle_ensure_table(mysqli $con): void
