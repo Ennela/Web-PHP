@@ -92,8 +92,8 @@ class PublicServerTests(unittest.TestCase):
                 self.assertEqual(headers['Referrer-Policy'], 'strict-origin-when-cross-origin')
                 self.assertIsNotNone(headers['Permissions-Policy'])
                 self.assertIsNone(headers['X-Powered-By'])
-                # Caddy omits Server; Apache (ServerTokens Prod) sends the bare product name only.
-                self.assertIn(headers['Server'], (None, 'Apache'))
+                # Caddy omits Server; Apache (ServerTokens Prod) sends the bare name; Cloudflare edge sends 'cloudflare'.
+                self.assertIn(headers['Server'], (None, 'Apache', 'cloudflare'))
         _, _, headers = request(BASE)
         policy = headers['Content-Security-Policy']
         for directive in ["object-src 'none'", "base-uri 'self'", "frame-ancestors 'self'"]:
