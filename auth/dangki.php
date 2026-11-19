@@ -50,7 +50,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         }
         mysqli_stmt_close($stmtEmail);
 
-        $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
+        $hashedPassword = app_hash_password($matkhau);
         $stmtInsert = mysqli_prepare($con, "INSERT INTO tbl_tkkhachhang (hoten, email, username, password) VALUES (?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmtInsert, "ssss", $hoten, $email, $taikhoan, $hashedPassword);
 

@@ -36,6 +36,11 @@ if ($orderId <= 0) {
 $sql = "SELECT * FROM `oder` WHERE `id` = $orderId AND `makh` = $makh";
 $result = mysqli_query($con, $sql);
 $order = mysqli_fetch_assoc($result);
+if ($order) {
+    $order['sdt'] = app_decrypt_field($order['sdt'] ?? '', 'oder.sdt');
+    $order['diachi'] = app_decrypt_field($order['diachi'] ?? '', 'oder.diachi');
+    $order['note'] = app_decrypt_field($order['note'] ?? '', 'oder.note');
+}
 
 if (!$order) {
     $_SESSION['swal_warning'] = 'Bạn không có quyền xem đơn hàng này!';

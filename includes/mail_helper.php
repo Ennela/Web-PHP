@@ -42,20 +42,21 @@ function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TY
         error_log('MAILJET_UNAVAILABLE: HTTPS transport is unavailable.');
         return ['success' => false, 'messageId' => null, 'error' => 'Email service unavailable'];
     }
+    $maskedEmail = function_exists('app_mask_email') ? app_mask_email((string)$toEmail) : '***';
 
     // ─── Validate ───
     if (empty($apiKey) || empty($secretKey)) {
-        error_log("MAILJET_ERROR: API keys not configured. To=$toEmail Subject=$subject");
+        error_log("MAILJET_ERROR: API keys not configured. To=$maskedEmail Subject=$subject");
         return ['success' => false, 'messageId' => null, 'error' => 'API keys not configured'];
     }
     if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
-        error_log("MAILJET_ERROR: Invalid recipient email. To=$toEmail");
+        error_log("MAILJET_ERROR: Invalid recipient email. To=$maskedEmail");
         return ['success' => false, 'messageId' => null, 'error' => 'Invalid email'];
     }
 
     // ─── Blacklist Check (nếu có DB connection) ───
     if (isEmailBlacklisted($toEmail)) {
-        error_log("MAILJET_SKIP: Email blacklisted. To=$toEmail");
+        error_log("MAILJET_SKIP: Email blacklisted. To=$maskedEmail");
         return ['success' => false, 'messageId' => null, 'error' => 'Email blacklisted'];
     }
 
@@ -119,7 +120,7 @@ function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TY
     for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
         if ($attempt > 0) {
             $delay = pow(2, $attempt) * 1000000; // 2s, 4s, 8s (microseconds)
-            error_log("MAILJET_RETRY: Attempt $attempt/$maxRetries after " . ($delay/1000000) . "s delay. To=$toEmail");
+            error_log("MAILJET_RETRY: Attempt $attempt/$maxRetries after " . ($delay/1000000) . "s delay. To=$maskedEmail");
             usleep($delay);
         }
 
@@ -144,7 +145,7 @@ function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TY
         if ($httpCode >= 200 && $httpCode < 300) {
             $data = json_decode($response, true);
             $messageId = $data['Messages'][0]['To'][0]['MessageID'] ?? null;
-            error_log("MAILJET_OK: Type=$mailType To=$toEmail MessageID=$messageId");
+            error_log("MAILJET_OK: Type=$mailType To=$maskedEmail MessageID=$messageId");
             return ['success' => true, 'messageId' => $messageId, 'error' => null];
         }
 
@@ -157,7 +158,7 @@ function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TY
         }
     }
 
-    error_log("MAILJET_FAIL: HTTP=$lastCode Type=$mailType To=$toEmail Error=$lastError");
+    error_log("MAILJET_FAIL: HTTP=$lastCode Type=$mailType To=$maskedEmail Error=$lastError");
     return ['success' => false, 'messageId' => null, 'error' => "HTTP $lastCode: $lastError"];
 }
 

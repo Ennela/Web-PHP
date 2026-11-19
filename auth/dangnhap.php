@@ -15,9 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        app_redirect(BASE_URL . 'auth/dangnhap.php');
-        exit;
+        secure_logout('dangnhap.php');
     }
 
     if (isset($_POST['dangnhap'])) {
@@ -37,15 +35,12 @@ require_once dirname(__DIR__) . '/config.php';
 
             $loginSuccess = false;
             if ($row_dangnhap) {
-                if (password_verify($matkhau, $row_dangnhap['password'])) {
+                $needsRehash = false;
+                if (app_verify_password($matkhau, $row_dangnhap['password'] ?? '', $needsRehash)) {
                     $loginSuccess = true;
-                } elseif ($row_dangnhap['password'] === $matkhau) {
-                    $loginSuccess = true;
-                    $newHash = password_hash($matkhau, PASSWORD_BCRYPT);
-                    $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
-                    mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
-                    mysqli_stmt_execute($upStmt);
-                    mysqli_stmt_close($upStmt);
+                    if ($needsRehash) {
+                        app_upgrade_password_hash($con, 'tbl_tkkhachhang', 'makh', (int)$row_dangnhap['makh'], 'password', $matkhau);
+                    }
                 }
             }
 

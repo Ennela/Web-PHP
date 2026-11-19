@@ -56,6 +56,9 @@ $sql .= " ORDER BY `ngaytao` DESC";
 
 $result = mysqli_query($con, $sql);
 while ($row = mysqli_fetch_assoc($result)) {
+    $row['sdt'] = app_decrypt_field($row['sdt'] ?? '', 'oder.sdt');
+    $row['diachi'] = app_decrypt_field($row['diachi'] ?? '', 'oder.diachi');
+    $row['note'] = app_decrypt_field($row['note'] ?? '', 'oder.note');
     $orders[] = $row;
 }
 

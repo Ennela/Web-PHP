@@ -60,6 +60,9 @@ if (empty($oder)) {
     app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
+$oder[0]['sdt'] = app_decrypt_field($oder[0]['sdt'] ?? '', 'oder.sdt');
+$oder[0]['diachi'] = app_decrypt_field($oder[0]['diachi'] ?? '', 'oder.diachi');
+$oder[0]['note'] = app_decrypt_field($oder[0]['note'] ?? '', 'oder.note');
 ?>
 <!DOCTYPE html>
 <!--
