@@ -5,16 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     include BASE_PATH . 'includes/connect.php';
 
-    if (isset($_POST['login'])) {
-        $dangxuat = $_POST['login'];
-    } else {
-        $dangxuat = '';
-    }
-    if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: dangnhap.php');
-        exit;
-    }
+    // Đăng xuất được xử lý tập trung trong config.php (auth_handle_logout_request)
 
     if (isset($_POST['dangnhap'])) {
         $taikhoan = trim($_POST['taikhoan'] ?? '');
@@ -23,41 +14,48 @@ require_once dirname(__DIR__) . '/config.php';
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
             header('Location: dangnhap.php');
             exit;
-        } else {
-            $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
-            mysqli_stmt_bind_param($stmt, "s", $taikhoan);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            $row_dangnhap = mysqli_fetch_assoc($result);
-            mysqli_stmt_close($stmt);
-
-            $loginSuccess = false;
-            if ($row_dangnhap) {
-                if (password_verify($matkhau, $row_dangnhap['password'])) {
-                    $loginSuccess = true;
-                } elseif ($row_dangnhap['password'] === $matkhau) {
-                    $loginSuccess = true;
-                    $newHash = password_hash($matkhau, PASSWORD_BCRYPT);
-                    $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
-                    mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
-                    mysqli_stmt_execute($upStmt);
-                    mysqli_stmt_close($upStmt);
-                }
-            }
-
-            if ($loginSuccess) {
-                session_regenerate_id(true);
-                csrf_rotate_token();
-                $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
-                $_SESSION['makh'] = (int)$row_dangnhap['makh'];
-                header('Location: ' . BASE_URL . 'home/trangchu.php');
-                exit;
-            } else {
-                $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
-                header('Location: dangnhap.php');
-                exit;
-            }
         }
+
+        // Chống brute-force: kiểm tra khóa tạm thời trước khi truy vấn tài khoản
+        $lock = auth_throttle_lock_seconds($con, 'customer', $taikhoan);
+        if ($lock > 0) {
+            $_SESSION['swal_error'] = auth_lock_message($lock);
+            header('Location: dangnhap.php');
+            exit;
+        }
+
+        $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, "s", $taikhoan);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $row_dangnhap = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
+
+        // Luôn chạy password_verify kể cả khi không có tài khoản (không lộ tài khoản tồn tại qua thời gian phản hồi)
+        [$loginSuccess, $newHash] = auth_verify_password($matkhau, $row_dangnhap['password'] ?? null);
+
+        if ($loginSuccess && $newHash !== null) {
+            $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
+            mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
+            mysqli_stmt_execute($upStmt);
+            mysqli_stmt_close($upStmt);
+        }
+
+        if ($loginSuccess) {
+            auth_throttle_clear($con, 'customer', $taikhoan);
+            auth_login([
+                'dangnhap' => $row_dangnhap['hoten'],
+                'makh'     => (int)$row_dangnhap['makh'],
+            ]);
+            header('Location: ' . BASE_URL . 'home/trangchu.php');
+            exit;
+        }
+
+        auth_throttle_record_failure($con, 'customer', $taikhoan);
+        // Thông báo chung chung: không tiết lộ sai tài khoản hay sai mật khẩu
+        $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
+        header('Location: dangnhap.php');
+        exit;
     }
 
     include BASE_PATH . 'includes/header.php';

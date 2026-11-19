@@ -24,6 +24,14 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
             exit;
         }
 
+        // Chính sách mật khẩu mạnh (chống đoán / brute-force mật khẩu yếu)
+        $pwErrors = auth_password_policy_errors($matkhau);
+        if (!empty($pwErrors)) {
+            $_SESSION['swal_error'] = implode('. ', $pwErrors) . '!';
+            header('Location: dangki.php');
+            exit;
+        }
+
         // Check for duplicate username with prepared statement
         $stmtUser = mysqli_prepare($con, "SELECT makh FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
         mysqli_stmt_bind_param($stmtUser, "s", $taikhoan);
@@ -163,7 +171,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
                     <div class="mb-3"><label class="form-label">Họ và tên</label><input class="form-control" name="hoten" type="text" placeholder="Nhập họ và tên" required></div>
                     <div class="mb-3"><label class="form-label">Email</label><input class="form-control" name="email" type="email" placeholder="Nhập địa chỉ email" required></div>
                     <div class="mb-3"><label class="form-label">Tên đăng nhập</label><input class="form-control" type="text" name="taikhoan" placeholder="Nhập tên đăng nhập" required></div>
-                    <div class="mb-4"><label class="form-label">Mật khẩu</label><input class="form-control" name="matkhau" type="password" placeholder="Nhập mật khẩu" required></div>
+                    <div class="mb-4"><label class="form-label">Mật khẩu</label><input class="form-control" name="matkhau" type="password" placeholder="Tối thiểu 8 ký tự, gồm chữ và số" minlength="8" maxlength="72" pattern="(?=.*[A-Za-z])(?=.*\d).{8,72}" title="Tối thiểu 8 ký tự, gồm cả chữ và số" autocomplete="new-password" required></div>
                     <button name="dangki" class="btn-auth" type="submit">Đăng ký</button>
                 </form>
                 <div class="auth-link">Đã có tài khoản? <a href="<?php echo BASE_URL; ?>auth/dangnhap.php">Đăng nhập</a></div>

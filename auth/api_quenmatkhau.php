@@ -28,30 +28,41 @@ if (empty($input)) {
     exit;
 }
 
-// Tìm user bằng email hoặc username
-$inputSafe = mysqli_real_escape_string($con, $input);
-$query = mysqli_query($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `tbl_tkkhachhang` WHERE `email` = '$inputSafe' OR `username` = '$inputSafe' LIMIT 1");
-$user = mysqli_fetch_assoc($query);
+// Thông báo chung — KHÔNG tiết lộ tài khoản/email có tồn tại hay không (chống dò tài khoản)
+$genericResponse = ['success' => true, 'message' => 'Nếu tài khoản tồn tại và đã có email, link đặt lại mật khẩu sẽ được gửi trong vài phút. Kiểm tra hộp thư (kể cả Spam) nhé.'];
 
-if (!$user) {
-    echo json_encode(['success' => false, 'message' => 'Email hoặc tên đăng nhập không tồn tại trong hệ thống. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.']);
+// Giới hạn: tối đa 3 yêu cầu / tài khoản / 15 phút (chống spam email, dò tài khoản)
+$lock = auth_throttle_lock_seconds($con, 'reset', $input, 3);
+if ($lock > 0) {
+    echo json_encode(['success' => false, 'message' => 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ' . max(1, (int)ceil($lock / 60)) . ' phút.']);
+    exit;
+}
+auth_throttle_record_failure($con, 'reset', $input);
+
+// Tìm user bằng email hoặc username (prepared statement)
+$stmt = mysqli_prepare($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `tbl_tkkhachhang` WHERE `email` = ? OR `username` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmt, 'ss', $input, $input);
+mysqli_stmt_execute($stmt);
+$user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+mysqli_stmt_close($stmt);
+
+if (!$user || empty($user['email'])) {
+    echo json_encode($genericResponse);
     exit;
 }
 
-// Kiểm tra user có email không
-if (empty($user['email'])) {
-    echo json_encode(['success' => false, 'message' => 'Tài khoản chưa cập nhật email. Vui lòng liên hệ admin để được hỗ trợ.']);
-    exit;
-}
-
-// Tạo token bảo mật
-$token = bin2hex(random_bytes(32)); // 64 ký tự hex
+// Tạo token ngẫu nhiên 256-bit; DB chỉ lưu SHA-256 của token
+// -> lộ DB cũng không dùng được token để chiếm tài khoản
+$token = bin2hex(random_bytes(32)); // 64 ký tự hex (gửi qua email)
+$tokenHash = hash('sha256', $token);
 $expiry = time() + 1800; // 30 phút
 
-// Lưu token vào DB
 $makh = intval($user['makh']);
-$sql = "UPDATE `tbl_tkkhachhang` SET `reset_token` = '$token', `reset_token_expiry` = $expiry WHERE `makh` = $makh";
-if (!mysqli_query($con, $sql)) {
+$stmt = mysqli_prepare($con, "UPDATE `tbl_tkkhachhang` SET `reset_token` = ?, `reset_token_expiry` = ? WHERE `makh` = ?");
+mysqli_stmt_bind_param($stmt, 'sii', $tokenHash, $expiry, $makh);
+$saved = mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
+if (!$saved) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống. Vui lòng thử lại sau.']);
     exit;
 }
@@ -74,5 +85,5 @@ if (!$result['success']) {
     error_log("FORGOT_PASSWORD: Failed to send email to {$user['email']} for makh=$makh. Error: " . ($result['error'] ?? 'unknown'));
 }
 
-echo json_encode(['success' => true, 'message' => 'Mình đã gửi link đặt lại mật khẩu đến ' . substr($user['email'], 0, 3) . '***. Kiểm tra hộp thư (kể cả Spam) nhé.']);
+echo json_encode($genericResponse);
 mysqli_close($con);

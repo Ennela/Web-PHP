@@ -8,11 +8,15 @@ include './connect_db.php';
 
 // Xử lý đăng nhập
 if (isset($_POST['dangnhap'])) {
-    $taikhoan = $_POST['taikhoan'];
-    $matkhau = $_POST['matkhau'];
+    $taikhoan = trim((string)($_POST['taikhoan'] ?? ''));
+    $matkhau = (string)($_POST['matkhau'] ?? '');
 
-    if ($taikhoan == '' || $matkhau == '') {
+    if ($taikhoan === '' || $matkhau === '') {
         $thongbao = 'empty';
+    } elseif (($lock = auth_throttle_lock_seconds($con, 'admin', $taikhoan)) > 0) {
+        // Chống brute-force tài khoản quản trị
+        $thongbao = 'locked';
+        $lockMessage = auth_lock_message($lock);
     } else {
         // Prepared statement chống SQL injection
         $stmt = mysqli_prepare($con, "SELECT * FROM tbl_qlthanhvien WHERE taikhoan = ? LIMIT 1");
@@ -22,38 +26,36 @@ if (isset($_POST['dangnhap'])) {
         $row_dangnhap = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
 
-        if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
-            // Đăng nhập thành công với bcrypt hash
-            session_regenerate_id(true);
-            csrf_rotate_token();
-            $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
-            $_SESSION['manv'] = $row_dangnhap['id'];
-            $_SESSION['role'] = 'admin';
-            session_regenerate_id(true);
-            header('Location: trangchu.php');
-            ob_end_flush();
-            exit;
-        } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
-            // Fallback: mật khẩu cũ chưa hash — đăng nhập OK + tự động hash lại
-            $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
-            $updateStmt = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET matkhau = ? WHERE id = ?");
-            mysqli_stmt_bind_param($updateStmt, "si", $hashedPassword, $row_dangnhap['id']);
-            mysqli_stmt_execute($updateStmt);
-            mysqli_stmt_close($updateStmt);
+        [$ok, $newHash] = auth_verify_password($matkhau, $row_dangnhap['matkhau'] ?? null);
 
-            session_regenerate_id(true);
-            csrf_rotate_token();
-            $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
-            $_SESSION['manv'] = $row_dangnhap['id'];
-            $_SESSION['role'] = 'admin';
-            session_regenerate_id(true);
+        if ($ok) {
+            if ($newHash !== null) {
+                // Mật khẩu cũ chưa hash / hash yếu -> cập nhật bcrypt
+                $updateStmt = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET matkhau = ? WHERE id = ?");
+                mysqli_stmt_bind_param($updateStmt, "si", $newHash, $row_dangnhap['id']);
+                mysqli_stmt_execute($updateStmt);
+                mysqli_stmt_close($updateStmt);
+            }
+            auth_throttle_clear($con, 'admin', $taikhoan);
+            // Chống Session Fixation: cấp session ID mới + ghi mốc vòng đời phiên
+            auth_login([
+                'dangnhap1' => $row_dangnhap['hoten'],
+                'manv'      => (int)$row_dangnhap['id'],
+                'role'      => 'admin',
+            ]);
             header('Location: trangchu.php');
             ob_end_flush();
             exit;
-        } else {
-            $thongbao = 'wrong';
         }
+
+        auth_throttle_record_failure($con, 'admin', $taikhoan);
+        $thongbao = 'wrong';
     }
+} elseif (!empty($_SESSION['swal_warning'])) {
+    // Phiên vừa bị hủy do hết hạn / nghi bị chiếm phiên
+    $thongbao = 'expired';
+    $expiredMessage = $_SESSION['swal_warning'];
+    unset($_SESSION['swal_warning']);
 } else {
     // Chỉ hiện cảnh báo khi user truy cập trực tiếp mà chưa đăng nhập
     $thongbao = 'require_login';
@@ -335,6 +337,10 @@ if (isset($_POST['dangnhap'])) {
             showToast('error', 'Thiếu thông tin', 'Vui lòng nhập đầy đủ tài khoản và mật khẩu!');
         <?php elseif ($thongbao === 'wrong'): ?>
             showToast('error', 'Đăng nhập thất bại', 'Sai tài khoản hoặc mật khẩu. Vui lòng thử lại!');
+        <?php elseif ($thongbao === 'locked'): ?>
+            showToast('error', 'Tạm khóa đăng nhập', <?= json_encode($lockMessage ?? '', JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
+        <?php elseif ($thongbao === 'expired'): ?>
+            showToast('warning', 'Hết phiên đăng nhập', <?= json_encode($expiredMessage ?? '', JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
         <?php endif; ?>
     <?php endif; ?>
 </script>

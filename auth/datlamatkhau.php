@@ -12,12 +12,17 @@ $token = trim($_GET['token'] ?? '');
 $validToken = false;
 $errorMessage = '';
 
-if (empty($token) || strlen($token) !== 64) {
+if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
     $errorMessage = 'Link đặt lại mật khẩu không hợp lệ.';
 } else {
-    $tokenSafe = mysqli_real_escape_string($con, $token);
-    $query = mysqli_query($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE `reset_token` = '$tokenSafe' AND `reset_token_expiry` >= " . time() . " LIMIT 1");
-    $user = mysqli_fetch_assoc($query);
+    // DB chỉ lưu SHA-256 của token -> so khớp theo hash
+    $tokenHash = hash('sha256', $token);
+    $now = time();
+    $stmt = mysqli_prepare($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE `reset_token` = ? AND `reset_token_expiry` >= ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, 'si', $tokenHash, $now);
+    mysqli_stmt_execute($stmt);
+    $user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+    mysqli_stmt_close($stmt);
 
     if (!$user) {
         $errorMessage = 'Link đặt lại mật khẩu đã hết hạn hoặc đã được sử dụng. Vui lòng yêu cầu lại.';
@@ -250,7 +255,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="mb-3">
                     <label class="form-label" for="matkhau_moi">Mật khẩu mới</label>
                     <div class="password-wrap">
-                        <input name="matkhau_moi" class="form-control" type="password" id="matkhau_moi" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" required>
+                        <input name="matkhau_moi" class="form-control" type="password" id="matkhau_moi" placeholder="Tối thiểu 8 ký tự, gồm chữ và số" autocomplete="new-password" required>
                         <button type="button" class="toggle-pw" tabindex="-1"><i class="fas fa-eye"></i></button>
                     </div>
                     <div class="pw-strength"><div class="pw-strength-bar" id="strengthBar"></div></div>
@@ -337,8 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const mk = document.getElementById('matkhau_moi').value;
         const mkx = document.getElementById('matkhau_xacnhan').value;
 
-        if (mk.length < 6) {
-            Swal.fire({ icon: 'warning', title: 'Mật khẩu phải có ít nhất 6 ký tự', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+        if (mk.length < 8 || !/[A-Za-z]/.test(mk) || !/\d/.test(mk)) {
+            Swal.fire({ icon: 'warning', title: 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ và số', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
             return;
         }
         if (mk !== mkx) {

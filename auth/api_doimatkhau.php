@@ -35,12 +35,7 @@ $errors = [];
 if (empty($mk_hientai)) {
     $errors[] = 'Mật khẩu hiện tại không được để trống';
 }
-if (empty($mk_moi)) {
-    $errors[] = 'Mật khẩu mới không được để trống';
-}
-if (strlen($mk_moi) < 6) {
-    $errors[] = 'Mật khẩu mới phải có ít nhất 6 ký tự';
-}
+$errors = array_merge($errors, auth_password_policy_errors($mk_moi));
 if ($mk_moi !== $mk_xacnhan) {
     $errors[] = 'Mật khẩu xác nhận không khớp';
 }
@@ -53,6 +48,14 @@ if (!empty($errors)) {
     exit;
 }
 
+// Chống dò mật khẩu hiện tại qua chức năng đổi mật khẩu (khóa sau 5 lần sai / 15 phút)
+$throttleKey = 'makh:' . $makh;
+$lock = auth_throttle_lock_seconds($con, 'change_pw', $throttleKey);
+if ($lock > 0) {
+    echo json_encode(['success' => false, 'message' => auth_lock_message($lock)]);
+    exit;
+}
+
 // Kiểm tra mật khẩu hiện tại bằng prepared statement
 $stmt = mysqli_prepare($con, "SELECT `password` FROM `tbl_tkkhachhang` WHERE `makh` = ? LIMIT 1");
 mysqli_stmt_bind_param($stmt, "i", $makh);
@@ -61,17 +64,14 @@ $res = mysqli_stmt_get_result($stmt);
 $user = mysqli_fetch_assoc($res);
 mysqli_stmt_close($stmt);
 
-$currentPasswordMatch = false;
-if ($user) {
-    if (password_verify($mk_hientai, $user['password']) || $user['password'] === $mk_hientai) {
-        $currentPasswordMatch = true;
-    }
-}
+[$currentPasswordMatch] = auth_verify_password($mk_hientai, $user['password'] ?? null);
 
 if (!$currentPasswordMatch) {
+    auth_throttle_record_failure($con, 'change_pw', $throttleKey);
     echo json_encode(['success' => false, 'message' => 'Mật khẩu hiện tại không đúng']);
     exit;
 }
+auth_throttle_clear($con, 'change_pw', $throttleKey);
 
 // Update mật khẩu mới bằng bcrypt hash
 $hashedPassword = password_hash($mk_moi, PASSWORD_BCRYPT);
@@ -81,6 +81,8 @@ mysqli_stmt_bind_param($updateStmt, "sii", $hashedPassword, $now, $makh);
 
 if (mysqli_stmt_execute($updateStmt)) {
     mysqli_stmt_close($updateStmt);
+    // Đổi mật khẩu = sự kiện nhạy cảm -> cấp session ID mới (ID cũ nếu bị lộ sẽ vô hiệu)
+    session_regenerate_id(true);
     echo json_encode(['success' => true, 'message' => 'Đổi mật khẩu thành công!']);
 } else {
     mysqli_stmt_close($updateStmt);
