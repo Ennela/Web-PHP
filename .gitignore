@@ -79,3 +79,7 @@ new_style.css
 
 # Test files (không push)
 test_email.php
+
+# Docker local test (chua secret that)
+.env.docker
+docker-compose.override.yml

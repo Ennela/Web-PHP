@@ -11,8 +11,9 @@ RUN a2enmod rewrite headers \
     && a2dismod -f autoindex status
 
 COPY deploy/php-security.ini /usr/local/etc/php/conf.d/zz-security.ini
-COPY deploy/apache-security.conf /etc/apache2/conf-available/app-security.conf
-RUN a2enconf app-security
+COPY deploy/apache-security.conf /etc/apache2/conf-available/zz-app-security.conf
+# zz- prefix: conf-enabled loads alphabetically; Debian security.conf (ServerTokens OS) must load BEFORE ours.
+RUN a2enconf zz-app-security
 
 ENV PORT=80 APP_ENV=production APP_DEBUG=0
 WORKDIR /var/www/html
