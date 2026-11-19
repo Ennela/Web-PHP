@@ -401,7 +401,7 @@ CREATE TABLE IF NOT EXISTS `tbl_diachi` (
     KEY `fk_diachi_kh` (`makh`),
     CONSTRAINT `fk_diachi_kh` FOREIGN KEY (`makh`)
         REFERENCES `tbl_tkkhachhang` (`makh`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_sizegiay` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -415,7 +415,7 @@ CREATE TABLE IF NOT EXISTS `tbl_sizegiay` (
     KEY `fk_size_kh` (`makh`),
     CONSTRAINT `fk_size_kh` FOREIGN KEY (`makh`)
         REFERENCES `tbl_tkkhachhang` (`makh`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_tonkho` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -472,7 +472,7 @@ CREATE TABLE IF NOT EXISTS `tbl_login_attempts` (
     `attempted_at` INT UNSIGNED NOT NULL,
     KEY `idx_scope_identifier` (`scope`, `identifier`, `attempted_at`),
     KEY `idx_scope_ip` (`scope`, `ip`, `attempted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Phiên đăng nhập cũ không còn dùng được sau nâng cấp: xóa token đặt lại mật khẩu còn tồn
 UPDATE `tbl_tkkhachhang` SET `reset_token` = NULL, `reset_token_expiry` = NULL WHERE `reset_token` IS NOT NULL;

@@ -1,0 +1,135 @@
+# Triển khai: Internet -> Cloudflare -> cloudflared -> app (PHP/Apache) -> db (MySQL 8, TLS)
+# Không service nào publish cổng ra máy host. Secret lấy từ file .env cạnh file này
+# (mẫu: .env.docker.example). App KHÔNG đọc .env: Compose truyền biến vào container.
+name: shop
+
+services:
+  # Sinh CA + chứng chỉ cho MySQL một lần. App bắt buộc dùng TLS có kiểm tra chứng chỉ
+  # khi DB không phải loopback (includes/database.php), nên MySQL phải có CA riêng.
+  dbcerts:
+    image: alpine:3.20
+    restart: "no"
+    volumes:
+      - dbcerts:/certs
+    command:
+      - sh
+      - -ec
+      - |
+        cd /certs
+        [ -f server-cert.pem ] && exit 0
+        apk add --no-cache openssl >/dev/null
+        openssl req -x509 -newkey rsa:4096 -nodes -keyout ca-key.pem -out ca.pem -days 3650 -subj "/CN=shop-db-ca"
+        openssl req -newkey rsa:2048 -nodes -keyout server-key.pem -out server.csr -subj "/CN=db"
+        printf 'subjectAltName=DNS:db\n' > ext.cnf
+        openssl x509 -req -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -days 3650 -extfile ext.cnf
+        rm -f server.csr ext.cnf
+        chmod 600 ca-key.pem
+        chown 999:999 server-key.pem && chmod 600 server-key.pem
+        chmod 644 ca.pem server-cert.pem
+    networks: [shopnet]
+
+  db:
+    image: mysql:8.0.46
+    restart: unless-stopped
+    depends_on:
+      dbcerts:
+        condition: service_completed_successfully
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Đặt DB_ROOT_PASSWORD trong .env}
+      MYSQL_DATABASE: giaythethao2
+      MYSQL_USER: shopapp
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Đặt DB_PASSWORD trong .env}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --ssl-ca=/certs/ca.pem
+      - --ssl-cert=/certs/server-cert.pem
+      - --ssl-key=/certs/server-key.pem
+      - --require-secure-transport=ON
+      - --tls-version=TLSv1.2,TLSv1.3
+    volumes:
+      - dbdata:/var/lib/mysql
+      - dbcerts:/certs:ro
+      # Chỉ chạy khi volume dbdata còn trống (lần khởi tạo đầu tiên).
+      - ./database/schema_full.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -uroot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks: [shopnet]
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "0"
+      APP_URL: https://${APP_DOMAIN:?Đặt APP_DOMAIN trong .env (vd shop.tenmien.com)}
+      APP_TRUSTED_HOSTS: ${APP_DOMAIN}
+      # Chỉ tin đúng container cloudflared (IP cố định bên dưới), không tin cả subnet.
+      TRUSTED_PROXIES: 172.30.0.10/32
+      APP_ENCRYPTION_KEY_ID: ${APP_ENCRYPTION_KEY_ID:-k1}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?Đặt APP_ENCRYPTION_KEY trong .env}
+      APP_CRYPTO_STRICT_READ: ${APP_CRYPTO_STRICT_READ:-0}
+      MYSQLHOST: db
+      MYSQLPORT: "3306"
+      MYSQLDATABASE: giaythethao2
+      MYSQLUSER: shopapp
+      MYSQLPASSWORD: ${DB_PASSWORD}
+      MYSQL_SSL_CA: /certs/ca.pem
+      MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY:-}
+      MAILJET_WEBHOOK_SECRET: ${MAILJET_WEBHOOK_SECRET:-}
+      MAIL_TRANS_FROM_EMAIL: ${MAIL_TRANS_FROM_EMAIL:-no-reply@yourdomain.com}
+      MAIL_TRANS_FROM_NAME: ${MAIL_TRANS_FROM_NAME:-Shop Sneakers}
+      MAIL_MARKETING_FROM_EMAIL: ${MAIL_MARKETING_FROM_EMAIL:-hello@yourdomain.com}
+      MAIL_MARKETING_FROM_NAME: ${MAIL_MARKETING_FROM_NAME:-Shop Sneakers}
+      MAIL_ADMIN_EMAIL: ${MAIL_ADMIN_EMAIL:-}
+      MAIL_ADMIN_NAME: ${MAIL_ADMIN_NAME:-Shop Admin}
+      MAIL_UNSUBSCRIBE_URL: ${MAIL_UNSUBSCRIBE_URL:-}
+      BRAND_NAME: ${BRAND_NAME:-Shop Sneakers}
+      BRAND_URL: https://${APP_DOMAIN}
+      BRAND_LOGO_URL: ${BRAND_LOGO_URL:-}
+      BRAND_PHONE: ${BRAND_PHONE:-}
+      BRAND_ADDRESS: ${BRAND_ADDRESS:-}
+      BRAND_TAX_ID: ${BRAND_TAX_ID:-}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
+      VNPAY_URL: ${VNPAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+    volumes:
+      - dbcerts:/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 80) ? 0 : 1);'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [shopnet]
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.11.1
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Đặt TUNNEL_TOKEN trong .env (tunnel MỚI, không dùng ielts-smartprep)}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      shopnet:
+        ipv4_address: 172.30.0.10
+
+networks:
+  shopnet:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  dbdata:
+  dbcerts:
