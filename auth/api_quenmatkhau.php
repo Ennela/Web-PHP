@@ -28,10 +28,13 @@ if (empty($input)) {
     exit;
 }
 
-// Tìm user bằng email hoặc username
-$inputSafe = mysqli_real_escape_string($con, $input);
-$query = mysqli_query($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `tbl_tkkhachhang` WHERE `email` = '$inputSafe' OR `username` = '$inputSafe' LIMIT 1");
-$user = mysqli_fetch_assoc($query);
+// Tìm user bằng email hoặc username (Prepared Statement)
+$stmtUser = mysqli_prepare($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `tbl_tkkhachhang` WHERE `email` = ? OR `username` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmtUser, "ss", $input, $input);
+mysqli_stmt_execute($stmtUser);
+$resUser = mysqli_stmt_get_result($stmtUser);
+$user = mysqli_fetch_assoc($resUser);
+mysqli_stmt_close($stmtUser);
 
 if (!$user) {
     echo json_encode(['success' => false, 'message' => 'Email hoặc tên đăng nhập không tồn tại trong hệ thống. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.']);
@@ -44,14 +47,18 @@ if (empty($user['email'])) {
     exit;
 }
 
-// Tạo token bảo mật
-$token = bin2hex(random_bytes(32)); // 64 ký tự hex
+// Tạo token bảo mật bằng CSPRNG và chỉ lưu giá trị băm SHA-256 vào DB
+$token = bin2hex(random_bytes(32)); // 64 ký tự hex gửi qua link email
+$tokenHash = app_hash_token($token);
 $expiry = time() + 1800; // 30 phút
 
-// Lưu token vào DB
+// Lưu token hash vào DB
 $makh = intval($user['makh']);
-$sql = "UPDATE `tbl_tkkhachhang` SET `reset_token` = '$token', `reset_token_expiry` = $expiry WHERE `makh` = $makh";
-if (!mysqli_query($con, $sql)) {
+$stmtToken = mysqli_prepare($con, "UPDATE `tbl_tkkhachhang` SET `reset_token` = ?, `reset_token_expiry` = ? WHERE `makh` = ?");
+mysqli_stmt_bind_param($stmtToken, "sii", $tokenHash, $expiry, $makh);
+$saved = mysqli_stmt_execute($stmtToken);
+mysqli_stmt_close($stmtToken);
+if (!$saved) {
     echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống. Vui lòng thử lại sau.']);
     exit;
 }
@@ -71,7 +78,8 @@ $emailData = getPasswordResetTemplate([
 $result = sendTransactionalEmail($user['email'], $hoTen, $emailData['subject'], $emailData['html']);
 
 if (!$result['success']) {
-    error_log("FORGOT_PASSWORD: Failed to send email to {$user['email']} for makh=$makh. Error: " . ($result['error'] ?? 'unknown'));
+    $maskedEmail = app_mask_email($user['email']);
+    error_log("FORGOT_PASSWORD: Failed to send email to {$maskedEmail} for makh=$makh. Error: " . ($result['error'] ?? 'unknown'));
 }
 
 echo json_encode(['success' => true, 'message' => 'Mình đã gửi link đặt lại mật khẩu đến ' . substr($user['email'], 0, 3) . '***. Kiểm tra hộp thư (kể cả Spam) nhé.']);

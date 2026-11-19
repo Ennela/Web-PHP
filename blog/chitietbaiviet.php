@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: baiviet.php');
+    app_redirect(BASE_URL . 'blog/baiviet.php');
     exit;
 }
 
@@ -26,7 +26,7 @@ if (!$post) {
             <i class="far fa-newspaper" style="font-size: 4rem; color: #ddd; margin-bottom: 16px; display: block;"></i>
             <h3 style="font-weight: 800; color: #333; margin-bottom: 10px;">Bài viết không tồn tại</h3>
             <p style="color: #888; margin-bottom: 24px;">Bài viết bạn đang tìm không tồn tại hoặc đã bị xóa.</p>
-            <a href="<?php echo BASE_URL; ?>blog/baiviet.php" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">
+            <a href="<?= e(BASE_URL) ?>blog/baiviet.php" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">
                 <i class="fas fa-arrow-left"></i> Quay lại Blog
             </a>
         </div>
@@ -251,23 +251,23 @@ include_once BASE_PATH . 'includes/header.php';
     <div class="container">
         <!-- Breadcrumb -->
         <nav class="blog-breadcrumb">
-            <a href="<?php echo BASE_URL; ?>home/trangchu.php">Trang chủ</a>
+            <a href="<?= e(BASE_URL) ?>home/trangchu.php">Trang chủ</a>
             <span>/</span>
-            <a href="<?php echo BASE_URL; ?>blog/baiviet.php">Blog</a>
+            <a href="<?= e(BASE_URL) ?>blog/baiviet.php">Blog</a>
             <span>/</span>
-            <span style="color:#1e293b; font-weight:700;"><?= htmlspecialchars(mb_substr($post['tieude'], 0, 40)) ?><?= mb_strlen($post['tieude']) > 40 ? '...' : '' ?></span>
+            <span style="color:#1e293b; font-weight:700;"><?= e(mb_substr($post['tieude'], 0, 40)) ?><?= mb_strlen($post['tieude']) > 40 ? '...' : '' ?></span>
         </nav>
 
         <div class="article-wrapper">
             <!-- Hero Image -->
             <div class="article-hero">
-                <img src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($post['anhdaidien']) ?>" 
-                     alt="<?= htmlspecialchars($post['tieude']) ?>"
-                     onerror="this.style.background='#eee'">
+                <img src="<?= e(safe_url(BASE_URL . 'admin/' . $post['anhdaidien'])) ?>"
+                     alt="<?= e($post['tieude']) ?>"
+                     data-image-background-on-error>
             </div>
 
             <!-- Title -->
-            <h1 class="article-title"><?= htmlspecialchars($post['tieude']) ?></h1>
+            <h1 class="article-title"><?= e($post['tieude']) ?></h1>
 
             <!-- Meta -->
             <div class="article-meta">
@@ -277,14 +277,14 @@ include_once BASE_PATH . 'includes/header.php';
                 </div>
                 <div class="article-meta-item">
                     <i class="far fa-user"></i>
-                    <?= htmlspecialchars($post['nguoiphutrach']) ?>
+                    <?= e($post['nguoiphutrach']) ?>
                 </div>
             </div>
 
             <!-- Article Content -->
             <div class="article-content">
                 <div class="article-body">
-                    <?= nl2br(htmlspecialchars($post['noidung'])) ?>
+                    <?= clean_html($post['noidung']) ?>
                 </div>
 
                 <!-- Article Images -->
@@ -298,16 +298,16 @@ include_once BASE_PATH . 'includes/header.php';
                 <div class="article-images <?= ($hasImg1 && $hasImg2) ? 'two-cols' : '' ?>">
                     <?php if ($hasImg1): ?>
                     <div class="article-img-item">
-                        <img src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($img1) ?>" 
-                             alt="<?= htmlspecialchars($post['tieude']) ?>"
-                             onerror="this.parentElement.style.display='none'">
+                        <img src="<?= e(safe_url(BASE_URL . 'admin/' . $img1)) ?>"
+                             alt="<?= e($post['tieude']) ?>"
+                             data-hide-on-error>
                     </div>
                     <?php endif; ?>
                     <?php if ($hasImg2): ?>
                     <div class="article-img-item">
-                        <img src="<?php echo BASE_URL; ?>admin/<?= htmlspecialchars($img2) ?>" 
-                             alt="<?= htmlspecialchars($post['tieude']) ?>"
-                             onerror="this.parentElement.style.display='none'">
+                        <img src="<?= e(safe_url(BASE_URL . 'admin/' . $img2)) ?>"
+                             alt="<?= e($post['tieude']) ?>"
+                             data-hide-on-error>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -316,13 +316,13 @@ include_once BASE_PATH . 'includes/header.php';
                 <!-- Share -->
                 <div class="article-share" style="margin-top: 30px;">
                     <span>Chia sẻ:</span>
-                    <a href="#" class="share-btn" title="Facebook" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank', 'width=600,height=400'); return false;">
+                    <a href="#" class="share-btn" title="Facebook" data-share="facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="#" class="share-btn" title="Twitter" onclick="window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href), '_blank', 'width=600,height=400'); return false;">
+                    <a href="#" class="share-btn" title="Twitter" data-share="twitter">
                         <i class="fab fa-twitter"></i>
                     </a>
-                    <a href="#" class="share-btn" title="Copy Link" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã copy link!'); return false;">
+                    <a href="#" class="share-btn" title="Copy Link" data-share="copy">
                         <i class="fas fa-link"></i>
                     </a>
                 </div>
@@ -330,7 +330,7 @@ include_once BASE_PATH . 'includes/header.php';
 
             <!-- Back Button -->
             <div class="mt-4">
-                <a href="<?php echo BASE_URL; ?>blog/baiviet.php" class="article-back">
+                <a href="<?= e(BASE_URL) ?>blog/baiviet.php" class="article-back">
                     <i class="fas fa-arrow-left"></i> Quay lại danh sách bài viết
                 </a>
             </div>
@@ -338,4 +338,27 @@ include_once BASE_PATH . 'includes/header.php';
     </div>
 </main>
 
+<script nonce="<?= e(csp_nonce()) ?>">
+document.querySelectorAll('[data-share]').forEach(link => {
+    link.addEventListener('click', event => {
+        event.preventDefault();
+        if (link.dataset.share === 'copy') {
+            navigator.clipboard.writeText(window.location.href).then(() => alert('Đã copy link!'));
+            return;
+        }
+        const endpoint = link.dataset.share === 'facebook'
+            ? 'https://www.facebook.com/sharer/sharer.php?u='
+            : 'https://twitter.com/intent/tweet?url=';
+        window.open(endpoint + encodeURIComponent(window.location.href), '_blank', 'noopener,noreferrer,width=600,height=400');
+    });
+});
+document.querySelectorAll('img[data-hide-on-error], img[data-image-background-on-error]').forEach(image => {
+    const onError = () => {
+        if (image.hasAttribute('data-hide-on-error')) image.parentElement.style.display = 'none';
+        else image.style.background = '#eee';
+    };
+    image.addEventListener('error', onError);
+    if (image.complete && image.naturalWidth === 0) onError();
+});
+</script>
 <?php include BASE_PATH . 'includes/footer.php'; ?>

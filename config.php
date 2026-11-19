@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/includes/environment.php';
 app_load_local_environment(__DIR__ . '/.env');
+require_once __DIR__ . '/includes/xss.php';
+require_once __DIR__ . '/includes/redirect.php';
 require_once __DIR__ . '/includes/security.php';
 $canonical_url = app_security_bootstrap();
 $protocol = app_is_https() ? 'https' : 'http';
@@ -22,6 +24,7 @@ if ($base_dir === '/' || $base_dir === '//') {
 define('BASE_URL', $canonical_url ?? ($protocol . '://' . $host . $base_dir));
 define('BASE_PATH', __DIR__ . DIRECTORY_SEPARATOR);
 
+require_once BASE_PATH . 'includes/crypto.php';
 require_once BASE_PATH . 'includes/csrf.php';
 csrf_bootstrap($base_dir, $protocol === 'https');
 ?>

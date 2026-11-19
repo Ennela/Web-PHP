@@ -5,3 +5,6 @@
 *.sh text eol=lf
 Dockerfile text eol=lf
 .htaccess text eol=lf
+
+# Keep vendored upstream source verbatim, including its original whitespace.
+lib/htmlpurifier/** -whitespace

@@ -11,6 +11,7 @@
  */
 
 require_once __DIR__ . '/mail_config.php';
+require_once __DIR__ . '/xss.php';
 
 // ═══════════════════════════════════════════════════════════
 // SHARED COMPONENTS
@@ -19,20 +20,21 @@ require_once __DIR__ . '/mail_config.php';
 function _emailPreheader($text)
 {
     return '<div style="display:none;font-size:1px;color:#f8f9fa;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">'
-        . htmlspecialchars($text)
+        . e($text)
         . '</div>';
 }
 
 function _emailHeader($title, $bgColor = '#2563eb')
 {
+    $bgColor = preg_match('/\A#[0-9a-f]{6}\z/i', (string)$bgColor) ? $bgColor : '#2563eb';
     $logoHtml = '';
     if (!empty(BRAND_LOGO_URL)) {
-        $logoHtml = '<img src="' . BRAND_LOGO_URL . '" alt="' . BRAND_NAME . '" style="max-width:120px;margin-bottom:12px;" /><br>';
+        $logoHtml = '<img src="' . e(safe_url(BRAND_LOGO_URL)) . '" alt="' . e(BRAND_NAME) . '" style="max-width:120px;margin-bottom:12px;" /><br>';
     }
     return '
     <div style="background:linear-gradient(135deg,' . $bgColor . ',#1e40af);padding:32px 24px;text-align:center;">
         ' . $logoHtml . '
-        <h1 style="color:#fff;margin:0;font-size:22px;font-weight:800;letter-spacing:1px;">' . htmlspecialchars($title) . '</h1>
+        <h1 style="color:#fff;margin:0;font-size:22px;font-weight:800;letter-spacing:1px;">' . e($title) . '</h1>
     </div>';
 }
 
@@ -42,17 +44,17 @@ function _emailFooter($includeUnsubscribe = false)
     $unsub = '';
     if ($includeUnsubscribe && !empty(MAIL_UNSUBSCRIBE_URL)) {
         $unsub = '<p style="margin:8px 0;">
-            <a href="' . MAIL_UNSUBSCRIBE_URL . '" style="color:#94a3b8;font-size:12px;text-decoration:underline;">Hủy đăng ký nhận tin</a>
+            <a href="' . e(safe_url(MAIL_UNSUBSCRIBE_URL)) . '" style="color:#94a3b8;font-size:12px;text-decoration:underline;">Hủy đăng ký nhận tin</a>
         </p>';
     }
     return '
     <div style="background:#f8fafc;padding:20px 24px;text-align:center;border-top:1px solid #e2e8f0;">
-        <p style="color:#64748b;font-size:12px;margin:0 0 4px;font-weight:600;">' . BRAND_NAME . '</p>
-        <p style="color:#94a3b8;font-size:11px;margin:0 0 4px;">' . BRAND_ADDRESS . '</p>
-        <p style="color:#94a3b8;font-size:11px;margin:0 0 4px;">SĐT: ' . BRAND_PHONE
+        <p style="color:#64748b;font-size:12px;margin:0 0 4px;font-weight:600;">' . e(BRAND_NAME) . '</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0 0 4px;">' . e(BRAND_ADDRESS) . '</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0 0 4px;">SĐT: ' . e(BRAND_PHONE)
         . (!empty(BRAND_TAX_ID) ? ' | MST: ' . BRAND_TAX_ID : '') . '</p>
         ' . $unsub . '
-        <p style="color:#cbd5e1;font-size:11px;margin:8px 0 0;">© ' . $year . ' ' . BRAND_NAME . ' — Tất cả quyền được bảo lưu</p>
+        <p style="color:#cbd5e1;font-size:11px;margin:8px 0 0;">© ' . $year . ' ' . e(BRAND_NAME) . ' — Tất cả quyền được bảo lưu</p>
     </div>';
 }
 
@@ -87,21 +89,21 @@ function _emailWrapper($content)
  */
 function getOrderConfirmationTemplate($data)
 {
-    $customerName = htmlspecialchars($data['customerName'] ?? 'Quý khách');
-    $phone = htmlspecialchars($data['phone'] ?? '');
-    $address = htmlspecialchars($data['address'] ?? '');
-    $orderCode = htmlspecialchars($data['orderCode'] ?? '');
+    $customerName = e($data['customerName'] ?? 'Quý khách');
+    $phone = e($data['phone'] ?? '');
+    $address = e($data['address'] ?? '');
+    $orderCode = e($data['orderCode'] ?? '');
     $totalFmt = number_format($data['total'] ?? 0, 0, ',', '.');
-    $paymentMethod = htmlspecialchars($data['paymentMethod'] ?? 'COD');
-    $trackingLink = $data['trackingLink'] ?? '#';
+    $paymentMethod = e($data['paymentMethod'] ?? 'COD');
+    $trackingLink = e(safe_url($data['trackingLink'] ?? '#'));
 
     // Build product rows
     $productRows = '';
     foreach (($data['products'] ?? []) as $p) {
-        $pName = htmlspecialchars($p['name'] ?? '');
+        $pName = e($p['name'] ?? '');
         $pQty = (int) ($p['qty'] ?? 1);
         $pPrice = number_format(($p['price'] ?? 0) * $pQty, 0, ',', '.');
-        $pSize = !empty($p['size']) ? ' · Size: ' . $p['size'] : '';
+        $pSize = !empty($p['size']) ? ' · Size: ' . e($p['size']) : '';
 
         $productRows .= '
         <tr>
@@ -157,7 +159,7 @@ function getOrderConfirmationTemplate($data)
             <a href="' . $trackingLink . '" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Xem đơn hàng của tôi</a>
         </div>
 
-        <p style="color:#94a3b8;font-size:12px;text-align:center;">Có gì thắc mắc thì gọi ngay <strong>' . BRAND_PHONE . '</strong>, mình hỗ trợ liền.</p>
+        <p style="color:#94a3b8;font-size:12px;text-align:center;">Có gì thắc mắc thì gọi ngay <strong>' . e(BRAND_PHONE) . '</strong>, mình hỗ trợ liền.</p>
     </div>'
         . _emailFooter();
 
@@ -182,8 +184,8 @@ function getOrderConfirmationTemplate($data)
  */
 function getOTPTemplate($data)
 {
-    $name = htmlspecialchars($data['customerName'] ?? 'Quý khách');
-    $otp = htmlspecialchars($data['otpCode'] ?? '------');
+    $name = e($data['customerName'] ?? 'Quý khách');
+    $otp = e($data['otpCode'] ?? '------');
     $expiry = (int) ($data['expiryMinutes'] ?? 5);
 
     $preheader = _emailPreheader("Mã của bạn: $otp — dùng trong $expiry phút.");
@@ -229,8 +231,8 @@ function getOTPTemplate($data)
  */
 function getPasswordResetTemplate($data)
 {
-    $name = htmlspecialchars($data['customerName'] ?? 'Quý khách');
-    $resetLink = $data['resetLink'] ?? '#';
+    $name = e($data['customerName'] ?? 'Quý khách');
+    $resetLink = e(safe_url($data['resetLink'] ?? '#'));
     $expiry = (int) ($data['expiryMinutes'] ?? 30);
 
     $preheader = _emailPreheader("Đặt lại mật khẩu — link dùng được trong $expiry phút.");
@@ -278,17 +280,17 @@ function getPasswordResetTemplate($data)
  */
 function getAbandonedCartTemplate($data)
 {
-    $name = htmlspecialchars($data['customerName'] ?? 'bạn');
-    $cartLink = $data['cartLink'] ?? '#';
+    $name = e($data['customerName'] ?? 'bạn');
+    $cartLink = e(safe_url($data['cartLink'] ?? '#'));
     $couponCode = $data['couponCode'] ?? null;
     $couponText = $data['couponText'] ?? 'Giảm 5%';
 
     // Product list
     $productRows = '';
     foreach (($data['products'] ?? []) as $p) {
-        $pName = htmlspecialchars($p['name'] ?? '');
+        $pName = e($p['name'] ?? '');
         $pPrice = number_format($p['price'] ?? 0, 0, ',', '.');
-        $pImg = $p['image'] ?? '';
+        $pImg = e(safe_url($p['image'] ?? '', ''));
 
         $imgHtml = '';
         if (!empty($pImg)) {
@@ -314,9 +316,9 @@ function getAbandonedCartTemplate($data)
         <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:12px;padding:16px;text-align:center;margin:20px 0;">
             <p style="color:#92400e;font-size:13px;margin:0 0 8px;font-weight:600;">Bonus nhỏ cho bạn — dùng ngay kẻ0 mất</p>
             <div style="background:#fff;border-radius:8px;padding:10px 20px;display:inline-block;">
-                <span style="font-size:20px;font-weight:900;color:#d97706;letter-spacing:2px;">' . htmlspecialchars($couponCode) . '</span>
+                <span style="font-size:20px;font-weight:900;color:#d97706;letter-spacing:2px;">' . e($couponCode) . '</span>
             </div>
-            <p style="color:#b45309;font-size:12px;margin:8px 0 0;">' . htmlspecialchars($couponText) . ' khi checkout</p>
+            <p style="color:#b45309;font-size:12px;margin:8px 0 0;">' . e($couponText) . ' khi checkout</p>
         </div>';
     }
 
@@ -367,10 +369,10 @@ function getAbandonedCartTemplate($data)
  */
 function getContactNotificationTemplate($data)
 {
-    $name = htmlspecialchars($data['customerName'] ?? 'Không rõ');
-    $email = htmlspecialchars($data['customerEmail'] ?? '');
-    $message = nl2br(htmlspecialchars($data['message'] ?? ''));
-    $sentAt = htmlspecialchars($data['sentAt'] ?? date('d/m/Y H:i:s'));
+    $name = e($data['customerName'] ?? 'Không rõ');
+    $email = e($data['customerEmail'] ?? '');
+    $message = nl2br(e($data['message'] ?? ''));
+    $sentAt = e($data['sentAt'] ?? date('d/m/Y H:i:s'));
 
     $preheader = _emailPreheader("Liên hệ mới: $name ($email)");
 
@@ -406,7 +408,7 @@ function getContactNotificationTemplate($data)
 
         <!-- Quick Reply CTA -->
         <div style="text-align:center;margin:24px 0;">
-            <a href="mailto:' . $email . '?subject=Re: Phản hồi từ ' . BRAND_NAME . '" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Trả lời ngay</a>
+            <a href="mailto:' . $email . '?subject=Re: Phản hồi từ ' . e(BRAND_NAME) . '" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Trả lời ngay</a>
         </div>
     </div>'
         . _emailFooter();

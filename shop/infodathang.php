@@ -17,7 +17,7 @@ if (isset($_GET['action'])) {
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: ' . BASE_URL . 'home/trangchu.php');
+        app_redirect(BASE_URL . 'home/trangchu.php');
         exit;
     }
     require_once BASE_PATH . 'includes/mail_helper.php';
@@ -29,10 +29,10 @@ if (isset($_GET['action'])) {
     function GuiMail()
     {
         $body = "<h3>Đơn hàng COD mới</h3>"
-              . "<p><strong>" . htmlspecialchars($_POST['tenkh'] ?? '') . "</strong></p>"
-              . "<p>SĐT: " . htmlspecialchars($_POST['sdt'] ?? '') . "</p>"
-              . "<p>Địa chỉ: " . htmlspecialchars($_POST['diachi'] ?? '') . "</p>"
-              . "<p>Email: " . htmlspecialchars($_POST['email'] ?? '') . "</p>";
+              . "<p><strong>" . e($_POST['tenkh'] ?? '') . "</strong></p>"
+              . "<p>SĐT: " . e($_POST['sdt'] ?? '') . "</p>"
+              . "<p>Địa chỉ: " . e($_POST['diachi'] ?? '') . "</p>"
+              . "<p>Email: " . e($_POST['email'] ?? '') . "</p>";
 
         sendAdminNotification('Đơn hàng COD mới — ' . BRAND_NAME, $body);
     }
@@ -87,7 +87,7 @@ if (isset($_GET['action'])) {
     // Redirect if cart is empty
     if (empty($orderProducts)) {
         $_SESSION['swal_warning'] = 'Giỏ hàng trống!';
-        header('Location: ' . BASE_URL . 'shop/giohang.php');
+        app_redirect(BASE_URL . 'shop/giohang.php');
         exit;
     }
 
@@ -104,7 +104,7 @@ if (isset($_GET['action'])) {
         }
         if ($_POST['tenkh'] == '' || $_POST['sdt'] == '' || $_POST['diachi'] == '' || empty($_POST['email']) || $_POST['quantity'] == '') {
             $_SESSION['swal_error'] = 'Mời bạn nhập đầy đủ thông tin';
-            header('Location: infodathang.php');
+            app_redirect(BASE_URL . 'shop/infodathang.php');
             exit;
         }
         $makh_val = !empty($_SESSION['makh']) ? intval($_SESSION['makh']) : 'NULL';
@@ -125,14 +125,19 @@ if (isset($_GET['action'])) {
             $errorMsgs = array_map(function($e) { return $e['message']; }, $stockResult['errors']);
             $errorText = implode('\n', $errorMsgs);
             $_SESSION['swal_error'] = "Không thể đặt hàng:\n" . $errorText;
-            header('Location: ' . BASE_URL . 'shop/giohang.php');
+            app_redirect(BASE_URL . 'shop/giohang.php');
             exit;
         }
         
         $email = mysqli_real_escape_string($con, trim($_POST['email']));
-        $token = bin2hex(random_bytes(16)); // generate token for tracking
+        $token = bin2hex(random_bytes(16)); // generate raw token for tracking link
+        $tokenHash = app_hash_token($token);
+        $tenkh_safe = mysqli_real_escape_string($con, trim($_POST['tenkh'] ?? ''));
+        $sdt_enc = mysqli_real_escape_string($con, (string)app_encrypt(trim($_POST['sdt'] ?? ''), 'oder.sdt'));
+        $diachi_enc = mysqli_real_escape_string($con, (string)app_encrypt(trim($_POST['diachi'] ?? ''), 'oder.diachi'));
+        $note_enc = mysqli_real_escape_string($con, (string)app_encrypt(trim($_POST['note'] ?? ''), 'oder.note'));
 
-        $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`,`donhangthang`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$token', '" . $_POST['tenkh'] . "', '" . $_POST['sdt'] . "', '$email', '" . $_POST['diachi'] . "', '" . $_POST['note'] . "', '" . $total . "', '" . time() . "', '" . date('m') . "', 'PENDING', 'UNPAID', $makh_val)");
+        $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`,`donhangthang`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$tokenHash', '$tenkh_safe', '$sdt_enc', '$email', '$diachi_enc', '$note_enc', '" . $total . "', '" . time() . "', '" . date('m') . "', 'PENDING', 'UNPAID', $makh_val)");
         $orderID = $con->insert_id;// lưu id giỏ hàng
         $insertString = "";
         foreach ($submitProducts as $key => $timsanpham) {
@@ -165,7 +170,7 @@ if (isset($_GET['action'])) {
         }
         
         $_SESSION['swal_success'] = 'Đơn hàng đã đặt thành công!';
-        header('Location: giohang.php');
+        app_redirect(BASE_URL . 'shop/giohang.php');
         exit;
     }
 
@@ -183,8 +188,8 @@ if (isset($_GET['action'])) {
         if ($customer_query && mysqli_num_rows($customer_query) > 0) {
             $customer_row = mysqli_fetch_assoc($customer_query);
             $default_name = $customer_row['hoten'] ?? '';
-            $default_phone = $customer_row['sdt'] ?? '';
-            $default_address = $customer_row['diachi'] ?? '';
+            $default_phone = app_decrypt_field($customer_row['sdt'] ?? '', 'tbl_tkkhachhang.sdt');
+            $default_address = app_decrypt_field($customer_row['diachi'] ?? '', 'tbl_tkkhachhang.diachi');
             $default_email = $customer_row['email'] ?? '';
         }
         
@@ -193,7 +198,8 @@ if (isset($_GET['action'])) {
         if ($address_query && mysqli_num_rows($address_query) > 0) {
             $address_row = mysqli_fetch_assoc($address_query);
             $default_name = $address_row['hoten'];
-            $default_phone = $address_row['sdt'];
+            $default_phone = app_decrypt_field($address_row['sdt'] ?? '', 'tbl_diachi.sdt');
+            $address_row['diachi_cuthe'] = app_decrypt_field($address_row['diachi_cuthe'] ?? '', 'tbl_diachi.diachi_cuthe');
             
             $addr_parts = [];
             if (!empty($address_row['diachi_cuthe'])) $addr_parts[] = $address_row['diachi_cuthe'];
@@ -318,30 +324,30 @@ if (isset($_GET['action'])) {
                             <h4 class="card-title text-info"><i class="fas fa-truck mr-2"></i> Thông tin Nhận hàng</h4>
                         </div>
                         <div class="card-body">
-                            <form method="post" action="<?php echo BASE_URL; ?>shop/infodathang.php?action=submit">
+                            <form method="post" action="<?= e(BASE_URL) ?>shop/infodathang.php?action=submit">
                                 <?= csrf_field() ?>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Họ tên người nhận <span class="text-danger">*</span></label>
-                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= htmlspecialchars($default_name) ?>"/>
+                                    <input name="tenkh" required class="form-control" type="text" placeholder="Nhập đầy đủ họ tên" value="<?= e($default_name) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Số điện thoại <span class="text-danger">*</span></label>
-                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx" value="<?= htmlspecialchars($default_phone) ?>"/>
+                                    <input name="sdt" required class="form-control" type="text" placeholder="09xxxxxxx" value="<?= e($default_phone) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Email nhận thông báo <span class="text-danger">*</span></label>
-                                    <input name="email" required class="form-control" type="email" placeholder="example@gmail.com" value="<?= htmlspecialchars($default_email) ?>"/>
+                                    <input name="email" required class="form-control" type="email" placeholder="example@gmail.com" value="<?= e($default_email) ?>"/>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="font-weight-bold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."><?= htmlspecialchars($default_address) ?></textarea>
+                                    <textarea name="diachi" required class="form-control" rows="2" placeholder="Số nhà, Phường/Xã, Quận/Huyện..."><?= e($default_address) ?></textarea>
                                 </div>
                                 <div class="form-group mb-4">
                                     <label class="font-weight-bold">Ghi chú (nếu có)</label>
                                     <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú về thời gian giao hàng..."></textarea>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <a href="<?php echo BASE_URL; ?>shop/giohang.php" class="btn btn-outline-secondary">
+                                    <a href="<?= e(BASE_URL) ?>shop/giohang.php" class="btn btn-outline-secondary">
                                         <i class="fas fa-arrow-left mr-2"></i> Quay lại
                                     </a>
                                     <button type="submit" name="xacnhan" class="btn btn-info btn-lg font-weight-bold shadow-sm" style="font-size: 1.1rem; padding: 12px 30px;">
@@ -363,8 +369,8 @@ if (isset($_GET['action'])) {
                                 <?php foreach($orderProducts as $sp): ?>
                                 <li class="list-group-item d-flex justify-content-between lh-condensed px-0">
                                     <div>
-                                        <h6 class="my-0"><?= htmlspecialchars($sp['tensp']) ?></h6>
-                                        <small class="text-muted">SL: <?= $sp['qty_in_cart'] ?><?php if (!empty($sp['order_size'])): ?> · Size: <?= $sp['order_size'] ?><?php endif; ?></small>
+                                        <h6 class="my-0"><?= e($sp['tensp']) ?></h6>
+                                        <small class="text-muted">SL: <?= (int)$sp['qty_in_cart'] ?><?php if (!empty($sp['order_size'])): ?> · Size: <?= (int)$sp['order_size'] ?><?php endif; ?></small>
                                     </div>
                                     <span class="text-muted"><?= number_format($sp['giasanpham'] * $sp['qty_in_cart'], 0, ',', '.') ?>&nbsp;đ</span>
                                 </li>

@@ -8,16 +8,21 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 include BASE_PATH . 'includes/connect.php';
 
 // ── Validate token từ URL ──
-$token = trim($_GET['token'] ?? '');
+$token = is_string($_GET['token'] ?? null) ? trim($_GET['token']) : '';
 $validToken = false;
 $errorMessage = '';
 
-if (empty($token) || strlen($token) !== 64) {
+if (empty($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
     $errorMessage = 'Link đặt lại mật khẩu không hợp lệ.';
 } else {
-    $tokenSafe = mysqli_real_escape_string($con, $token);
-    $query = mysqli_query($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE `reset_token` = '$tokenSafe' AND `reset_token_expiry` >= " . time() . " LIMIT 1");
-    $user = mysqli_fetch_assoc($query);
+    $tokenHash = app_hash_token($token);
+    $now = time();
+    $stmt = mysqli_prepare($con, "SELECT `makh`, `hoten` FROM `tbl_tkkhachhang` WHERE (`reset_token` = ? OR `reset_token` = ?) AND `reset_token_expiry` >= ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "ssi", $tokenHash, $token, $now);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($res);
+    mysqli_stmt_close($stmt);
 
     if (!$user) {
         $errorMessage = 'Link đặt lại mật khẩu đã hết hạn hoặc đã được sử dụng. Vui lòng yêu cầu lại.';
@@ -226,13 +231,13 @@ include BASE_PATH . 'includes/header.php';
             <h2 class="auth-title">Link không hợp lệ</h2>
             <div class="error-box">
                 <i class="fas fa-times-circle"></i>
-                <?= htmlspecialchars($errorMessage) ?>
+                <?= e($errorMessage) ?>
             </div>
-            <a href="<?= BASE_URL ?>auth/quenmatkhau.php" class="btn-auth" style="display:block; text-align:center; text-decoration:none;">
+            <a href="<?= e(BASE_URL) ?>auth/quenmatkhau.php" class="btn-auth" style="display:block; text-align:center; text-decoration:none;">
                 <i class="fas fa-redo"></i> Yêu cầu lại
             </a>
             <div class="auth-link">
-                <a href="<?= BASE_URL ?>auth/dangnhap.php"><i class="fas fa-arrow-left"></i> Quay lại đăng nhập</a>
+                <a href="<?= e(BASE_URL) ?>auth/dangnhap.php"><i class="fas fa-arrow-left"></i> Quay lại đăng nhập</a>
             </div>
 
 <?php else: ?>
@@ -241,11 +246,11 @@ include BASE_PATH . 'includes/header.php';
                 <div class="auth-icon blue"><i class="fas fa-lock-open"></i></div>
             </div>
             <h2 class="auth-title">Đặt mật khẩu mới</h2>
-            <p class="auth-subtitle">Nhập mật khẩu mới cho tài khoản <strong><?= htmlspecialchars($user['hoten'] ?? '') ?></strong></p>
+            <p class="auth-subtitle">Nhập mật khẩu mới cho tài khoản <strong><?= e($user['hoten'] ?? '') ?></strong></p>
 
-            <form method="post" id="resetForm" onsubmit="return false;">
+            <form method="post" id="resetForm">
                 <?= csrf_field() ?>
-                <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+                <input type="hidden" name="token" value="<?= e($token) ?>">
 
                 <div class="mb-3">
                     <label class="form-label" for="matkhau_moi">Mật khẩu mới</label>
@@ -271,7 +276,7 @@ include BASE_PATH . 'includes/header.php';
             </form>
 
             <div class="auth-link">
-                <a href="<?= BASE_URL ?>auth/dangnhap.php"><i class="fas fa-arrow-left"></i> Quay lại đăng nhập</a>
+                <a href="<?= e(BASE_URL) ?>auth/dangnhap.php"><i class="fas fa-arrow-left"></i> Quay lại đăng nhập</a>
             </div>
 <?php endif; ?>
 
@@ -280,7 +285,7 @@ include BASE_PATH . 'includes/header.php';
 </main>
 
 <?php if ($validToken): ?>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('resetForm');
     const btn = document.getElementById('btnReset');
@@ -351,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const fd = new FormData(form);
 
-        fetch('<?= BASE_URL ?>auth/api_datlamatkhau.php', {
+        fetch(<?= js_value(BASE_URL . 'auth/api_datlamatkhau.php') ?>, {
             method: 'POST',
             headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content },
             body: fd
@@ -367,10 +372,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmButtonColor: '#3b82f6',
                     allowOutsideClick: false
                 }).then(() => {
-                    window.location.href = data.redirect || '<?= BASE_URL ?>auth/dangnhap.php';
+                    window.location.href = <?= js_value(BASE_URL . 'auth/dangnhap.php') ?>;
                 });
             } else {
-                Swal.fire({ icon: 'error', title: data.message || 'Có lỗi xảy ra', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+                Swal.fire({ icon: 'error', titleText: data.message || 'Có lỗi xảy ra', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> Đặt lại mật khẩu';
             }

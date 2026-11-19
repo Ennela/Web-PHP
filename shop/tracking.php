@@ -6,25 +6,30 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 include BASE_PATH . 'includes/connect.php';
 
-$orderCode = isset($_GET['order']) ? mysqli_real_escape_string($con, $_GET['order']) : '';
-$token = isset($_GET['token']) ? mysqli_real_escape_string($con, $_GET['token']) : '';
+$orderCode = trim((string)($_GET['order'] ?? ''));
+$token = trim((string)($_GET['token'] ?? ''));
 
 $error = '';
 $orderData = null;
 $orderDetails = [];
 
-if (empty($orderCode) || empty($token)) {
+if ($orderCode === '' || $token === '') {
     $error = "Đường dẫn không hợp lệ. Vui lòng kiểm tra lại link trong email của bạn.";
 } else {
-    // Kiểm tra đơn hàng và token bằng prepared statement
-    $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND `token` = ? LIMIT 1");
-    mysqli_stmt_bind_param($stmt, "ss", $orderCode, $token);
+    $tokenHash = app_hash_token($token);
+    // Kiểm tra đơn hàng và token hash bằng prepared statement
+    $stmt = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `order_code` = ? AND (`token` = ? OR `token` = ?) LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "sss", $orderCode, $tokenHash, $token);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $orderData = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
+
+        $orderData['sdt'] = app_decrypt_field($orderData['sdt'] ?? '', 'oder.sdt');
+        $orderData['diachi'] = app_decrypt_field($orderData['diachi'] ?? '', 'oder.diachi');
+        $orderData['note'] = app_decrypt_field($orderData['note'] ?? '', 'oder.note');
 
         // Lấy chi tiết đơn hàng
         $orderId = (int)$orderData['id'];
@@ -53,7 +58,7 @@ function getStatusBadge($status) {
         case 'SHIPPING': return '<span class="badge" style="background-color:#007bff; color:#fff; padding:0.4em 0.6em;">Đang giao hàng</span>';
         case 'DELIVERED': return '<span class="badge" style="background-color:#28a745; color:#fff; padding:0.4em 0.6em;">Đã giao hàng</span>';
         case 'CANCELLED': return '<span class="badge" style="background-color:#dc3545; color:#fff; padding:0.4em 0.6em;">Đã hủy</span>';
-        default: return '<span class="badge" style="background-color:#6c757d; color:#fff; padding:0.4em 0.6em;">' . htmlspecialchars($status) . '</span>';
+        default: return '<span class="badge" style="background-color:#6c757d; color:#fff; padding:0.4em 0.6em;">' . e($status) . '</span>';
     }
 }
 
@@ -115,7 +120,6 @@ include BASE_PATH . 'includes/header.php';
     .tracking-page .text-danger {
         font-size: clamp(1.1rem, 3vw, 1.5rem) !important;
     }
-    /* Responsive table for products */
     .tracking-page .table td {
         vertical-align: middle;
         padding: clamp(8px, 2vw, 12px);
@@ -131,13 +135,11 @@ include BASE_PATH . 'includes/header.php';
     .tracking-page .table small {
         font-size: clamp(0.7rem, 1.5vw, 0.82rem);
     }
-    /* Alert responsive */
     .tracking-page .alert {
         font-size: clamp(0.85rem, 2vw, 1rem);
         border-radius: 12px;
         padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px);
     }
-    /* Mobile: stack info rows */
     @media (max-width: 575.98px) {
         .tracking-page .row.mb-4 > .col-sm-6 {
             margin-bottom: 16px;
@@ -156,12 +158,12 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-md-8">
                     <?php if ($error): ?>
                         <div class="alert alert-danger shadow-sm text-center">
-                            <i class="fas fa-exclamation-circle mr-2"></i> <?= htmlspecialchars($error) ?>
+                            <i class="fas fa-exclamation-circle mr-2"></i> <?= e($error) ?>
                         </div>
                     <?php elseif ($orderData): ?>
                         <div class="card shadow-sm border-0 mb-4">
                             <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                                <h4 class="card-title text-info"><i class="fas fa-box-open mr-2"></i> Đơn hàng #<?= htmlspecialchars($orderData['order_code']) ?></h4>
+                                <h4 class="card-title text-info"><i class="fas fa-box-open mr-2"></i> Đơn hàng #<?= e($orderData['order_code']) ?></h4>
                             </div>
                             <div class="card-body">
                                 <div class="row mb-4">
@@ -183,12 +185,12 @@ include BASE_PATH . 'includes/header.php';
                                 
                                 <hr>
                                 <h5 class="mb-3 mt-4">Thông tin giao hàng</h5>
-                                <p class="mb-1"><strong>Người nhận:</strong> <?= htmlspecialchars($orderData['tenkh']) ?></p>
-                                <p class="mb-1"><strong>SĐT:</strong> <?= htmlspecialchars($orderData['sdt']) ?></p>
-                                <p class="mb-1"><strong>Email:</strong> <?= htmlspecialchars($orderData['email']) ?></p>
-                                <p class="mb-1"><strong>Địa chỉ:</strong> <?= htmlspecialchars($orderData['diachi']) ?></p>
+                                <p class="mb-1"><strong>Người nhận:</strong> <?= e($orderData['tenkh']) ?></p>
+                                <p class="mb-1"><strong>SĐT:</strong> <?= e($orderData['sdt']) ?></p>
+                                <p class="mb-1"><strong>Email:</strong> <?= e($orderData['email']) ?></p>
+                                <p class="mb-1"><strong>Địa chỉ:</strong> <?= e($orderData['diachi']) ?></p>
                                 <?php if (!empty($orderData['note'])): ?>
-                                    <p class="mb-0 text-muted"><em>Ghi chú: <?= htmlspecialchars($orderData['note']) ?></em></p>
+                                    <p class="mb-0 text-muted"><em>Ghi chú: <?= e($orderData['note']) ?></em></p>
                                 <?php endif; ?>
 
                                 <hr>
@@ -199,13 +201,13 @@ include BASE_PATH . 'includes/header.php';
                                             <?php foreach ($orderDetails as $item): ?>
                                                 <tr>
                                                     <td width="80">
-                                                        <img src="<?= BASE_URL ?>admin/<?= htmlspecialchars($item['anhdaidien']) ?>" class="img-fluid rounded border" alt="<?= htmlspecialchars($item['tensp']) ?>">
+                                                        <img src="<?= e(safe_url(BASE_URL . 'admin/' . $item['anhdaidien'])) ?>" class="img-fluid rounded border" alt="<?= e($item['tensp']) ?>">
                                                     </td>
                                                     <td>
-                                                        <h6 class="mb-1"><?= htmlspecialchars($item['tensp']) ?></h6>
+                                                        <h6 class="mb-1"><?= e($item['tensp']) ?></h6>
                                                         <small class="text-muted">
-                                                            Số lượng: <?= htmlspecialchars($item['quantity']) ?>
-                                                            <?php if (!empty($item['size'])): ?> | Size: <?= htmlspecialchars($item['size']) ?><?php endif; ?>
+                                                            Số lượng: <?= e($item['quantity']) ?>
+                                                            <?php if (!empty($item['size'])): ?> | Size: <?= e($item['size']) ?><?php endif; ?>
                                                         </small>
                                                     </td>
                                                     <td class="text-right align-middle">

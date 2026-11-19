@@ -67,6 +67,11 @@ $statusMessage = '';
 if ($orderId > 0) {
     $orderResult = mysqli_query($con, "SELECT * FROM `oder` WHERE `id` = $orderId LIMIT 1");
     $order = mysqli_fetch_assoc($orderResult);
+    if ($order) {
+        $order['sdt'] = app_decrypt_field($order['sdt'] ?? '', 'oder.sdt');
+        $order['diachi'] = app_decrypt_field($order['diachi'] ?? '', 'oder.diachi');
+        $order['note'] = app_decrypt_field($order['note'] ?? '', 'oder.note');
+    }
 }
 
 if ($order) {
@@ -124,7 +129,17 @@ if ($order) {
                 }
 
                 $orderCodeDisplay = !empty($order['order_code']) ? $order['order_code'] : $orderId;
-                $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCodeDisplay . "&token=" . ($order['token'] ?? '');
+                $rawTrackingToken = $_SESSION['vnpay_order_tokens'][(int)$orderId] ?? '';
+                unset($_SESSION['vnpay_order_tokens'][(int)$orderId]);
+                if ($rawTrackingToken === '') {
+                    $rawTrackingToken = bin2hex(random_bytes(16));
+                    $newTokenHash = app_hash_token($rawTrackingToken);
+                    $stmtTk = mysqli_prepare($con, "UPDATE `oder` SET `token` = ? WHERE `id` = ?");
+                    mysqli_stmt_bind_param($stmtTk, "si", $newTokenHash, $orderId);
+                    mysqli_stmt_execute($stmtTk);
+                    mysqli_stmt_close($stmtTk);
+                }
+                $trackingLink = BASE_URL . "shop/tracking.php?order=" . $orderCodeDisplay . "&token=" . $rawTrackingToken;
 
                 $emailData = getOrderConfirmationTemplate([
                     'customerName'  => $orderTenkh,
@@ -181,11 +196,11 @@ if ($order) {
                     <div class="mb-4">
                         <i class="fas <?= $iconClass ?> <?= $cardColor ?>" style="font-size: 4rem;"></i>
                     </div>
-                    <h3 class="<?= $cardColor ?> font-weight-bold mb-1"><?= $cardTitle ?></h3>
+                    <h3 class="<?= $cardColor ?> font-weight-bold mb-1"><?= e($cardTitle) ?></h3>
                     
                     <?php if ($alreadyProcessed): ?>
                         <!-- Duplicate tab / Already processed message -->
-                        <p class="text-muted mb-4"><?= $statusMessage ?></p>
+                        <p class="text-muted mb-4"><?= e($statusMessage) ?></p>
                         
                         <?php if ($duplicatePayment): ?>
                         <div class="alert alert-info text-left" style="font-size: 0.88rem; border-radius: 10px;">
@@ -203,16 +218,16 @@ if ($order) {
                         
                     <?php else: ?>
                         <!-- Normal payment result -->
-                        <p class="text-muted mb-4">Đơn hàng số: #<?= htmlspecialchars($_GET['vnp_TxnRef'] ?? 'N/A') ?></p>
+                        <p class="text-muted mb-4">Đơn hàng số: #<?= e($_GET['vnp_TxnRef'] ?? 'N/A') ?></p>
 
                         <div class="text-left bg-light p-3 rounded mb-4" style="font-size: 0.95rem;">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Mã giao dịch:</span>
-                                <span class="font-weight-bold text-dark"><?= htmlspecialchars($_GET['vnp_TransactionNo'] ?? 'N/A') ?></span>
+                                <span class="font-weight-bold text-dark"><?= e($_GET['vnp_TransactionNo'] ?? 'N/A') ?></span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Ngân hàng thanh toán:</span>
-                                <span class="font-weight-bold text-dark"><?= htmlspecialchars($_GET['vnp_BankCode'] ?? 'N/A') ?></span>
+                                <span class="font-weight-bold text-dark"><?= e($_GET['vnp_BankCode'] ?? 'N/A') ?></span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Thời gian:</span>
@@ -243,11 +258,11 @@ if ($order) {
 
                     <div class="mt-4">
                         <?php if (!empty($_SESSION['dangnhap'])): ?>
-                        <a href="<?php echo BASE_URL; ?>shop/tradonhang.php" class="btn btn-outline-info btn-block btn-lg shadow-sm font-weight-bold mb-2" style="font-size: 1rem;">
+                        <a href="<?= e(BASE_URL) ?>shop/tradonhang.php" class="btn btn-outline-info btn-block btn-lg shadow-sm font-weight-bold mb-2" style="font-size: 1rem;">
                             <i class="fas fa-list-alt mr-2"></i>XEM ĐƠN HÀNG CỦA TÔI
                         </a>
                         <?php endif; ?>
-                        <a href="<?php echo BASE_URL; ?>home/trangchu.php" class="btn btn-info btn-block btn-lg shadow-sm font-weight-bold" style="font-size: 1rem;">
+                        <a href="<?= e(BASE_URL) ?>home/trangchu.php" class="btn btn-info btn-block btn-lg shadow-sm font-weight-bold" style="font-size: 1rem;">
                             TIẾP TỤC MUA SẮM
                         </a>
                     </div>

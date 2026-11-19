@@ -12,7 +12,7 @@ require_once dirname(__DIR__) . '/config.php';
         $matkhau = $_POST['matkhau'];
         if ($taikhoan == '' || $matkhau == '') {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Vui lòng nhập đủ thông tin');
                 window.location.href = 'dangnhap.php';
             </script>
@@ -26,31 +26,20 @@ require_once dirname(__DIR__) . '/config.php';
             $row_dangnhap = mysqli_fetch_assoc($result);
             mysqli_stmt_close($stmt);
 
-            if ($row_dangnhap && password_verify($matkhau, $row_dangnhap['matkhau'])) {
-                // Đăng nhập thành công với bcrypt hash
+            $needsRehash = false;
+            if ($row_dangnhap && app_verify_password($matkhau, $row_dangnhap['matkhau'] ?? '', $needsRehash)) {
+                if ($needsRehash) {
+                    app_upgrade_password_hash($con, 'tbl_qlthanhvien', 'id', (int)$row_dangnhap['id'], 'matkhau', $matkhau);
+                }
                 session_regenerate_id(true);
                 csrf_rotate_token();
                 $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
                 $_SESSION['manv'] = $row_dangnhap['id'];
-                header('Location: trangchu.php');
-                exit;
-            } elseif ($row_dangnhap && $row_dangnhap['matkhau'] === $matkhau) {
-                // Fallback: mật khẩu cũ chưa hash — đăng nhập OK + tự động hash lại
-                $hashedPassword = password_hash($matkhau, PASSWORD_BCRYPT);
-                $updateStmt = mysqli_prepare($con, "UPDATE tbl_qlthanhvien SET matkhau = ? WHERE id = ?");
-                mysqli_stmt_bind_param($updateStmt, "si", $hashedPassword, $row_dangnhap['id']);
-                mysqli_stmt_execute($updateStmt);
-                mysqli_stmt_close($updateStmt);
-
-                session_regenerate_id(true);
-                csrf_rotate_token();
-                $_SESSION['dangnhap1'] = $row_dangnhap['hoten'];
-                $_SESSION['manv'] = $row_dangnhap['id'];
-                header('Location: trangchu.php');
+                app_redirect(BASE_URL . 'admin/trangchu.php');
                 exit;
             } else {
                 ?>
-                <script type="text/javascript">
+                <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                     alert('Sai tài khoản hoặc mật khẩu');
                     window.location.href = 'dangnhap.php';
                 </script>
@@ -66,7 +55,7 @@ require_once dirname(__DIR__) . '/config.php';
     <title>Trang đăng nhập</title>
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
           rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a81368914c.js"></script>
+    <script nonce="<?= e(csp_nonce()) ?>" src="https://kit.fontawesome.com/a81368914c.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
 </head>
@@ -172,7 +161,7 @@ require_once dirname(__DIR__) . '/config.php';
         </form>
     </div>
 </div>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     const inputs = document.querySelectorAll("input");
 
 

@@ -1,5 +1,9 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
+    // A known page ID is accepted here, never an arbitrary URL or an admin destination.
+    $returnId = $_POST['return_to'] ?? $_GET['return_to'] ?? 'home';
+    $returnDestination = app_return_destination($returnId);
+    $loginDestination = BASE_URL . 'auth/dangnhap.php?return_to=' . rawurlencode($returnId);
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
@@ -11,9 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
         $dangxuat = '';
     }
     if ($dangxuat == 'dangxuat') {
-        session_destroy();
-        header('Location: dangnhap.php');
-        exit;
+        secure_logout('dangnhap.php');
     }
 
     if (isset($_POST['dangnhap'])) {
@@ -21,7 +23,7 @@ require_once dirname(__DIR__) . '/config.php';
         $matkhau = trim($_POST['matkhau'] ?? '');
         if ($taikhoan === '' || $matkhau === '') {
             $_SESSION['swal_warning'] = 'Vui lòng nhập đầy đủ thông tin!';
-            header('Location: dangnhap.php');
+            app_redirect($loginDestination);
             exit;
         } else {
             $stmt = mysqli_prepare($con, "SELECT * FROM tbl_tkkhachhang WHERE username = ? LIMIT 1");
@@ -33,15 +35,12 @@ require_once dirname(__DIR__) . '/config.php';
 
             $loginSuccess = false;
             if ($row_dangnhap) {
-                if (password_verify($matkhau, $row_dangnhap['password'])) {
+                $needsRehash = false;
+                if (app_verify_password($matkhau, $row_dangnhap['password'] ?? '', $needsRehash)) {
                     $loginSuccess = true;
-                } elseif ($row_dangnhap['password'] === $matkhau) {
-                    $loginSuccess = true;
-                    $newHash = password_hash($matkhau, PASSWORD_BCRYPT);
-                    $upStmt = mysqli_prepare($con, "UPDATE tbl_tkkhachhang SET password = ? WHERE makh = ?");
-                    mysqli_stmt_bind_param($upStmt, "si", $newHash, $row_dangnhap['makh']);
-                    mysqli_stmt_execute($upStmt);
-                    mysqli_stmt_close($upStmt);
+                    if ($needsRehash) {
+                        app_upgrade_password_hash($con, 'tbl_tkkhachhang', 'makh', (int)$row_dangnhap['makh'], 'password', $matkhau);
+                    }
                 }
             }
 
@@ -50,11 +49,11 @@ require_once dirname(__DIR__) . '/config.php';
                 csrf_rotate_token();
                 $_SESSION['dangnhap'] = $row_dangnhap['hoten'];
                 $_SESSION['makh'] = (int)$row_dangnhap['makh'];
-                header('Location: ' . BASE_URL . 'home/trangchu.php');
+                app_redirect($returnDestination, 303);
                 exit;
             } else {
                 $_SESSION['swal_error'] = 'Sai tài khoản hoặc mật khẩu!';
-                header('Location: dangnhap.php');
+                app_redirect($loginDestination);
                 exit;
             }
         }
@@ -165,8 +164,9 @@ require_once dirname(__DIR__) . '/config.php';
         <div class="auth-card">
             <h2 class="auth-title">Đăng nhập</h2>
             <p class="auth-subtitle">Đăng nhập để trải nghiệm mua sắm</p>
-            <form action="<?php echo BASE_URL; ?>auth/dangnhap.php" method="POST">
+            <form action="<?= e(BASE_URL) ?>auth/dangnhap.php" method="POST">
                 <?= csrf_field() ?>
+                <input type="hidden" name="return_to" value="<?= e($returnId) ?>">
                 <div class="mb-3">
                     <label class="form-label" for="email">Tài khoản</label>
                     <input name="taikhoan" class="form-control" type="text" id="email" placeholder="Nhập tên đăng nhập">
@@ -180,11 +180,11 @@ require_once dirname(__DIR__) . '/config.php';
                         <input class="form-check-input" type="checkbox" id="checkbox">
                         <label class="form-check-label" for="checkbox">Ghi nhớ đăng nhập</label>
                     </div>
-                    <a href="<?php echo BASE_URL; ?>auth/quenmatkhau.php" style="color:#3b82f6; font-weight:600; font-size:clamp(0.8rem,1.8vw,0.85rem); text-decoration:none;">Quên mật khẩu?</a>
+                    <a href="<?= e(BASE_URL) ?>auth/quenmatkhau.php" style="color:#3b82f6; font-weight:600; font-size:clamp(0.8rem,1.8vw,0.85rem); text-decoration:none;">Quên mật khẩu?</a>
                 </div>
                 <button class="btn-auth" name="dangnhap" type="submit">Đăng nhập</button>
             </form>
-            <div class="auth-link">Chưa có tài khoản? <a href="<?php echo BASE_URL; ?>auth/dangki.php">Đăng ký ngay</a></div>
+            <div class="auth-link">Chưa có tài khoản? <a href="<?= e(BASE_URL) ?>auth/dangki.php">Đăng ký ngay</a></div>
         </div>
     </div>
 </main>

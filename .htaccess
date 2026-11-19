@@ -9,7 +9,7 @@ RewriteEngine On
 # HTTPS/proxy handling belongs to the application's configured trusted proxies.
 
 # Deny dotfiles, source-only code, credentials, database dumps and build tooling.
-RewriteRule "(^|/)(\.[^/]+|database|documents|deploy|scripts|scratch|backups?|secrets|certs|vendor|node_modules|includes|vnpay_php)(/|$)" - [R=404,L,NC]
+RewriteRule "(^|/)(\.[^/]+|database|documents|deploy|scripts|scratch|backups?|secrets|certs|vendor|lib|node_modules|includes|vnpay_php)(/|$)" - [R=404,L,NC]
 RewriteRule "(^|/)(config\.php|connect_db\.php|function\.php|pagination\.php|Dockerfile|Caddyfile|docker-entrypoint\.sh|composer\.(json|lock)|package(-lock)?\.json|README[^/]*)(/|$)" - [R=404,L,NC]
 RewriteRule "\.(sql|log|ini|conf|ya?ml|toml|sh|bak|backup|old|orig|save|swp|pem|key|p12|pfx)([./]|$)|~$" - [R=404,L,NC]
 
