@@ -328,7 +328,7 @@ UNLOCK TABLES;
 
 -- ############################################################
 -- PHẦN 2 — NÂNG CẤP LÊN SCHEMA HIỆN TẠI (MySQL 8.0, chạy lại được nhiều lần)
--- Thay thế: railway_migration*.sql, check_and_fix_all.sql, migration_quenmatkhau,
+-- Thay thế các migration Railway cũ (đã xóa), migration_quenmatkhau,
 --           migration_email_system, migration_broken_auth, migration_crypto_security,
 --           migration_tonkho. Cột nhạy cảm tạo thẳng ở kiểu cuối cùng (đủ chỗ cho dữ liệu mã hóa).
 -- ############################################################
