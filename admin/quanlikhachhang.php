@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
         session_start();
     }
     if ( ! isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
+        app_redirect(BASE_URL . 'admin/canhbao.php');
         exit;
     }
     if (isset($_POST['login'])) {
@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: index.php');
+        app_redirect(BASE_URL . 'admin/index.php');
         exit;
     }
     include './connect_db.php';
@@ -24,7 +24,7 @@ require_once dirname(__DIR__) . '/config.php';
         && ! empty($_POST)
     ) {
         $_SESSION['locsanpham3'] = array_intersect_key($_POST, array_flip(['makh', 'hoten']));
-        header('Location: quanlikhachhang.php');
+        app_redirect(BASE_URL . 'admin/quanlikhachhang.php');
         exit;
     }
     if ( ! empty($_SESSION['locsanpham3'])) {
@@ -49,9 +49,8 @@ require_once dirname(__DIR__) . '/config.php';
         extract(array_intersect_key($_SESSION['locsanpham3'], array_flip(['makh', 'hoten'])));//tự động lấy ra biến id và hoten
     }
     
-    $item_per_page = ! empty($_GET['per_page']) ? $_GET['per_page'] : 6;
-    $current_page  = ! empty($_GET['page']) ? $_GET['page']
-        : 1; //Trang hiện tại
+    $item_per_page = max(1, min(100, (int)($_GET['per_page'] ?? 6)));
+    $current_page = max(1, (int)($_GET['page'] ?? 1)); //Trang hiện tại
     $offset        = ($current_page - 1) * $item_per_page;
     $totalRecords  = mysqli_query($con, "SELECT * FROM `tbl_tkkhachhang`");
     $totalRecords  = $totalRecords->num_rows;
@@ -91,7 +90,7 @@ require_once dirname(__DIR__) . '/config.php';
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -132,11 +131,11 @@ require_once dirname(__DIR__) . '/config.php';
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span
+                                data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                             Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -258,7 +257,7 @@ require_once dirname(__DIR__) . '/config.php';
                         </div>
                         <div class="flex-1 text-right md:text-center">
                             <div class="metric-label">Tổng khách hàng</div>
-                            <div class="metric-value"><?= $totalRecords ?> <span class="metric-unit">khách hàng</span></div>
+                            <div class="metric-value"><?= e($totalRecords) ?> <span class="metric-unit">khách hàng</span></div>
                         </div>
                     </div>
                 </div>
@@ -270,10 +269,10 @@ require_once dirname(__DIR__) . '/config.php';
                         <?= csrf_field() ?>
                         <input type="text"
                                placeholder="Mã khách hàng ..." name="makh"
-                               value="<?=!empty($makh)?$makh:""?>"/>
+                               value="<?= e(!empty($makh)?$makh:"") ?>"/>
                         <input type="text"
                                placeholder="Tên khách hàng ..." name="hoten"
-                               value="<?=!empty($hoten)? $hoten : ""?>"/>
+                               value="<?= e(!empty($hoten)? $hoten : "") ?>"/>
                         <button type="submit" class="btn-search">
                             <i class="fas fa-search"></i> Tìm kiếm
                         </button>
@@ -281,7 +280,7 @@ require_once dirname(__DIR__) . '/config.php';
                 </div>
             </div>
             <div class="flex w-full px-6 justify-end animate-in" style="animation-delay: 0.15s;">
-                <div class="records-info"><i class="fas fa-info-circle" style="color: #3b82f6;"></i> Có tất cả <strong><?=$totalRecords?></strong> khách hàng trên <strong><?=$totalPages?></strong> trang</div>
+                <div class="records-info"><i class="fas fa-info-circle" style="color: #3b82f6;"></i> Có tất cả <strong><?= e($totalRecords) ?></strong> khách hàng trên <strong><?= e($totalPages) ?></strong> trang</div>
             </div>
             <div class="w-full p-6 animate-in" style="animation-delay: 0.2s;">
                 <div class="table-wrapper">
@@ -300,14 +299,14 @@ require_once dirname(__DIR__) . '/config.php';
                         while ($row = mysqli_fetch_array($result)) {
                             ?>
                             <tr>
-                                <td class="text-center"><?= $row['makh'] ?></td>
-                                <td class="text-center"><?= $row['username'] ?></td>
-                                <td class="text-center"><?= $row['hoten'] ?></td>
-                                <td class="text-center"><?= date('d/m/Y H:i',
-                                        $row['ngaytao']) ?></td>
+                                <td class="text-center"><?= (int)$row['makh'] ?></td>
+                                <td class="text-center"><?= e($row['username']) ?></td>
+                                <td class="text-center"><?= e($row['hoten']) ?></td>
+                                <td class="text-center"><?= e(date('d/m/Y H:i',
+                                        $row['ngaytao'])) ?></td>
                                 <td class="text-center doimau"><form method="post" action="./delete_qlkhachhang.php" style="display:inline;">
                                     <?= csrf_field() ?>
-                                        <input type="hidden" name="makh" value="<?= $row['makh'] ?>">
+                                        <input type="hidden" name="makh" value="<?= (int)$row['makh'] ?>">
                                         <button type="submit" style="background:none;border:0;color:inherit;font:inherit;cursor:pointer;"><i class="fas fa-trash-alt mr-1"></i>Xoá</button>
                                     </form>
                                 </td>
@@ -331,11 +330,18 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -345,7 +351,7 @@ require_once dirname(__DIR__) . '/config.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -355,7 +361,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

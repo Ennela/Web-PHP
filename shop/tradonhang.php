@@ -9,7 +9,7 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 // Xử lý đăng xuất
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: ' . BASE_URL . 'home/trangchu.php');
+    app_redirect(BASE_URL . 'home/trangchu.php');
     exit;
 }
 
@@ -19,7 +19,7 @@ require_once BASE_PATH . 'includes/inventory_helper.php';
 // ===== BẮT BUỘC ĐĂNG NHẬP =====
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
     $_SESSION['swal_warning'] = 'Vui lòng đăng nhập để tra cứu đơn hàng!';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -28,7 +28,7 @@ $makh = intval($_SESSION['makh']);
 if (($_POST['action'] ?? '') === 'sync_shipping') {
     csrf_require_post();
     autoCompleteShippingOrders($con, $makh);
-    header('Location: ' . BASE_URL . 'shop/tradonhang.php', true, 303);
+    app_redirect(BASE_URL . 'shop/tradonhang.php', 303);
     exit;
 }
 
@@ -359,7 +359,7 @@ include BASE_PATH . 'includes/header.php';
         <div class="container text-center">
             <h2><i class="fas fa-shipping-fast mr-2"></i> Đơn Hàng Của Tôi</h2>
             <p class="mt-2">Theo dõi trạng thái tất cả đơn hàng của bạn</p>
-            <form method="post" action="<?= BASE_URL ?>shop/tradonhang.php" class="mt-3">
+            <form method="post" action="<?= e(BASE_URL) ?>shop/tradonhang.php" class="mt-3">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="sync_shipping">
                 <button type="submit" class="btn btn-outline-light btn-sm">
@@ -369,7 +369,7 @@ include BASE_PATH . 'includes/header.php';
             <div class="mt-3">
                 <span class="user-badge">
                     <i class="fas fa-user-circle"></i>
-                    <?= htmlspecialchars($_SESSION['dangnhap']) ?>
+                    <?= e($_SESSION['dangnhap']) ?>
                 </span>
             </div>
         </div>
@@ -378,27 +378,27 @@ include BASE_PATH . 'includes/header.php';
     <!-- Filter Tabs -->
     <div class="container">
         <div class="filter-bar">
-            <a href="<?= BASE_URL ?>shop/tradonhang.php" 
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php"
                class="filter-tab <?= empty($filterStatus) ? 'active' : '' ?>">
                 <i class="fas fa-list"></i> Tất cả
             </a>
-            <a href="<?= BASE_URL ?>shop/tradonhang.php?status=PENDING" 
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php?status=PENDING"
                class="filter-tab <?= $filterStatus === 'PENDING' ? 'active' : '' ?>">
                 <i class="fas fa-clock"></i> Chờ xử lý
             </a>
-            <a href="<?= BASE_URL ?>shop/tradonhang.php?status=CONFIRMED" 
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php?status=CONFIRMED"
                class="filter-tab <?= $filterStatus === 'CONFIRMED' ? 'active' : '' ?>">
                 <i class="fas fa-check-circle"></i> Đã xác nhận
             </a>
-            <a href="<?= BASE_URL ?>shop/tradonhang.php?status=SHIPPING" 
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php?status=SHIPPING"
                class="filter-tab <?= $filterStatus === 'SHIPPING' ? 'active' : '' ?>">
                 <i class="fas fa-truck"></i> Đang giao
             </a>
-            <a href="<?= BASE_URL ?>shop/tradonhang.php?status=DELIVERED" 
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php?status=DELIVERED"
                class="filter-tab <?= $filterStatus === 'DELIVERED' ? 'active' : '' ?>">
                 <i class="fas fa-box-open"></i> Đã giao
             </a>
-            <a href="<?= BASE_URL ?>shop/tradonhang.php?status=CANCELLED" 
+            <a href="<?= e(BASE_URL) ?>shop/tradonhang.php?status=CANCELLED"
                class="filter-tab <?= $filterStatus === 'CANCELLED' ? 'active' : '' ?>">
                 <i class="fas fa-times-circle"></i> Đã hủy
             </a>
@@ -422,7 +422,7 @@ include BASE_PATH . 'includes/header.php';
                         <div class="order-card-header">
                             <div class="order-id">
                                 <i class="fas fa-box" style="color: #3b82f6; margin-right: 6px;"></i>
-                                Đơn hàng <span>#<?= !empty($order['order_code']) ? $order['order_code'] : $order['id'] ?></span>
+                                Đơn hàng <span>#<?= e(!empty($order['order_code']) ? $order['order_code'] : $order['id']) ?></span>
                             </div>
                             <div class="order-status-badge" style="color: <?= $statusInfo['color'] ?>; background: <?= $statusInfo['bg'] ?>;">
                                 <i class="fas <?= $statusInfo['icon'] ?>"></i>
@@ -432,7 +432,7 @@ include BASE_PATH . 'includes/header.php';
                         <div class="order-card-body">
                             <div class="order-info-row">
                                 <span class="order-info-label"><i class="fas fa-map-marker-alt"></i> Địa chỉ giao</span>
-                                <span class="order-info-value"><?= htmlspecialchars($order['diachi']) ?></span>
+                                <span class="order-info-value"><?= e($order['diachi']) ?></span>
                             </div>
                             <div class="order-info-row">
                                 <span class="order-info-label"><i class="far fa-calendar-alt"></i> Ngày đặt</span>
@@ -448,16 +448,16 @@ include BASE_PATH . 'includes/header.php';
                             $orderStatus = strtoupper($order['status'] ?? 'PENDING');
                             ?>
                             <?php if ($orderStatus === 'SHIPPING'): ?>
-                            <button class="btn-action btn-receive" onclick="orderAction(<?= $order['id'] ?>, 'receive', this)">
+                            <button class="btn-action btn-receive" data-order-id="<?= (int)$order['id'] ?>" data-order-action="receive">
                                 <i class="fas fa-check-circle mr-1"></i> Đã nhận hàng
                             </button>
                             <?php endif; ?>
                             <?php if (in_array($orderStatus, ['PENDING', 'CONFIRMED'])): ?>
-                            <button class="btn-action btn-cancel-order" onclick="orderAction(<?= $order['id'] ?>, 'cancel', this)">
+                            <button class="btn-action btn-cancel-order" data-order-id="<?= (int)$order['id'] ?>" data-order-action="cancel">
                                 <i class="fas fa-times mr-1"></i> Hủy đơn
                             </button>
                             <?php endif; ?>
-                            <a href="<?= BASE_URL ?>shop/chitietdonhang.php?id=<?= $order['id'] ?>" class="btn-detail">
+                            <a href="<?= e(BASE_URL) ?>shop/chitietdonhang.php?id=<?= (int)$order['id'] ?>" class="btn-detail">
                                 Xem chi tiết <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
@@ -474,7 +474,7 @@ include BASE_PATH . 'includes/header.php';
                         <?= !empty($filterStatus) ? 'Thử chọn tab khác để xem các đơn hàng.' : 'Hãy mua sắm và quay lại đây để theo dõi nhé!' ?>
                     </p>
                     <?php if (empty($filterStatus)): ?>
-                        <a href="<?= BASE_URL ?>shop/shop.php" class="btn-detail mt-3" style="display: inline-flex;">
+                        <a href="<?= e(BASE_URL) ?>shop/shop.php" class="btn-detail mt-3" style="display: inline-flex;">
                             <i class="fas fa-shopping-bag mr-2"></i> Bắt đầu mua sắm
                         </a>
                     <?php endif; ?>
@@ -488,7 +488,7 @@ include BASE_PATH . 'includes/header.php';
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 function orderAction(orderId, action, btn) {
     let confirmMsg = '';
     let confirmBtnText = '';
@@ -525,7 +525,7 @@ function processOrderAction(orderId, action, btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang xử lý...';
     
-    fetch('<?= BASE_URL ?>shop/api_order_action.php', {
+    fetch(<?= js_value(BASE_URL . 'shop/api_order_action.php') ?>, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -572,4 +572,8 @@ function resetBtn(btn, action) {
     if (action === 'receive') btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Đã nhận hàng';
     if (action === 'cancel') btn.innerHTML = '<i class="fas fa-times mr-1"></i> Hủy đơn';
 }
+
+document.querySelectorAll('[data-order-id][data-order-action]').forEach(button => {
+    button.addEventListener('click', () => orderAction(Number.parseInt(button.dataset.orderId, 10), button.dataset.orderAction, button));
+});
 </script>

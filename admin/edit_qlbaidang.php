@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
         session_start();
     }
     if (!isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
+        app_redirect(BASE_URL . 'admin/canhbao.php');
         exit;
     }
     if (isset($_POST['login'])) {
@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: index.php');
+        app_redirect(BASE_URL . 'admin/index.php');
         exit;
     }
 
@@ -38,7 +38,7 @@ require_once dirname(__DIR__) . '/config.php';
         $nguoiphutrach = $_POST['nguoiphutrach'];
         $tieude = $_POST['tieude'];
         $chedo = $_POST['chedo'];
-        $noidung = $_POST['noidung'];
+        $noidung = mysqli_real_escape_string($con, clean_html($_POST['noidung'] ?? ''));
 
         try {
             $images = app_upload_admin_images($_FILES);
@@ -64,14 +64,14 @@ require_once dirname(__DIR__) . '/config.php';
             mysqli_stmt_close($stmtUp);
 
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('D? li?u dã du?c dua vào');
                 window.location.href = 'quanlibaidang.php';
             </script>
             <?php
         } else {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('D? li?u dua vào không h?p l? vui lòng ki?m tra l?i');
                 window.location.href = 'quanlibaidang.php';
             </script>
@@ -97,7 +97,7 @@ require_once dirname(__DIR__) . '/config.php';
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -138,11 +138,11 @@ require_once dirname(__DIR__) . '/config.php';
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span
+                                data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                             Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -261,13 +261,13 @@ require_once dirname(__DIR__) . '/config.php';
                     <label class="block">
                         <span class="text-gray-700">Tên tiêu d?:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
-                               placeholder="" value="<?php echo $fetched_row['tieude']; ?>"
+                               placeholder="" value="<?php echo e($fetched_row['tieude']); ?>"
                                type="text" name="tieude">
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Ngu?i ph? trách:</span>
                         <input class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
-                               placeholder="" value="<?php echo $fetched_row['nguoiphutrach']; ?>"
+                               placeholder="" value="<?php echo e($fetched_row['nguoiphutrach']); ?>"
                                type="text" name="nguoiphutrach">
                     </label>
                     <label class="block">
@@ -284,7 +284,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="mt-5">
                         <label for="avatar">Ch?n ?nh d?i di?n: </label>
                         <?php if (!empty($fetched_row['anhdaidien'])) { ?>
-                            <img width="200px" height="200px" src="<?= $fetched_row['anhdaidien'] ?>"/><br/>
+                            <img width="200px" height="200px" src="<?= e(safe_url($fetched_row['anhdaidien'])) ?>"/><br/>
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhdaidien"
@@ -293,7 +293,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="mt-5">
                         <label for="avatar">Ch?n ?nh gi?i thi?u 1: </label>
                         <?php if (!empty($fetched_row['anhgiuoithieu1'])) { ?>
-                            <img width="200px" height="200px" src="<?= $fetched_row['anhgiuoithieu1'] ?>"/><br/>
+                            <img width="200px" height="200px" src="<?= e(safe_url($fetched_row['anhgiuoithieu1'])) ?>"/><br/>
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu1"
@@ -302,7 +302,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="mt-5">
                         <label for="avatar">Ch?n ?nh gi?i thi?u 2: </label>
                         <?php if (!empty($fetched_row['anhgiuoithieu2'])) { ?>
-                            <img width="200px" height="200px" src="<?= $fetched_row['anhgiuoithieu2'] ?>"/><br/>
+                            <img width="200px" height="200px" src="<?= e(safe_url($fetched_row['anhgiuoithieu2'])) ?>"/><br/>
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu2"
@@ -314,7 +314,7 @@ require_once dirname(__DIR__) . '/config.php';
                         <textarea name="noidung"
                                   class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
                                   placeholder="" rows="3"
-                        ><?php echo $fetched_row['noidung']; ?>
+                        ><?php echo e($fetched_row['noidung']); ?>
                         </textarea>
                     </label>
                     <div class="mt-3 text-right">
@@ -335,11 +335,18 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -349,7 +356,7 @@ require_once dirname(__DIR__) . '/config.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -359,7 +366,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

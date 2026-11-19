@@ -15,7 +15,7 @@ if (isset($_POST['login'])) {
 }
 if ($dangxuat == 'dangxuat') {
     session_destroy();
-    header('Location: trangchu.php');
+    app_redirect(BASE_URL . 'home/trangchu.php');
     exit;
 }
 include BASE_PATH . 'includes/header.php';
@@ -416,34 +416,34 @@ include BASE_PATH . 'includes/header.php';
             style="width: 100%; position: relative; z-index: 2;">
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img class="w-100 d-block hero-img" src="<?php echo BASE_URL; ?>images/632663.jpg"
+                    <img class="w-100 d-block hero-img" src="<?= e(BASE_URL) ?>images/632663.jpg"
                         alt="Nike LeBron 7">
                     <div class="carousel-caption d-none d-md-block modern-caption">
                         <h2 class="text-white">Nike LeBron 7</h2>
                         <p class="text-white">Sức mạnh trên từng bước chạy — hiệu suất vượt trội cho mọi sân đấu.</p>
-                        <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=80" class="modern-btn mt-3">Khám
+                        <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=80" class="modern-btn mt-3">Khám
                             phá ngay</a>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <img class="w-100 d-block hero-img"
-                        src="<?php echo BASE_URL; ?>images/Jordan-1-Light-Smoke-Gray-min.jpg"
+                        src="<?= e(BASE_URL) ?>images/Jordan-1-Light-Smoke-Gray-min.jpg"
                         alt="Air Jordan 1 High Light Smoke Gray">
                     <div class="carousel-caption d-none d-md-block modern-caption">
                         <h2 class="text-white">Air Jordan 1 High Light Smoke Gray</h2>
                         <p class="text-white">Huyền thoại sân bóng rổ — phong cách bất tử qua mọi thế hệ.</p>
-                        <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=83" class="modern-btn mt-3">Khám
+                        <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=83" class="modern-btn mt-3">Khám
                             phá ngay</a>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <img class="w-100 d-block hero-img"
-                        src="<?php echo BASE_URL; ?>images/pexels-howard-senton-2148272793-30707531.jpg"
+                        src="<?= e(BASE_URL) ?>images/pexels-howard-senton-2148272793-30707531.jpg"
                         alt="Adidas Superstar">
                     <div class="carousel-caption d-none d-md-block modern-caption">
                         <h2 class="text-white">Adidas Superstar</h2>
                         <p class="text-white">Biểu tượng đường phố — đơn giản mà đẳng cấp, không bao giờ lỗi mốt.</p>
-                        <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=67" class="modern-btn mt-3">Khám
+                        <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=67" class="modern-btn mt-3">Khám
                             phá ngay</a>
                     </div>
                 </div>
@@ -474,7 +474,7 @@ include BASE_PATH . 'includes/header.php';
             <div class="row align-items-center mt-5">
                 <div class="col-md-6 mb-5 mb-md-0">
                     <img class="img-fluid img-editorial"
-                        src="<?php echo BASE_URL; ?>admin/uploads/jordan_paris_banner.png" alt="Air Jordan 1 Low Paris">
+                        src="<?= e(BASE_URL) ?>admin/uploads/jordan_paris_banner.png" alt="Air Jordan 1 Low Paris">
                 </div>
                 <div class="col-md-6 ps-md-5">
                     <h3 class="product-highlight-title">AIR JORDAN 1 LOW 'PARIS'</h3>
@@ -488,7 +488,7 @@ include BASE_PATH . 'includes/header.php';
                             lưỡi gà. Không chỉ là một đôi giày, đây là mảnh ghép hoàn hảo xác định đẳng cấp outfit của
                             bạn.</p>
                     </div>
-                    <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=79" class="btn-editorial mt-2">SỞ HỮU
+                    <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=79" class="btn-editorial mt-2">SỞ HỮU
                         NGAY</a>
                 </div>
             </div>
@@ -554,21 +554,21 @@ include BASE_PATH . 'includes/header.php';
                     <div class="col-md-4 mb-4">
                         <div class="card product-card h-100">
                             <div class="pc-img-wrap">
-                                <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>">
-                                    <img class="card-img-top" src="<?php echo BASE_URL; ?>admin/<?= $row['anhdaidien'] ?>"
-                                        alt="<?= $row['tensp'] ?>" style="height: 380px; object-fit: cover; width: 100%;">
+                                <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=<?= (int)$row['masp'] ?>">
+                                    <img class="card-img-top" src="<?= e(safe_url(BASE_URL . 'admin/' . $row['anhdaidien'])) ?>"
+                                        alt="<?= e($row['tensp']) ?>" style="height: 380px; object-fit: cover; width: 100%;">
                                 </a>
                             </div>
                             <div class="card-body text-center d-flex flex-column" style="padding: 25px;">
                                 <h5 class="card-title"
                                     style="font-weight: 800; font-size: 1.15rem; color: #1e293b; margin-bottom: 15px;">
-                                    <?= $row['tensp'] ?>
+                                    <?= e($row['tensp']) ?>
                                 </h5>
                                 <p class="card-text mb-4" style="font-weight: 700; font-size: 1.25rem; color: #2563eb;">
                                     <?= number_format($row['giasanpham'], 0, ',', '.') ?>&nbsp;đ
                                 </p>
                                 <div class="mt-auto">
-                                    <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>"
+                                    <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=<?= (int)$row['masp'] ?>"
                                         class="btn-editorial-outline">XEM CHI TIẾT</a>
                                 </div>
                             </div>
@@ -577,7 +577,7 @@ include BASE_PATH . 'includes/header.php';
                 <?php } ?>
             </div>
             <div class="text-center mt-5">
-                <a href="<?php echo BASE_URL; ?>shop/shop.php" class="btn-editorial-outline"
+                <a href="<?= e(BASE_URL) ?>shop/shop.php" class="btn-editorial-outline"
                     style="padding: 14px 40px; font-size: 1.1rem; border-width: 2px;">XEM TẤT CẢ SẢN PHẨM &rarr;</a>
             </div>
         </div>
@@ -594,7 +594,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/kien.jpg"
+                            <img class="card-img-top w-100 d-block" src="<?= e(BASE_URL) ?>images/kien.jpg"
                                 alt="Nguyễn Văn Kiên" />
                         </div>
                         <div class="team-info">
@@ -610,7 +610,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/ha.jpg"
+                            <img class="card-img-top w-100 d-block" src="<?= e(BASE_URL) ?>images/ha.jpg"
                                 alt="Đỗ Quang Hà" />
                         </div>
                         <div class="team-info">
@@ -626,7 +626,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="col-sm-6 col-lg-4 mb-4">
                     <div class="card team-member">
                         <div class="team-img-wrapper">
-                            <img class="card-img-top w-100 d-block" src="<?php echo BASE_URL; ?>images/nhan.jpg"
+                            <img class="card-img-top w-100 d-block" src="<?= e(BASE_URL) ?>images/nhan.jpg"
                                 alt="Nguyễn Bá Nhân" />
                         </div>
                         <div class="team-info">

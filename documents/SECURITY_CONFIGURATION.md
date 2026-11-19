@@ -7,7 +7,7 @@ Thay đổi này áp dụng cấu hình an toàn cho PHP, web server, môi trư�
 - `includes/security.php` được nạp trước session, HTML và database: ẩn lỗi mặc định, trả thông báo HTML/JSON chung, loại output đang render khi có exception. Log server chỉ ghi loại exception, tên file/dòng hoặc mã driver DB, không ghi mật khẩu, SQL hay request body trong các handler mới.
 - `.htaccess`, `deploy/apache-security.conf` và `Caddyfile` chặn file môi trường, dotfile, Git, dump SQL kể cả file nén, log/backup/khóa riêng, tài liệu, công cụ kiểm thử và PHP chỉ dùng để include. Tắt directory listing và chặn phương thức TRACE/TRACK/CONNECT; PHP chỉ xử lý GET/HEAD/POST/OPTIONS.
 - Header HTTP gồm `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, CSP và `Cache-Control: no-store` trên trang động. Phiên bản PHP được ẩn; Caddy loại Server header, Apache giới hạn còn tên `Apache` và tắt chữ ký/phiên bản chi tiết.
-- CSP giới hạn domain CDN/font/API/Google Maps/VNPAY đang dùng, cấm plugin/object, giới hạn frame và base URL. Template hiện dùng inline JavaScript/CSS nên policy còn `'unsafe-inline'`; chưa phải policy chỉ dùng nonce.
+- CSP giới hạn domain CDN/font/API/Google Maps/VNPAY đang dùng, cấm plugin/object, giới hạn frame và base URL. Script tin cậy dùng nonce theo từng phản hồi; HTML event handlers đã chuyển sang `addEventListener`, `script-src-attr 'none'`. CSS inline vẫn được giữ để tương thích giao diện. Xem thêm `XSS_SECURITY.md`.
 - Host được kiểm tra allowlist trước khi tạo URL. Không dùng `X-Forwarded-Host`. Chỉ tin `X-Forwarded-Proto` nếu IP kết nối khớp `TRUSTED_PROXIES`.
 - Production/staging yêu cầu `APP_URL` HTTPS. HTTP được chuyển tới origin đã cấu hình, không lấy host tùy ý từ client. Cookie bật Secure khi HTTPS được xác minh; production HTTPS có HSTS một năm, không tự bật `includeSubDomains`/preload.
 - Production không hiển thị lỗi kể cả `APP_DEBUG=1`. Kết nối MySQL yêu cầu đủ biến môi trường, cấm user `root`, timeout 5 giây và trả 503 chung khi thất bại.
@@ -59,7 +59,7 @@ MYSQLDATABASE=giaythethao2
 
 `APP_TRUSTED_HOSTS` nhận hostname không có port, cách nhau bằng dấu phẩy. Host từ `APP_URL` được thêm vào allowlist tự động; local còn cho phép localhost, 127.0.0.1 và IPv6 loopback. Production không tự cho phép localhost.
 
-Nếu HTTPS kết thúc ở reverse proxy, đặt `TRUSTED_PROXIES` bằng IP/CIDR thực tế của proxy, cách nhau bằng dấu phẩy. Ví dụ proxy cùng máy có thể là `127.0.0.1/32,::1/128`. Tránh `0.0.0.0/0` hoặc `::/0`; việc tin toàn bộ client sẽ làm mất ý nghĩa kiểm tra header proxy. Caddyfile trong repo phục vụ HTTP local; production phải có TLS trực tiếp hoặc tại proxy được tin cậy.
+Nếu HTTPS kết thúc ở reverse proxy, đặt `TRUSTED_PROXIES` bằng IP/CIDR thực tế của proxy, cách nhau bằng dấu phẩy. Ví dụ proxy cùng máy có thể là `127.0.0.1/32,::1/128`. Tránh `0.0.0.0/0` hoặc `::/0`; việc tin toàn bộ client sẽ làm mất ý nghĩa kiểm tra header proxy. Caddyfile mặc định phục vụ HTTP local. Demo HTTPS dùng `./run-https.sh`; production có mẫu `deploy/Caddyfile.production` hoặc TLS tại proxy được tin cậy. Xem [cấu hình và demo bảo vệ đường truyền](TRANSPORT_SECURITY.md).
 
 Tạo DB user riêng, chỉ cấp quyền cần thiết trên `giaythethao2`; tài khoản runtime không cần quyền quản trị toàn MySQL. Thực hiện migration bằng tài khoản triển khai riêng. Kiểm tra/đổi tài khoản quản trị mẫu trong database trước khi đưa dịch vụ ra Internet.
 

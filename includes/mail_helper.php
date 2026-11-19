@@ -13,6 +13,7 @@
  */
 
 require_once __DIR__ . '/mail_config.php';
+require_once __DIR__ . '/outbound_transport.php';
 
 // ═══════════════════════════════════════════════════════════
 // CORE: Gửi email qua Mailjet API
@@ -36,6 +37,11 @@ require_once __DIR__ . '/mail_config.php';
 function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TYPE_TRANSACTIONAL, $options = []) {
     $apiKey    = getenv('MAILJET_API_KEY');
     $secretKey = getenv('MAILJET_SECRET_KEY');
+
+    if (!extension_loaded('curl')) {
+        error_log('MAILJET_UNAVAILABLE: HTTPS transport is unavailable.');
+        return ['success' => false, 'messageId' => null, 'error' => 'Email service unavailable'];
+    }
 
     // ─── Validate ───
     if (empty($apiKey) || empty($secretKey)) {
@@ -118,7 +124,8 @@ function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TY
         }
 
         $ch = curl_init('https://api.mailjet.com/v3.1/send');
-        curl_setopt_array($ch, [
+        // Fixed provider endpoint; never follow a redirect with API credentials/payload.
+        curl_setopt_array($ch, app_https_curl_options() + [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $payload,

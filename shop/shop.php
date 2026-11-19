@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: shop.php');
+    app_redirect(BASE_URL . 'shop/shop.php');
     exit;
 }
 
@@ -582,31 +582,31 @@ include BASE_PATH . 'includes/header.php';
 
             <!-- UC1: Category Tags -->
             <div class="category-tags">
-                <a href="<?php echo BASE_URL; ?>shop/shop.php" class="category-tag <?= empty($category) ? 'active' : '' ?>">
+                <a href="<?= e(BASE_URL) ?>shop/shop.php" class="category-tag <?= empty($category) ? 'active' : '' ?>">
                     <i class="fas fa-th"></i> Tất cả
                 </a>
                 <?php while ($cat = mysqli_fetch_assoc($categories)): ?>
-                <a href="<?php echo BASE_URL; ?>shop/shop.php?category=<?= urlencode($cat['nhomsp']) ?>" 
+                <a href="<?= e(BASE_URL) ?>shop/shop.php?category=<?= urlencode($cat['nhomsp']) ?>"
                    class="category-tag <?= $category === $cat['nhomsp'] ? 'active' : '' ?>">
-                    <?= htmlspecialchars($cat['nhomsp']) ?>
+                    <?= e($cat['nhomsp']) ?>
                 </a>
                 <?php endwhile; ?>
             </div>
 
             <!-- UC3: Filter & Sort Bar -->
             <div class="filter-wrapper shop-filter-bar">
-                <form method="GET" action="<?php echo BASE_URL; ?>shop/shop.php" id="filterForm">
+                <form method="GET" action="<?= e(BASE_URL) ?>shop/shop.php" id="filterForm">
                     <?php if (!empty($category)): ?>
-                    <input type="hidden" name="category" value="<?= htmlspecialchars($category) ?>">
+                    <input type="hidden" name="category" value="<?= e($category) ?>">
                     <?php endif; ?>
                     <div class="filter-row">
                         <div class="filter-group">
                             <label><i class="fas fa-search"></i> Tìm kiếm</label>
                             <div class="search-box-wrap">
                                 <input type="text" name="search" placeholder="Tìm giày Nike, Jordan, Adidas..."
-                                       value="<?= htmlspecialchars($search) ?>" id="shopSearchInput">
+                                       value="<?= e($search) ?>" id="shopSearchInput">
                                 <i class="fas fa-search search-icon"></i>
-                                <button type="button" class="search-clear" onclick="document.getElementById('shopSearchInput').value=''; this.style.display='none';" title="Xóa">
+                                <button type="button" class="search-clear" data-clear-shop-search title="Xóa">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -636,7 +636,7 @@ include BASE_PATH . 'includes/header.php';
                             <button type="submit" class="btn-filter-apply">
                                 <i class="fas fa-filter"></i> Lọc
                             </button>
-                            <a href="<?php echo BASE_URL; ?>shop/shop.php<?= !empty($category) ? '?category=' . urlencode($category) : '' ?>" class="btn-filter-reset">
+                            <a href="<?= e(BASE_URL) ?>shop/shop.php<?= !empty($category) ? '?category=' . urlencode($category) : '' ?>" class="btn-filter-reset">
                                 <i class="fas fa-undo"></i> Xóa
                             </a>
                         </div>
@@ -647,17 +647,17 @@ include BASE_PATH . 'includes/header.php';
             <?php if (!empty($search)): ?>
             <div class="search-highlight">
                 <i class="fas fa-search"></i>
-                Kết quả tìm kiếm cho: "<strong><?= htmlspecialchars($search) ?></strong>"
-                — <?= $totalRecords ?> sản phẩm
+                Kết quả tìm kiếm cho: "<strong><?= e($search) ?></strong>"
+                — <?= (int)$totalRecords ?> sản phẩm
             </div>
             <?php endif; ?>
 
             <!-- Results Info -->
             <div class="results-info">
                 <span class="results-count">
-                    Hiển thị <strong><?= min($totalRecords, $item_per_page) ?></strong> / <strong><?= $totalRecords ?></strong> sản phẩm
+                    Hiển thị <strong><?= min($totalRecords, $item_per_page) ?></strong> / <strong><?= (int)$totalRecords ?></strong> sản phẩm
                     <?php if (!empty($category)): ?>
-                        trong <strong><?= htmlspecialchars($category) ?></strong>
+                        trong <strong><?= e($category) ?></strong>
                     <?php endif; ?>
                 </span>
             </div>
@@ -670,19 +670,19 @@ include BASE_PATH . 'includes/header.php';
                     <div class="card product-card h-100">
                         <div class="pc-img-wrap">
                             <?php if(!empty($row['nhomsp'])): ?>
-                            <span class="pc-badge"><?= htmlspecialchars($row['nhomsp']) ?></span>
+                            <span class="pc-badge"><?= e($row['nhomsp']) ?></span>
                             <?php endif; ?>
                             <?php if(!empty($row['giagoc']) && $row['giagoc'] > $row['giasanpham']): 
                                 $disc = round((1 - $row['giasanpham'] / $row['giagoc']) * 100);
                             ?>
-                            <span class="pc-badge sale" style="left:auto; right:12px;">-<?= $disc ?>%</span>
+                            <span class="pc-badge sale" style="left:auto; right:12px;">-<?= (int)$disc ?>%</span>
                             <?php endif; ?>
-                            <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>">
-                                <img class="card-img-top" src="<?php echo BASE_URL; ?>admin/<?= $row['anhdaidien'] ?>" alt="<?= htmlspecialchars($row['tensp']) ?>" style="height: 380px; object-fit: cover; width: 100%;">
+                            <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=<?= (int)$row['masp'] ?>">
+                                <img class="card-img-top" src="<?= e(safe_url(BASE_URL . 'admin/' . $row['anhdaidien'])) ?>" alt="<?= e($row['tensp']) ?>" style="height: 380px; object-fit: cover; width: 100%;">
                             </a>
                         </div>
                         <div class="card-body text-center d-flex flex-column" style="padding: 25px;">
-                            <h5 class="card-title" style="font-weight: 800; font-size: 1.05rem; color: #1e293b; margin-bottom: 15px; line-height: 1.4;"><?= htmlspecialchars($row['tensp']) ?></h5>
+                            <h5 class="card-title" style="font-weight: 800; font-size: 1.05rem; color: #1e293b; margin-bottom: 15px; line-height: 1.4;"><?= e($row['tensp']) ?></h5>
                             
                             <p class="card-text mb-4" style="font-weight: 700; font-size: 1.25rem; color: #2563eb;">
                                 <?php if(!empty($row['giagoc']) && $row['giagoc'] > $row['giasanpham']) { ?>
@@ -694,10 +694,10 @@ include BASE_PATH . 'includes/header.php';
                             </p>
 
                             <div class="mt-auto d-flex justify-content-between">
-                                <a href="<?php echo BASE_URL; ?>shop/chitietsanpham.php?masp=<?= $row['masp'] ?>" class="btn-editorial-outline" style="width: 48%;">
+                                <a href="<?= e(BASE_URL) ?>shop/chitietsanpham.php?masp=<?= (int)$row['masp'] ?>" class="btn-editorial-outline" style="width: 48%;">
                                     <i class="fa fa-eye mb-1 d-block"></i> Chi Tiết
                                 </a>
-                                <form method="post" action="<?= BASE_URL ?>shop/giohang.php?action=add" style="width: 48%; margin: 0;">
+                                <form method="post" action="<?= e(BASE_URL) ?>shop/giohang.php?action=add" style="width: 48%; margin: 0;">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="masp" value="<?= (int)$row['masp'] ?>">
                                     <input type="hidden" name="quantity" value="1">
@@ -716,7 +716,7 @@ include BASE_PATH . 'includes/header.php';
                 <i class="fas fa-box-open d-block"></i>
                 <h4>Không tìm thấy sản phẩm nào</h4>
                 <p>Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
-                <a href="<?php echo BASE_URL; ?>shop/shop.php" class="btn-editorial-solid mt-3" style="display: inline-block; padding: 12px 30px;">
+                <a href="<?= e(BASE_URL) ?>shop/shop.php" class="btn-editorial-solid mt-3" style="display: inline-block; padding: 12px 30px;">
                     <i class="fas fa-undo"></i> Xem tất cả sản phẩm
                 </a>
             </div>
@@ -728,25 +728,25 @@ include BASE_PATH . 'includes/header.php';
             <div class="d-flex justify-content-center mt-4">
                 <div id="pagination">
                     <?php if ($current_page > 3): ?>
-                        <a class="page-item" href="?<?= buildQueryString(['page' => 1]) ?>">First</a>
+                        <a class="page-item" href="?<?= e(buildQueryString(['page' => 1])) ?>">First</a>
                     <?php endif; ?>
                     <?php if ($current_page > 1): ?>
-                        <a class="page-item" href="?<?= buildQueryString(['page' => $current_page - 1]) ?>">Prev</a>
+                        <a class="page-item" href="?<?= e(buildQueryString(['page' => $current_page - 1])) ?>">Prev</a>
                     <?php endif; ?>
                     <?php for ($num = 1; $num <= $totalPages; $num++): ?>
                         <?php if ($num > $current_page - 3 && $num < $current_page + 3): ?>
                             <?php if ($num != $current_page): ?>
-                                <a class="page-item" href="?<?= buildQueryString(['page' => $num]) ?>"><?= $num ?></a>
+                                <a class="page-item" href="?<?= e(buildQueryString(['page' => $num])) ?>"><?= (int)$num ?></a>
                             <?php else: ?>
-                                <strong class="current-page page-item"><?= $num ?></strong>
+                                <strong class="current-page page-item"><?= (int)$num ?></strong>
                             <?php endif; ?>
                         <?php endif; ?>
                     <?php endfor; ?>
                     <?php if ($current_page < $totalPages - 1): ?>
-                        <a class="page-item" href="?<?= buildQueryString(['page' => $current_page + 1]) ?>">Next</a>
+                        <a class="page-item" href="?<?= e(buildQueryString(['page' => $current_page + 1])) ?>">Next</a>
                     <?php endif; ?>
                     <?php if ($current_page < $totalPages - 3): ?>
-                        <a class="page-item" href="?<?= buildQueryString(['page' => $totalPages]) ?>">Last</a>
+                        <a class="page-item" href="?<?= e(buildQueryString(['page' => $totalPages])) ?>">Last</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -755,4 +755,11 @@ include BASE_PATH . 'includes/header.php';
     </section>
 </main>
 
+<script nonce="<?= e(csp_nonce()) ?>">
+const clearSearch = document.querySelector('[data-clear-shop-search]');
+if (clearSearch) clearSearch.addEventListener('click', () => {
+    document.getElementById('shopSearchInput').value = '';
+    clearSearch.style.display = 'none';
+});
+</script>
 <?php include BASE_PATH . 'includes/footer.php'; ?>

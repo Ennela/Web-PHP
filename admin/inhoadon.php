@@ -5,7 +5,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 if (empty($_SESSION['dangnhap1'])) {
-    header('Location: canhbao.php');
+    app_redirect(BASE_URL . 'admin/canhbao.php');
     exit;
 }
 
@@ -13,7 +13,8 @@ include './connect_db.php';
 
 // Kiểm tra có ID đơn hàng không
 if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
-    echo "<script>alert('Không tìm thấy đơn hàng!'); window.location.href='quanlidonhang.php';</script>";
+    $_SESSION['swal_warning'] = 'Không tìm thấy đơn hàng!';
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 
@@ -28,14 +29,16 @@ $orderRow = mysqli_fetch_assoc($resStatus);
 mysqli_stmt_close($stmtStatus);
 
 if (!$orderRow) {
-    echo "<script>alert('Đơn hàng không tồn tại!'); window.location.href='quanlidonhang.php';</script>";
+    $_SESSION['swal_warning'] = 'Đơn hàng không tồn tại!';
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 
 // Không cho in đơn đã hủy
 $currentStatus = $orderRow['status'] ?? 'PENDING';
 if ($currentStatus === 'CANCELLED') {
-    echo "<script>alert('Đơn hàng đã bị hủy, không thể in!'); window.location.href='quanlidonhang.php';</script>";
+    $_SESSION['swal_warning'] = 'Đơn hàng đã bị hủy, không thể in!';
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 $statusUpdated = false;
@@ -53,7 +56,8 @@ WHERE oder.id = " . $id);
 $oder = mysqli_fetch_all($oder, MYSQLI_ASSOC);
 
 if (empty($oder)) {
-    echo "<script>alert('Đơn hàng không tồn tại hoặc chưa có sản phẩm!'); window.location.href='quanlidonhang.php';</script>";
+    $_SESSION['swal_warning'] = 'Đơn hàng không tồn tại hoặc chưa có sản phẩm!';
+    app_redirect(BASE_URL . 'admin/quanlidonhang.php', 303);
     exit;
 }
 ?>
@@ -79,7 +83,7 @@ and open the template in the editor.
     <?php endif; ?>
     <div id="order-detail-wrapper">
         <div id="order-detail">
-            <h1>Chi tiết đơn hàng #<?= $id ?></h1>
+            <h1>Chi tiết đơn hàng #<?= e($id) ?></h1>
             <label>Trạng thái: </label><span><strong><?php
                 $statusMap = [
                     'PENDING' => 'Chờ xử lý',
@@ -88,13 +92,13 @@ and open the template in the editor.
                     'DELIVERED' => 'Đã giao hàng',
                     'CANCELLED' => 'Đã hủy'
                 ];
-                echo $statusMap[$statusUpdated ? 'SHIPPING' : $currentStatus] ?? $currentStatus;
+                echo e($statusMap[$statusUpdated ? 'SHIPPING' : $currentStatus] ?? $currentStatus);
             ?></strong></span><br />
-            <label>Người nhận: </label><span> <?= $oder[0]['tenkh'] ?></span><br />
+            <label>Người nhận: </label><span> <?= e($oder[0]['tenkh']) ?></span><br />
 
             <label>Điện
-                thoại: </label><span> <?= $oder[0]['sdt'] ?></span><br />
-            <label>Địa chỉ: </label><span> <?= $oder[0]['diachi'] ?></span><br />
+                thoại: </label><span> <?= e($oder[0]['sdt']) ?></span><br />
+            <label>Địa chỉ: </label><span> <?= e($oder[0]['diachi']) ?></span><br />
             <hr />
             <h3>Danh sách sản phẩm</h3>
             <ul>
@@ -104,11 +108,11 @@ and open the template in the editor.
                 foreach ($oder as $row) {
                 ?>
                     <li>
-                        <span class="item-name"><?= $row['tbl_qlsanpham_tensp'] ?></span>
+                        <span class="item-name"><?= e($row['tbl_qlsanpham_tensp']) ?></span>
                         <?php if (!empty($row['size'])): ?>
-                        <span class="item-size"> - Size: <?= $row['size'] ?></span>
+                        <span class="item-size"> - Size: <?= (int)$row['size'] ?></span>
                         <?php endif; ?>
-                        <span class="item-quantity"> - SL: <?= $row['quantity'] ?> sản phẩm</span>
+                        <span class="item-quantity"> - SL: <?= (int)$row['quantity'] ?> sản phẩm</span>
                     </li>
                 <?php
                     $totalMoney    += ($row['price'] * $row['quantity']);
@@ -117,12 +121,12 @@ and open the template in the editor.
                 ?>
             </ul>
             <hr />
-            <label>Tổng SL:</label> <?= $totalQuantity ?> - <label>Tổng
-                tiền:</label> <?= number_format($totalMoney, 0, ",", ".") ?>&nbsp;đ
-            <p><label>Ghi chú: </label><?= $oder[0]['note'] ?></p>
+            <label>Tổng SL:</label> <?= e($totalQuantity) ?> - <label>Tổng
+                tiền:</label> <?= e(number_format($totalMoney, 0, ",", ".")) ?>&nbsp;đ
+            <p><label>Ghi chú: </label><?= e($oder[0]['note']) ?></p>
         </div>
     </div>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     // Tự động mở hộp thoại in và quay lại trang quản lí đơn hàng sau khi in xong/hủy in
     window.onload = function() {
         window.print();

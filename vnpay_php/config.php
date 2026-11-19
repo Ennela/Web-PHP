@@ -14,10 +14,7 @@ function vnpay_require_configuration(): void
     global $vnp_TmnCode, $vnp_HashSecret, $vnp_Url;
     // Exact HTTPS endpoints reject userinfo, nonstandard ports, query strings,
     // fragments and look-alike hosts before stock/orders can be changed.
-    $gateways = [
-        'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
-        'https://pay.vnpay.vn/vpcpay.html',
-    ];
+    $gateways = app_payment_endpoints();
     if (!preg_match('/\A[A-Za-z0-9]{4,32}\z/', $vnp_TmnCode)
         || strlen($vnp_HashSecret) < 16
         || preg_match('/[\x00-\x20\x7f]/', $vnp_HashSecret)

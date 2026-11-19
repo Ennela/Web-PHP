@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/config.php';
         session_start();
     }
     if (!isset($_SESSION['dangnhap1'])) {
-        header('Location: canhbao.php');
+        app_redirect(BASE_URL . 'admin/canhbao.php');
         exit;
     }
     if (isset($_POST['login'])) {
@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/config.php';
     }
     if ($dangxuat == 'dangxuat') {
         session_destroy();
-        header('Location: index.php');
+        app_redirect(BASE_URL . 'admin/index.php');
         exit;
     }
 
@@ -43,7 +43,7 @@ require_once dirname(__DIR__) . '/config.php';
         $tensp = $_POST['tensp'];
         $giasanpham = $_POST['giasanpham'];
         $giagoc = $_POST['giagoc'];
-        $noidung = $_POST['noidung'];
+        $noidung = mysqli_real_escape_string($con, clean_html($_POST['noidung'] ?? ''));
 
         $nhomsp = $_POST['nhomsp'];
 
@@ -83,14 +83,14 @@ require_once dirname(__DIR__) . '/config.php';
             }
 
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Dữ liệu đã được thay đổi');
                 window.location.href = 'quanlisanpham.php';
             </script>
             <?php
         } else {
             ?>
-            <script type="text/javascript">
+            <script nonce="<?= e(csp_nonce()) ?>" type="text/javascript">
                 alert('Dữ liệu thay vào không hợp lệ vui lòng kiểm tra lại');
                 window.location.href = 'quanlisanpham.php';
             </script>
@@ -116,7 +116,7 @@ require_once dirname(__DIR__) . '/config.php';
     <!--Replace with your tailwind.css once created-->
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <!--Totally optional :) -->
-    <script crossorigin="anonymous"
+    <script nonce="<?= e(csp_nonce()) ?>" crossorigin="anonymous"
             integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis="
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <link href="css/test.css" rel="stylesheet">
@@ -157,11 +157,11 @@ require_once dirname(__DIR__) . '/config.php';
                 <li class="flex-1 md:flex-none md:mr-3">
                     <div class="inline-block relative">
                         <button class="text-white drop-button focus:outline-none"
-                                onclick="toggleDD('myDropdown')"><span
+                                data-dropdown-toggle="myDropdown"><span
                                     class="pr-2"><i
                                         class="em em-robot_face"></i></span>
                             Xin chào, <?php
-                                echo $_SESSION['dangnhap1'] ?>
+                                echo e($_SESSION['dangnhap1']) ?>
                             <svg class="inline h-3 fill-current"
                                  viewBox="0 0 20 20"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -276,19 +276,19 @@ require_once dirname(__DIR__) . '/config.php';
                     <?= csrf_field() ?>
                     <label class="block">
                         <span class="text-gray-700">Tên sản phẩm:</span>
-                        <input type="text" name="tensp" value="<?php echo $fetched_row['tensp']; ?>"
+                        <input type="text" name="tensp" value="<?php echo e($fetched_row['tensp']); ?>"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="">
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Giá sản phẩm(đơn vị VND):</span>
-                        <input type="price" name="giasanpham" value="<?php echo $fetched_row['giasanpham']; ?>"
+                        <input type="price" name="giasanpham" value="<?php echo e($fetched_row['giasanpham']); ?>"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="">
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Giá gốc(đơn vị VND):</span>
-                        <input type="price" name="giagoc" value="<?php echo $fetched_row['giagoc']; ?>"
+                        <input type="price" name="giagoc" value="<?php echo e($fetched_row['giagoc']); ?>"
                                class="form-input border-2  border-blue-400 rounded-lg mt-1 block w-full"
                                placeholder="">
                     </label>
@@ -304,7 +304,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh đại diện: </label>
                         <?php if (!empty($fetched_row['anhdaidien'])) { ?>
-                            <img width="200px" height="200px" src="<?= $fetched_row['anhdaidien'] ?>"/><br/>
+                            <img width="200px" height="200px" src="<?= e(safe_url($fetched_row['anhdaidien'])) ?>"/><br/>
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhdaidien"
@@ -313,7 +313,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh giới thiệu 1: </label>
                         <?php if (!empty($fetched_row['anhgiuoithieu1'])) { ?>
-                            <img width="200px" height="200px" src="<?= $fetched_row['anhgiuoithieu1'] ?>"/><br/>
+                            <img width="200px" height="200px" src="<?= e(safe_url($fetched_row['anhgiuoithieu1'])) ?>"/><br/>
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu1" value=""
@@ -322,7 +322,7 @@ require_once dirname(__DIR__) . '/config.php';
                     <div class="mt-5">
                         <label for="avatar">Chọn ảnh giới thiệu 2: </label>
                         <?php if (!empty($fetched_row['anhgiuoithieu2'])) { ?>
-                            <img width="200px" height="200px" src="<?= $fetched_row['anhgiuoithieu2'] ?>"/><br/>
+                            <img width="200px" height="200px" src="<?= e(safe_url($fetched_row['anhgiuoithieu2'])) ?>"/><br/>
                         <?php } ?>
                         <input type="file"
                                id="avatar" name="anhgiuoithieu2"
@@ -336,7 +336,7 @@ require_once dirname(__DIR__) . '/config.php';
                         <textarea
                                 name="noidung"
                                 class="form-textarea border-2 rounded-lg border-blue-400  mt-1 block w-full"
-                                placeholder="" rows="3"><?= $fetched_row['noidung'] ?>
+                                placeholder="" rows="3"><?= e($fetched_row['noidung']) ?>
                         </textarea>
                     </label>
 
@@ -352,9 +352,9 @@ require_once dirname(__DIR__) . '/config.php';
                                 $stockQty = $currentStock[$s] ?? 0;
                                 $stockColor = $stockQty <= 0 ? 'border-red-400 bg-red-50' : ($stockQty <= 5 ? 'border-yellow-400 bg-yellow-50' : 'border-green-400 bg-green-50');
                             ?>
-                            <div class="flex items-center gap-2 p-2 rounded-lg border-2 <?= $stockColor ?>">
-                                <span class="font-bold text-gray-600 w-12">Size <?= $s ?></span>
-                                <input type="number" name="stock[<?= $s ?>]" value="<?= $stockQty ?>" min="0" 
+                            <div class="flex items-center gap-2 p-2 rounded-lg border-2 <?= e($stockColor) ?>">
+                                <span class="font-bold text-gray-600 w-12">Size <?= e($s) ?></span>
+                                <input type="number" name="stock[<?= e($s) ?>]" value="<?= e($stockQty) ?>" min="0"
                                        class="form-input border border-gray-300 rounded px-2 py-1 w-20 text-center font-bold"
                                        style="-moz-appearance: textfield;">
                             </div>
@@ -383,11 +383,18 @@ require_once dirname(__DIR__) . '/config.php';
 </div>
 
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
     /*Toggle dropdown list*/
     function toggleDD(myDropMenu) {
         document.getElementById(myDropMenu).classList.toggle("invisible");
     }
+
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleDD(button.dataset.dropdownToggle);
+        });
+    });
 
     /*Filter dropdown options*/
     function filterDD(myDropMenu, myDropMenuSearch) {
@@ -397,7 +404,7 @@ require_once dirname(__DIR__) . '/config.php';
         div = document.getElementById(myDropMenu);
         a = div.getElementsByTagName("a");
         for (i = 0; i < a.length; i++) {
-            if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (a[i].textContent.toUpperCase().indexOf(filter) > -1) {
                 a[i].style.display = "";
             } else {
                 a[i].style.display = "none";
@@ -407,7 +414,7 @@ require_once dirname(__DIR__) . '/config.php';
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.drop-button') && !event.target.matches('.drop-search')) {
+        if (!event.target.closest('.drop-button, .drop-search')) {
             var dropdowns = document.getElementsByClassName("dropdownlist");
             for (var i = 0; i < dropdowns.length; i++) {
                 var openDropdown = dropdowns[i];

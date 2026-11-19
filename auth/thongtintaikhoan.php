@@ -11,14 +11,14 @@ include BASE_PATH . 'includes/connect.php';
 // ── Handle logout ──
 if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
     session_destroy();
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
 // ── Check authentication ──
 if (empty($_SESSION['dangnhap']) || empty($_SESSION['makh'])) {
     $_SESSION['swal_warning'] = 'Vui lòng đăng nhập trước!';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
@@ -37,20 +37,22 @@ if ($orderQuery) {
 
 if (!$user) {
     $_SESSION['swal_error'] = 'Lỗi truy xuất! Vui lòng đăng nhập lại.';
-    header('Location: ' . BASE_URL . 'auth/dangnhap.php');
+    app_redirect(BASE_URL . 'auth/dangnhap.php');
     exit;
 }
 
 // Avatar URL
-$avatarUrl = !empty($user['avatar']) ? BASE_URL . $user['avatar'] : '';
-$defaultAvatar = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="#0f172a" width="100" height="100"/><text x="50" y="58" text-anchor="middle" fill="#3b82f6" font-size="40" font-family="Arial" font-weight="bold">' . mb_substr($user['hoten'] ?? 'U', 0, 1) . '</text></svg>');
+$avatarPath = is_string($user['avatar'] ?? null) ? $user['avatar'] : '';
+$avatarUrl = preg_match('~\Aauth/uploads/avatars/[A-Za-z0-9][A-Za-z0-9._-]*\.(?:jpe?g|png|webp|gif)\z~i', $avatarPath)
+    ? safe_url(BASE_URL . $avatarPath, '') : '';
+$defaultAvatar = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="#0f172a" width="100" height="100"/><text x="50" y="58" text-anchor="middle" fill="#3b82f6" font-size="40" font-family="Arial" font-weight="bold">' . e(mb_substr($user['hoten'] ?? 'U', 0, 1)) . '</text></svg>');
 $avatarSrc = $avatarUrl ?: $defaultAvatar;
 
 include BASE_PATH . 'includes/header.php';
 ?>
 
-<meta name="base-url" content="<?= BASE_URL ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/account.css">
+<meta name="base-url" content="<?= e(BASE_URL) ?>">
+<link rel="stylesheet" href="<?= e(BASE_URL) ?>assets/css/account.css">
 
 <!-- Mobile Toggle -->
 <button class="mobile-account-toggle" id="mobileAccountToggle">
@@ -64,9 +66,9 @@ include BASE_PATH . 'includes/header.php';
     <!-- ============ SIDEBAR ============ -->
     <aside class="account-sidebar">
         <div class="sidebar-profile">
-            <img src="<?= $avatarSrc ?>" alt="Avatar" class="sidebar-avatar avatar-img" id="sidebarAvatar">
-            <div class="sidebar-name"><?= htmlspecialchars($user['hoten'] ?? 'Người dùng') ?></div>
-            <div class="sidebar-email"><?= htmlspecialchars($user['email'] ?? $user['username'] ?? '') ?></div>
+            <img src="<?= e($avatarSrc) ?>" alt="Avatar" class="sidebar-avatar avatar-img" id="sidebarAvatar">
+            <div class="sidebar-name"><?= e($user['hoten'] ?? 'Người dùng') ?></div>
+            <div class="sidebar-email"><?= e($user['email'] ?? $user['username'] ?? '') ?></div>
         </div>
 
         <nav class="sidebar-nav">
@@ -94,7 +96,7 @@ include BASE_PATH . 'includes/header.php';
 
             <div class="sidebar-nav-divider"></div>
 
-            <form method="post" action="<?= BASE_URL ?>auth/thongtintaikhoan.php">
+            <form method="post" action="<?= e(BASE_URL) ?>auth/thongtintaikhoan.php">
                 <?= csrf_field() ?>
                 <input type="hidden" name="login" value="dangxuat">
                 <button type="submit" class="sidebar-nav-item logout" style="width:100%;background:transparent;border-top:0;border-right:0;border-bottom:0;text-align:left;font-family:inherit;">
@@ -119,30 +121,30 @@ include BASE_PATH . 'includes/header.php';
                 <!-- Avatar Section -->
                 <div class="profile-avatar-section">
                     <div class="profile-avatar-wrap" id="avatarWrap">
-                        <img src="<?= $avatarSrc ?>" alt="Avatar" class="profile-avatar-large avatar-img">
+                        <img src="<?= e($avatarSrc) ?>" alt="Avatar" class="profile-avatar-large avatar-img">
                         <div class="profile-avatar-overlay">
                             <i class="fas fa-camera"></i>
                         </div>
                         <input type="file" id="avatarInput" accept="image/*" style="display:none">
                     </div>
                     <div class="profile-avatar-info">
-                        <h3><?= htmlspecialchars($user['hoten'] ?? '') ?></h3>
+                        <h3><?= e($user['hoten'] ?? '') ?></h3>
                         <p>Nhấn vào ảnh đại diện để thay đổi (JPG, PNG, WebP — max 2MB)</p>
                     </div>
                 </div>
 
                 <!-- Profile Form -->
-                <form method="post" id="profileForm" onsubmit="return false;">
+                <form method="post" id="profileForm">
                     <?= csrf_field() ?>
                     <div class="acc-form-row">
                         <div class="acc-form-group">
                             <label class="acc-form-label">Họ và tên *</label>
-                            <input type="text" name="hoten" class="acc-form-input" value="<?= htmlspecialchars($user['hoten'] ?? '') ?>" disabled>
+                            <input type="text" name="hoten" class="acc-form-input" value="<?= e($user['hoten'] ?? '') ?>" disabled>
                             <div class="acc-form-error"></div>
                         </div>
                         <div class="acc-form-group">
                             <label class="acc-form-label">Tên đăng nhập</label>
-                            <input type="text" class="acc-form-input" value="<?= htmlspecialchars($user['username'] ?? '') ?>" disabled data-always-readonly="1">
+                            <input type="text" class="acc-form-input" value="<?= e($user['username'] ?? '') ?>" disabled data-always-readonly="1">
                             <div class="acc-form-error"></div>
                         </div>
                     </div>
@@ -150,12 +152,12 @@ include BASE_PATH . 'includes/header.php';
                     <div class="acc-form-row">
                         <div class="acc-form-group">
                             <label class="acc-form-label">Email</label>
-                            <input type="email" name="email" class="acc-form-input" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled>
+                            <input type="email" name="email" class="acc-form-input" value="<?= e($user['email'] ?? '') ?>" disabled>
                             <div class="acc-form-error"></div>
                         </div>
                         <div class="acc-form-group">
                             <label class="acc-form-label">Số điện thoại</label>
-                            <input type="tel" name="sdt" class="acc-form-input" value="<?= htmlspecialchars($user['sdt'] ?? '') ?>" disabled>
+                            <input type="tel" name="sdt" class="acc-form-input" value="<?= e($user['sdt'] ?? '') ?>" disabled>
                             <div class="acc-form-error"></div>
                         </div>
                     </div>
@@ -163,7 +165,7 @@ include BASE_PATH . 'includes/header.php';
                     <div class="acc-form-row">
                         <div class="acc-form-group">
                             <label class="acc-form-label">Ngày sinh</label>
-                            <input type="date" name="ngaysinh" class="acc-form-input" value="<?= htmlspecialchars($user['ngaysinh'] ?? '') ?>" disabled>
+                            <input type="date" name="ngaysinh" class="acc-form-input" value="<?= e($user['ngaysinh'] ?? '') ?>" disabled>
                             <div class="acc-form-error"></div>
                         </div>
                         <div class="acc-form-group">
@@ -211,7 +213,7 @@ include BASE_PATH . 'includes/header.php';
                     Cập nhật mật khẩu
                 </div>
 
-                <form method="post" id="passwordForm" onsubmit="return false;">
+                <form method="post" id="passwordForm">
                     <?= csrf_field() ?>
                     <div class="acc-form-group">
                         <label class="acc-form-label">Mật khẩu hiện tại</label>
@@ -357,24 +359,24 @@ include BASE_PATH . 'includes/header.php';
                         <div>
                             <span style="font-weight: 800; color: #111; font-size: 1.05rem;">
                                 <i class="fas fa-box" style="color: #3b82f6; margin-right: 4px;"></i>
-                                Đơn hàng #<?= !empty($order['order_code']) ? $order['order_code'] : $order['id'] ?>
+                                Đơn hàng #<?= e(!empty($order['order_code']) ? $order['order_code'] : $order['id']) ?>
                             </span>
                         </div>
-                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 50px; font-weight: 600; font-size: 0.82rem; color: <?= $status['color'] ?>; background: <?= $status['bg'] ?>;">
-                            <i class="fas <?= $status['icon'] ?>"></i>
-                            <?= $status['label'] ?>
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 50px; font-weight: 600; font-size: 0.82rem; color: <?= e($status['color']) ?>; background: <?= e($status['bg']) ?>;">
+                            <i class="fas <?= e($status['icon']) ?>"></i>
+                            <?= e($status['label']) ?>
                         </span>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem;">
                         <div style="color: #888;"><i class="fas fa-map-marker-alt" style="width: 18px;"></i> Địa chỉ:</div>
-                        <div style="font-weight: 600; color: #333;"><?= htmlspecialchars($order['diachi'] ?? '') ?></div>
+                        <div style="font-weight: 600; color: #333;"><?= e($order['diachi'] ?? '') ?></div>
                         <div style="color: #888;"><i class="far fa-calendar-alt" style="width: 18px;"></i> Ngày đặt:</div>
                         <div style="font-weight: 600; color: #333;"><?= date('d/m/Y H:i', $order['ngaytao']) ?></div>
                         <div style="color: #888;"><i class="fas fa-coins" style="width: 18px;"></i> Tổng tiền:</div>
                         <div style="font-weight: 700; color: #2563eb; font-size: 1.05rem;"><?= number_format($order['tongtien'], 0, ',', '.') ?>&nbsp;đ</div>
                     </div>
                     <div style="margin-top: 16px; text-align: right;">
-                        <a href="<?= BASE_URL ?>shop/chitietdonhang.php?id=<?= $order['id'] ?>" 
+                        <a href="<?= e(BASE_URL) ?>shop/chitietdonhang.php?id=<?= (int) $order['id'] ?>"
                            style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.85rem; text-decoration: none; transition: all 0.3s;">
                             Xem chi tiết <i class="fas fa-arrow-right"></i>
                         </a>
@@ -383,7 +385,7 @@ include BASE_PATH . 'includes/header.php';
                 <?php endforeach; ?>
 
                 <div style="text-align: center; margin-top: 20px;">
-                    <a href="<?= BASE_URL ?>shop/tradonhang.php" 
+                    <a href="<?= e(BASE_URL) ?>shop/tradonhang.php"
                        style="display: inline-flex; align-items: center; gap: 8px; color: #111; font-weight: 700; text-decoration: none; font-size: 0.9rem; padding: 10px 24px; border: 2px solid #111; border-radius: 6px; transition: all 0.3s;">
                         <i class="fas fa-list"></i> Xem tất cả đơn hàng
                     </a>
@@ -394,7 +396,7 @@ include BASE_PATH . 'includes/header.php';
                     <i class="fas fa-box-open" style="font-size: 3.5rem; color: #ddd; margin-bottom: 16px; display: block;"></i>
                     <h4 style="font-weight: 700; color: #555; margin-bottom: 8px;">Bạn chưa có đơn hàng nào</h4>
                     <p style="color: #999; margin-bottom: 20px;">Hãy mua sắm và quay lại đây để theo dõi nhé!</p>
-                    <a href="<?= BASE_URL ?>shop/shop.php" 
+                    <a href="<?= e(BASE_URL) ?>shop/shop.php"
                        style="display: inline-flex; align-items: center; gap: 8px; background: #111; color: #fff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;">
                         <i class="fas fa-shopping-bag"></i> Bắt đầu mua sắm
                     </a>
@@ -413,7 +415,7 @@ include BASE_PATH . 'includes/header.php';
             <button class="acc-modal-close"><i class="fas fa-times"></i></button>
         </div>
         <div class="acc-modal-body">
-            <form method="post" id="addressForm" onsubmit="return false;">
+            <form method="post" id="addressForm">
                 <?= csrf_field() ?>
                 <div class="acc-form-row">
                     <div class="acc-form-group">
@@ -461,6 +463,6 @@ include BASE_PATH . 'includes/header.php';
     </div>
 </div>
 
-<script src="<?= BASE_URL ?>assets/js/account.js"></script>
+<script nonce="<?= e(csp_nonce()) ?>" src="<?= e(BASE_URL) ?>assets/js/account.js"></script>
 
 <?php include BASE_PATH . 'includes/footer.php'; ?>

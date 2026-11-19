@@ -69,6 +69,7 @@ class PublicServerTests(unittest.TestCase):
             'scratch/runtime/frankenphp', 'includes/connect.php', 'includes/security.php',
             'config.php', 'config.php/extra', 'admin/connect_db.php', 'admin/function.php',
             'vnpay_php/config.php', 'deploy/php-security.ini', 'Dockerfile', 'Caddyfile',
+            'lib/htmlpurifier/library/HTMLPurifier.php', 'lib/htmlpurifier/UPSTREAM.json',
             'docker-entrypoint.sh', 'composer.json', 'composer.lock',
             'backup.sql.gz', 'backup.sql.zip', 'settings.ini.old', 'application.log.1',
             'assets/', 'images/', 'auth/uploads/', 'admin/uploads/shell.php',
