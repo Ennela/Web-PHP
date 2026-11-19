@@ -103,6 +103,10 @@ services:
       VNPAY_URL: ${VNPAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
     volumes:
       - dbcerts:/certs:ro
+      # Ảnh upload sống ngoài image. Volume trống lần đầu sẽ được Docker tự chép ảnh mẫu từ
+      # image vào (kèm quyền www-data); các lần build sau không ghi đè.
+      - adminuploads:/var/www/html/admin/uploads
+      - authuploads:/var/www/html/auth/uploads
     healthcheck:
       test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 80) ? 0 : 1);'"]
       interval: 15s
@@ -133,3 +137,5 @@ networks:
 volumes:
   dbdata:
   dbcerts:
+  adminuploads:
+  authuploads:
