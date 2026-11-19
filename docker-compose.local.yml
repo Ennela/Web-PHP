@@ -1,0 +1,15 @@
+# Chay thu local (khong tunnel): docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.local.yml up -d  -> http://127.0.0.1:18080
+services:
+  app:
+    ports:
+      - "127.0.0.1:18080:80"
+    environment:
+      APP_ENV: local
+      APP_REQUIRE_HTTPS: "0"
+      APP_URL: http://127.0.0.1:18080
+      APP_TRUSTED_HOSTS: localhost,127.0.0.1
+      TRUSTED_PROXIES: ""
+    volumes:
+      - ./scripts:/var/www/html/scripts:ro
+  cloudflared:
+    profiles: ["tunnel"]
