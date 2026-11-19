@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/admin_guard.php';
 /**
  * AJAX endpoint for admin - returns HTML table with order detail (products + sizes).
  */

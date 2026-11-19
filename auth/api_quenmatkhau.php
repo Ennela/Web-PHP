@@ -28,22 +28,26 @@ if (empty($input)) {
     exit;
 }
 
-// Tìm user bằng email hoặc username (Prepared Statement)
-$stmtUser = mysqli_prepare($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `tbl_tkkhachhang` WHERE `email` = ? OR `username` = ? LIMIT 1");
-mysqli_stmt_bind_param($stmtUser, "ss", $input, $input);
-mysqli_stmt_execute($stmtUser);
-$resUser = mysqli_stmt_get_result($stmtUser);
-$user = mysqli_fetch_assoc($resUser);
-mysqli_stmt_close($stmtUser);
+// Thông báo chung — KHÔNG tiết lộ tài khoản/email có tồn tại hay không (chống dò tài khoản)
+$genericResponse = ['success' => true, 'message' => 'Nếu tài khoản tồn tại và đã có email, link đặt lại mật khẩu sẽ được gửi trong vài phút. Kiểm tra hộp thư (kể cả Spam) nhé.'];
 
-if (!$user) {
-    echo json_encode(['success' => false, 'message' => 'Email hoặc tên đăng nhập không tồn tại trong hệ thống. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.']);
+// Giới hạn: tối đa 3 yêu cầu / tài khoản / 15 phút (chống spam email, dò tài khoản)
+$lock = auth_throttle_lock_seconds($con, 'reset', $input, 3);
+if ($lock > 0) {
+    echo json_encode(['success' => false, 'message' => 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ' . max(1, (int)ceil($lock / 60)) . ' phút.']);
     exit;
 }
+auth_throttle_record_failure($con, 'reset', $input);
 
-// Kiểm tra user có email không
-if (empty($user['email'])) {
-    echo json_encode(['success' => false, 'message' => 'Tài khoản chưa cập nhật email. Vui lòng liên hệ admin để được hỗ trợ.']);
+// Tìm user bằng email hoặc username (prepared statement)
+$stmt = mysqli_prepare($con, "SELECT `makh`, `hoten`, `email`, `username` FROM `tbl_tkkhachhang` WHERE `email` = ? OR `username` = ? LIMIT 1");
+mysqli_stmt_bind_param($stmt, 'ss', $input, $input);
+mysqli_stmt_execute($stmt);
+$user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+mysqli_stmt_close($stmt);
+
+if (!$user || empty($user['email'])) {
+    echo json_encode($genericResponse);
     exit;
 }
 
@@ -82,5 +86,5 @@ if (!$result['success']) {
     error_log("FORGOT_PASSWORD: Failed to send email to {$maskedEmail} for makh=$makh. Error: " . ($result['error'] ?? 'unknown'));
 }
 
-echo json_encode(['success' => true, 'message' => 'Mình đã gửi link đặt lại mật khẩu đến ' . substr($user['email'], 0, 3) . '***. Kiểm tra hộp thư (kể cả Spam) nhé.']);
+echo json_encode($genericResponse);
 mysqli_close($con);

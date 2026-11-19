@@ -382,8 +382,8 @@
                 showFieldError(pwForm.querySelector('[name="matkhau_hientai"]'), 'Không được để trống');
                 valid = false;
             }
-            if (!newPw || newPw.length < 6) {
-                showFieldError(pwForm.querySelector('[name="matkhau_moi"]'), 'Tối thiểu 6 ký tự');
+            if (!newPw || newPw.length < 8 || !/[A-Za-z]/.test(newPw) || !/\d/.test(newPw)) {
+                showFieldError(pwForm.querySelector('[name="matkhau_moi"]'), 'Tối thiểu 8 ký tự, gồm chữ và số');
                 valid = false;
             }
             if (newPw !== confirm) {

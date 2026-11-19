@@ -69,7 +69,7 @@ if (isset($_GET['action'])) {
     $orderProducts = array();
 
     if (!empty($cart)) {
-        $ids = implode(",", array_keys($cart));
+        $ids = sql_int_list(array_keys($cart));
         if (!empty($ids)) {
             $query = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN ($ids)");
             while ($row = mysqli_fetch_array($query)) {
@@ -94,7 +94,7 @@ if (isset($_GET['action'])) {
     if (isset($_GET['action'])) {
         $_POST['quantity'] = $_SESSION['chuyen'];
         $sizes = isset($_SESSION['chuyen_size']) ? $_SESSION['chuyen_size'] : [];
-        $timsanpham = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN (" . implode(",", array_keys($_POST['quantity'])) . ")");
+        $timsanpham = mysqli_query($con, "SELECT * FROM `tbl_qlsanpham` WHERE `masp` IN (" . sql_int_list(array_keys($_POST['quantity'])) . ")");
         $total = 0;
         $submitProducts = array();
         while ($row = mysqli_fetch_array($timsanpham)) {
@@ -129,26 +129,37 @@ if (isset($_GET['action'])) {
             exit;
         }
         
-        $email = mysqli_real_escape_string($con, trim($_POST['email']));
-        $token = bin2hex(random_bytes(16)); // generate raw token for tracking link
+        $email = trim((string)($_POST['email'] ?? ''));
+        $token = bin2hex(random_bytes(16)); // raw token cho link tra cứu
         $tokenHash = app_hash_token($token);
-        $tenkh_safe = mysqli_real_escape_string($con, trim($_POST['tenkh'] ?? ''));
-        $sdt_enc = mysqli_real_escape_string($con, (string)app_encrypt(trim($_POST['sdt'] ?? ''), 'oder.sdt'));
-        $diachi_enc = mysqli_real_escape_string($con, (string)app_encrypt(trim($_POST['diachi'] ?? ''), 'oder.diachi'));
-        $note_enc = mysqli_real_escape_string($con, (string)app_encrypt(trim($_POST['note'] ?? ''), 'oder.note'));
 
-        $insertOrder = mysqli_query($con, "INSERT INTO `oder` (`id`, `order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`,`donhangthang`, `status`, `payment_status`, `makh`) VALUES (NULL, '$orderCode', '$tokenHash', '$tenkh_safe', '$sdt_enc', '$email', '$diachi_enc', '$note_enc', '" . $total . "', '" . time() . "', '" . date('m') . "', 'PENDING', 'UNPAID', $makh_val)");
-        $orderID = $con->insert_id;// lưu id giỏ hàng
-        $insertString = "";
-        foreach ($submitProducts as $key => $timsanpham) {
-            $sizeVal = !empty($timsanpham['order_size']) ? "'" . (int)$timsanpham['order_size'] . "'" : "NULL";
-            $insertString .= "(NULL, '" . $orderID . "', '" . $timsanpham['masp'] . "', '" . $_POST['quantity'][$timsanpham['masp']] . "', " . $sizeVal . ", '" . $timsanpham['giasanpham'] . "', '" . time() . "', '" . time() . "')";
-
-            if ($key != count($submitProducts) - 1) {
-                $insertString .= ",";
-            }
+        // Prepared statement: dữ liệu khách hàng được bind; PII mã hóa AEAD, token chỉ lưu hash
+        $__tenkh   = trim((string)($_POST['tenkh'] ?? ''));
+        $__sdt     = (string)app_encrypt(trim((string)($_POST['sdt'] ?? '')), 'oder.sdt');
+        $__diachi  = (string)app_encrypt(trim((string)($_POST['diachi'] ?? '')), 'oder.diachi');
+        $__noteRaw = $_POST['note'] ?? '';
+        $__note    = (string)app_encrypt(is_scalar($__noteRaw) ? trim((string)$__noteRaw) : '', 'oder.note');
+        $__tong    = (string)$total;
+        $__ngaytao = time();
+        $__thang   = date('m');
+        $__stmt = mysqli_prepare($con,
+            "INSERT INTO `oder` (`order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `donhangthang`, `status`, `payment_status`, `makh`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', ?)");
+        mysqli_stmt_bind_param($__stmt, "ssssssssisi", $orderCode, $tokenHash, $__tenkh, $__sdt, $email, $__diachi, $__note, $__tong, $__ngaytao, $__thang, $makh_val);
+        $insertOrder = mysqli_stmt_execute($__stmt);
+        $orderID = mysqli_stmt_insert_id($__stmt); // lưu id giỏ hàng
+        mysqli_stmt_close($__stmt);
+        $__stmtItem = mysqli_prepare($con,
+            "INSERT INTO `oder_chitiet` (`madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        foreach ($submitProducts as $__sp) {
+            $__masp  = (int)$__sp['masp'];
+            $__qty   = max(0, (int)($_POST['quantity'][$__sp['masp']] ?? 0));
+            $__size  = !empty($__sp['order_size']) ? (int)$__sp['order_size'] : null;
+            $__price = (string)$__sp['giasanpham'];
+            $__t     = time();
+            mysqli_stmt_bind_param($__stmtItem, "iiiisii", $orderID, $__masp, $__qty, $__size, $__price, $__t, $__t);
+            mysqli_stmt_execute($__stmtItem);
         }
-        $insertOrder = mysqli_query($con, "INSERT INTO `oder_chitiet` (`id`, `madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES " . $insertString . ";");
+        mysqli_stmt_close($__stmtItem);
         
         // Tồn kho đã được trừ trong validateAndDeductStock() ở trên
         

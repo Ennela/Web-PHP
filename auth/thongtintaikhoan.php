@@ -234,7 +234,7 @@ include BASE_PATH . 'includes/header.php';
                     <div class="acc-form-group">
                         <label class="acc-form-label">Mật khẩu mới</label>
                         <div class="password-input-wrap">
-                            <input type="password" name="matkhau_moi" id="matkhau_moi" class="acc-form-input" placeholder="Tối thiểu 6 ký tự">
+                            <input type="password" name="matkhau_moi" id="matkhau_moi" class="acc-form-input" placeholder="Tối thiểu 8 ký tự, gồm chữ và số">
                             <button type="button" class="password-toggle"><i class="fas fa-eye"></i></button>
                         </div>
                         <div class="password-strength">

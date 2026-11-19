@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/admin_guard.php';
 csrf_require_post();
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
