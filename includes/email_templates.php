@@ -156,7 +156,7 @@ function getOrderConfirmationTemplate($data)
 
         <!-- CTA -->
         <div style="text-align:center;margin:24px 0;">
-            <a href="' . $trackingLink . '" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Xem đơn hàng của tôi</a>
+            <a href="' . $trackingLink . '" style="display:inline-block;background-color:#3b82f6;color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Xem đơn hàng của tôi</a>
         </div>
 
         <p style="color:#94a3b8;font-size:12px;text-align:center;">Có gì thắc mắc thì gọi ngay <strong>' . e(BRAND_PHONE) . '</strong>, mình hỗ trợ liền.</p>
@@ -245,7 +245,7 @@ function getPasswordResetTemplate($data)
         <p style="color:#64748b;font-size:14px;line-height:1.6;">Ai đó (hy vọng là bạn) vừa yêu cầu đổi mật khẩu. Bấm nút bên dưới để tạo mật khẩu mới:</p>
 
         <div style="text-align:center;margin:28px 0;">
-            <a href="' . $resetLink . '" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;text-decoration:none;padding:14px 40px;border-radius:10px;font-weight:700;font-size:15px;">Tạo mật khẩu mới</a>
+            <a href="' . $resetLink . '" style="display:inline-block;background-color:#7c3aed;color:#fff;text-decoration:none;padding:14px 40px;border-radius:10px;font-weight:700;font-size:15px;">Tạo mật khẩu mới</a>
         </div>
 
         <p style="color:#94a3b8;font-size:13px;line-height:1.6;">Link này hết hạn sau <strong>' . $expiry . ' phút</strong>.</p>
@@ -338,7 +338,7 @@ function getAbandonedCartTemplate($data)
         ' . $couponHtml . '
 
         <div style="text-align:center;margin:24px 0;">
-            <a href="' . $cartLink . '" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Quay lại giỏ hàng</a>
+            <a href="' . $cartLink . '" style="display:inline-block;background-color:#f59e0b;color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Quay lại giỏ hàng</a>
         </div>
 
         <p style="color:#94a3b8;font-size:12px;text-align:center;">Số lượng có hạn — hết là hết nha.</p>
@@ -408,7 +408,7 @@ function getContactNotificationTemplate($data)
 
         <!-- Quick Reply CTA -->
         <div style="text-align:center;margin:24px 0;">
-            <a href="mailto:' . $email . '?subject=Re: Phản hồi từ ' . e(BRAND_NAME) . '" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Trả lời ngay</a>
+            <a href="mailto:' . $email . '?subject=Re: Phản hồi từ ' . e(BRAND_NAME) . '" style="display:inline-block;background-color:#3b82f6;color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">Trả lời ngay</a>
         </div>
     </div>'
         . _emailFooter();
