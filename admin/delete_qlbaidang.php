@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/config.php';
-require_once __DIR__ . '/admin_guard.php';
 csrf_require_post();
+require_once __DIR__ . '/admin_guard.php';
 
 if (empty($_SESSION['dangnhap1'])) {
     http_response_code(403);
