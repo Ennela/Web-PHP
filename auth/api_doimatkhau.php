@@ -35,12 +35,7 @@ $errors = [];
 if (empty($mk_hientai)) {
     $errors[] = 'Mật khẩu hiện tại không được để trống';
 }
-if (empty($mk_moi)) {
-    $errors[] = 'Mật khẩu mới không được để trống';
-}
-if (strlen($mk_moi) < 6) {
-    $errors[] = 'Mật khẩu mới phải có ít nhất 6 ký tự';
-}
+$errors = array_merge($errors, auth_password_policy_errors($mk_moi));
 if ($mk_moi !== $mk_xacnhan) {
     $errors[] = 'Mật khẩu xác nhận không khớp';
 }
@@ -50,6 +45,14 @@ if ($mk_moi === $mk_hientai) {
 
 if (!empty($errors)) {
     echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+    exit;
+}
+
+// Chống dò mật khẩu hiện tại qua chức năng đổi mật khẩu (khóa sau 5 lần sai / 15 phút)
+$throttleKey = 'makh:' . $makh;
+$lock = auth_throttle_lock_seconds($con, 'change_pw', $throttleKey);
+if ($lock > 0) {
+    echo json_encode(['success' => false, 'message' => auth_lock_message($lock)]);
     exit;
 }
 
@@ -69,9 +72,11 @@ if ($user) {
 }
 
 if (!$currentPasswordMatch) {
+    auth_throttle_record_failure($con, 'change_pw', $throttleKey);
     echo json_encode(['success' => false, 'message' => 'Mật khẩu hiện tại không đúng']);
     exit;
 }
+auth_throttle_clear($con, 'change_pw', $throttleKey);
 
 // Update mật khẩu mới bằng bcrypt hash
 $hashedPassword = app_hash_password($mk_moi);
@@ -81,6 +86,8 @@ mysqli_stmt_bind_param($updateStmt, "sii", $hashedPassword, $now, $makh);
 
 if (mysqli_stmt_execute($updateStmt)) {
     mysqli_stmt_close($updateStmt);
+    // Đổi mật khẩu = sự kiện nhạy cảm -> cấp session ID mới (ID cũ nếu bị lộ sẽ vô hiệu)
+    session_regenerate_id(true);
     echo json_encode(['success' => true, 'message' => 'Đổi mật khẩu thành công!']);
 } else {
     mysqli_stmt_close($updateStmt);

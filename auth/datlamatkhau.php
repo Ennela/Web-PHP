@@ -255,7 +255,7 @@ include BASE_PATH . 'includes/header.php';
                 <div class="mb-3">
                     <label class="form-label" for="matkhau_moi">Mật khẩu mới</label>
                     <div class="password-wrap">
-                        <input name="matkhau_moi" class="form-control" type="password" id="matkhau_moi" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password" required>
+                        <input name="matkhau_moi" class="form-control" type="password" id="matkhau_moi" placeholder="Tối thiểu 8 ký tự, gồm chữ và số" autocomplete="new-password" required>
                         <button type="button" class="toggle-pw" tabindex="-1"><i class="fas fa-eye"></i></button>
                     </div>
                     <div class="pw-strength"><div class="pw-strength-bar" id="strengthBar"></div></div>
@@ -342,8 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const mk = document.getElementById('matkhau_moi').value;
         const mkx = document.getElementById('matkhau_xacnhan').value;
 
-        if (mk.length < 6) {
-            Swal.fire({ icon: 'warning', title: 'Mật khẩu phải có ít nhất 6 ký tự', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+        if (mk.length < 8 || !/[A-Za-z]/.test(mk) || !/\d/.test(mk)) {
+            Swal.fire({ icon: 'warning', title: 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ và số', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
             return;
         }
         if (mk !== mkx) {

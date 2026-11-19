@@ -30,16 +30,18 @@ if (empty($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
     echo json_encode(['success' => false, 'message' => 'Token không hợp lệ']);
     exit;
 }
-if (empty($mk_moi)) {
-    $errors[] = 'Mật khẩu mới không được để trống';
+
+// Chống dò token: tối đa 10 lần thử sai / IP / 15 phút
+$lock = auth_throttle_lock_seconds($con, 'reset_token', auth_client_ip(), 10);
+if ($lock > 0) {
+    echo json_encode(['success' => false, 'message' => auth_lock_message($lock)]);
+    exit;
 }
-if (strlen($mk_moi) < 6) {
-    $errors[] = 'Mật khẩu mới phải có ít nhất 6 ký tự';
-}
+
+$errors = auth_password_policy_errors($mk_moi);
 if ($mk_moi !== $mk_xacnhan) {
     $errors[] = 'Mật khẩu xác nhận không khớp';
 }
-
 if (!empty($errors)) {
     echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
     exit;
@@ -56,6 +58,7 @@ $user = mysqli_fetch_assoc($resCheck);
 mysqli_stmt_close($stmtCheck);
 
 if (!$user) {
+    auth_throttle_record_failure($con, 'reset_token', auth_client_ip());
     echo json_encode(['success' => false, 'message' => 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.']);
     exit;
 }
@@ -70,6 +73,16 @@ $updated = mysqli_stmt_execute($stmtUpdate);
 mysqli_stmt_close($stmtUpdate);
 
 if ($updated) {
+    // Hủy mọi phiên đăng nhập hiện có trên trình duyệt này và mở khóa brute-force cho tài khoản
+    $uStmt = mysqli_prepare($con, 'SELECT username FROM 	bl_tkkhachhang WHERE makh = ?');
+    mysqli_stmt_bind_param($uStmt, 'i', $makh);
+    mysqli_stmt_execute($uStmt);
+    $u = mysqli_fetch_assoc(mysqli_stmt_get_result($uStmt));
+    mysqli_stmt_close($uStmt);
+    if (!empty($u['username'])) {
+        auth_throttle_clear($con, 'customer', $u['username']);
+    }
+    auth_restart_session();
     $_SESSION['swal_success'] = 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.';
     echo json_encode(['success' => true, 'message' => 'Đặt lại mật khẩu thành công!', 'redirect' => BASE_URL . 'auth/dangnhap.php']);
 } else {

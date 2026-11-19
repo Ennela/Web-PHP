@@ -27,4 +27,9 @@ define('BASE_PATH', __DIR__ . DIRECTORY_SEPARATOR);
 require_once BASE_PATH . 'includes/crypto.php';
 require_once BASE_PATH . 'includes/csrf.php';
 csrf_bootstrap($base_dir, $protocol === 'https');
+
+// Broken Authentication & Session Management: vòng đời phiên + đăng xuất an toàn cho toàn site
+require_once BASE_PATH . 'includes/auth.php';
+auth_session_enforce();
+auth_handle_logout_request();
 ?>

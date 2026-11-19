@@ -13,7 +13,7 @@ if (isset($_POST['login']) && $_POST['login'] === 'dangxuat') {
 include BASE_PATH . 'includes/connect.php';
 
 // ===== UC3: Tìm kiếm bài viết =====
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search = (isset($_GET['search']) && is_string($_GET['search'])) ? trim($_GET['search']) : '';
 
 // Build WHERE clause (chỉ hiện bài "Hiện")
 $where_sql = " WHERE `chedo` = 'Hiện'";
@@ -23,9 +23,7 @@ if (!empty($search)) {
 }
 
 // Phân trang
-$item_per_page = !empty($_GET['per_page']) ? (int)$_GET['per_page'] : 6;
-$current_page = !empty($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($current_page - 1) * $item_per_page;
+list($item_per_page, $current_page, $offset) = sql_pagination($_GET['per_page'] ?? null, $_GET['page'] ?? null, 6, 60);
 
 $products = mysqli_query($con,
     "SELECT * FROM `tbl_qlbaidang`" . $where_sql . " ORDER BY `id` DESC LIMIT " . $item_per_page . " OFFSET " . $offset

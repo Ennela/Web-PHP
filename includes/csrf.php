@@ -85,7 +85,10 @@ function csrf_bootstrap(string $cookiePath = '/', bool $secure = false): void
 
     if (session_status() !== PHP_SESSION_ACTIVE) {
         ini_set('session.use_only_cookies', '1');
-        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_strict_mode', '1');      // từ chối session ID do client tự đặt (chống fixation)
+        ini_set('session.use_trans_sid', '0');        // không bao giờ đưa session ID lên URL
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.gc_maxlifetime', '28800');   // khớp AUTH_ABSOLUTE_TIMEOUT
         session_set_cookie_params([
             'lifetime' => 0,
             'path' => $cookiePath,
