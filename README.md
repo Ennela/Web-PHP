@@ -280,7 +280,57 @@ CA local chưa được tự cài vào máy. Xem [cách xác minh chứng chỉ,
    - Trang quản trị: `http://localhost/WEB-PHP/admin/`
    - Tài khoản admin mẫu: `noah2005` / `kudo-kun`
 
-### Triển khai lên Railway (Cloud)
+### Triển khai bằng Docker + Cloudflare Tunnel (khuyên dùng)
+
+Chạy trên chính máy của bạn, đưa ra Internet qua Cloudflare Tunnel (không cần mở cổng trên router).
+
+```
+Internet -> Cloudflare -> cloudflared -> app (PHP/Apache) -> db (MySQL 8, TLS)
+                           (mạng nội bộ Docker; không cổng nào được publish ra máy host)
+```
+
+**Yêu cầu:** Docker Desktop (WSL2), một tên miền đã **Active** trên Cloudflare.
+
+1. **Tạo file cấu hình:** sao chép `.env.docker.example` thành `.env.docker` (KHÔNG commit; đã bị `.gitignore`).
+2. **Sinh khóa mã hóa** (bắt buộc) rồi dán vào `APP_ENCRYPTION_KEY`:
+   ```powershell
+   docker run --rm -v "${PWD}:/app:ro" -w /app php:8.4-cli php -r "require 'includes/crypto.php'; echo app_generate_encryption_key();"
+   ```
+   **Sao lưu khóa ra nơi khác máy này.** Mất khóa = mất dữ liệu cá nhân đã mã hóa.
+3. Đặt `DB_ROOT_PASSWORD`, `DB_PASSWORD` (chuỗi dài, ngẫu nhiên). Mật khẩu DB chỉ có hiệu lực khi volume DB còn trống.
+4. **Tạo tunnel mới** trên Cloudflare Zero Trust (Networks > Tunnels > Cloudflared). Thêm *published application route*: subdomain + domain của bạn, Service `http://app:80`. Dán token vào `TUNNEL_TOKEN`, đặt `APP_DOMAIN` (không có `https://`). Trong SSL/TLS của domain: bật *Always Use HTTPS*, *Minimum TLS Version = 1.2*.
+5. **Khởi động:**
+   ```bash
+   docker compose --env-file .env.docker up -d --build
+   ```
+   Lần đầu DB tự import `database/schema_full.sql` (schema + dữ liệu mẫu, MySQL 8). Kiểm tra: `docker compose --env-file .env.docker ps` rồi mở `https://<APP_DOMAIN>/`.
+6. **Mã hóa dữ liệu cá nhân** (một lần, sau khi sao lưu DB và khóa). Image không chứa `scripts/` nên mount tạm:
+   ```powershell
+   $m = 'docker compose --env-file .env.docker run --rm --no-deps -T -v "${PWD}/scripts:/var/www/html/scripts:ro" --entrypoint php app scripts/migrate_crypto_storage.php'
+   Invoke-Expression "$m --dry-run --migrate"   # xem trước
+   Invoke-Expression "$m --migrate"             # chạy thật
+   Invoke-Expression "$m --verify"              # kỳ vọng: 0 plaintext
+   ```
+   Sau khi kiểm thử đăng nhập, đặt hàng, tra cứu đơn: thêm `APP_CRYPTO_STRICT_READ=1` vào `.env.docker` rồi `docker compose --env-file .env.docker up -d`.
+
+**Chạy thử local (không tunnel):**
+```bash
+docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.local.yml up -d
+```
+Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất kỳ (service tunnel không chạy).
+
+**Sao lưu / khôi phục:** `scripts\backup_db.ps1` sao lưu DB + ảnh upload ra `D:\backup\shop` (giữ 14 bản). Hướng dẫn đăng ký Task Scheduler và lệnh khôi phục nằm ở đầu file script. Script KHÔNG sao lưu khóa mã hóa và `.env.docker`.
+
+**Cập nhật bản mới:** `git pull` rồi `docker compose --env-file .env.docker up -d --build`.
+
+**Lưu ý vận hành**
+- `docker compose down -v` **xóa DB và ảnh upload**. Dùng `docker compose down` (không `-v`) để tắt.
+- Để web tự chạy lại sau khi khởi động Windows: Docker Desktop > Settings > General > *Start Docker Desktop when you sign in*. Dịch vụ có `restart: unless-stopped`.
+- Cloudflare chặn User-Agent mặc định của Python (`Python-urllib`) bằng 403; khi chạy `scripts/test_*.py` nhắm vào domain, đặt User-Agent giống trình duyệt.
+- Đổi URL trả về VNPAY và URL webhook Mailjet sang domain mới ở phía nhà cung cấp.
+- Checklist bảo mật: [documents/DEPLOY_SECURITY_CHECKLIST.md](./documents/DEPLOY_SECURITY_CHECKLIST.md).
+
+### Triển khai lên Railway (Cloud) — cũ, không còn dùng
 
 Dự án đã được cấu hình sẵn `Dockerfile` + `docker-entrypoint.sh` để triển khai tự động:
 
