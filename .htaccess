@@ -19,6 +19,12 @@ RewriteRule "^(admin|auth)/uploads/.*\.(php[0-9]*|phtml|pht|phar|cgi|pl|py|rb|sh
 RewriteCond %{REQUEST_URI} !\.(png|jpe?g|gif|webp|avif|ico|bmp)$ [NC]
 RewriteRule "^(admin|auth)/uploads(/|$)" - [R=404,L,NC]
 
+# Apache gỡ header Authorization trước khi tới PHP. Webhook Mailjet gửi Basic auth qua header này,
+# nên chuyển nó vào $_SERVER['HTTP_AUTHORIZATION'] (xem webhooks/mailjet_webhook.php).
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
 <IfModule mod_headers.c>
     Header always unset X-Powered-By
     Header always set X-Content-Type-Options "nosniff"
