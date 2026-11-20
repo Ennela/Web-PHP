@@ -121,7 +121,9 @@ function app_return_destination($id): string
 
 function app_payment_endpoints(): array
 {
-    return ['https://sandbox.vnpayment.vn/paymentv2/vpcpay.html', 'https://pay.vnpay.vn/vpcpay.html'];
+    return ['https://sandbox.vnpayment.vn/paymentv2/vpcpay.html', 'https://pay.vnpay.vn/vpcpay.html',
+        // MoMo: payUrl trả về từ API tạo thanh toán (test và production)
+        'https://test-payment.momo.vn/v2/gateway/pay', 'https://payment.momo.vn/v2/gateway/pay'];
 }
 
 /** Payment is the sole external redirect: exact HTTPS endpoint, no fragment/userinfo/alternate port. */

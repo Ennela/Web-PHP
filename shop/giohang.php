@@ -140,6 +140,14 @@ require_once dirname(__DIR__) . '/config.php';
                     $chuyen = $_POST['quantity'];
                     $_SESSION['chuyen'] = $chuyen;
                     $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
+                    $_SESSION['pay_gateway'] = 'vnpay';
+
+                    app_redirect(BASE_URL . 'shop/dathangonline.php');
+                    exit;
+                } elseif (isset($_POST['thanhtoanmomo'])) { // Thanh toán MoMo: dùng chung trang nhập thông tin với VNPAY
+                    $_SESSION['chuyen'] = $_POST['quantity'];
+                    $_SESSION['chuyen_size'] = isset($_POST['size']) ? $_POST['size'] : [];
+                    $_SESSION['pay_gateway'] = 'momo';
 
                     app_redirect(BASE_URL . 'shop/dathangonline.php');
                     exit;
@@ -692,6 +700,9 @@ require_once dirname(__DIR__) . '/config.php';
                                     </div>
                                     <button class="btn-editorial-outline-light" id="btn-cod" name="dathang" type="submit" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>>THANH TOÁN TIỀN MẶT</button>
                                     <button class="btn-editorial-danger" id="btn-vnpay" name="thanhtoanonline" type="submit" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>><i class="fas fa-credit-card me-2"></i> THANH TOÁN VNPAY</button>
+                                    <?php require_once BASE_PATH . 'includes/momo.php'; if (momo_is_configured()): ?>
+                                    <button class="btn-editorial-danger" id="btn-momo" name="thanhtoanmomo" type="submit" style="background:#a50064;border-color:#a50064;" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>><i class="fas fa-wallet me-2"></i> THANH TOÁN MOMO</button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -1048,15 +1059,18 @@ function recheckStockIssues(res) {
     const alertEl = document.getElementById('global-stock-alert');
     const btnCod = document.getElementById('btn-cod');
     const btnVnpay = document.getElementById('btn-vnpay');
+    const btnMomo = document.getElementById('btn-momo');
     
     if (hasIssues) {
         if (alertEl) alertEl.style.display = 'block';
         if (btnCod) { btnCod.disabled = true; btnCod.style.opacity = '0.5'; btnCod.style.cursor = 'not-allowed'; }
         if (btnVnpay) { btnVnpay.disabled = true; btnVnpay.style.opacity = '0.5'; btnVnpay.style.cursor = 'not-allowed'; }
+        if (btnMomo) { btnMomo.disabled = true; btnMomo.style.opacity = '0.5'; btnMomo.style.cursor = 'not-allowed'; }
     } else {
         if (alertEl) alertEl.style.display = 'none';
         if (btnCod) { btnCod.disabled = false; btnCod.style.opacity = '1'; btnCod.style.cursor = 'pointer'; }
         if (btnVnpay) { btnVnpay.disabled = false; btnVnpay.style.opacity = '1'; btnVnpay.style.cursor = 'pointer'; }
+        if (btnMomo) { btnMomo.disabled = false; btnMomo.style.opacity = '1'; btnMomo.style.cursor = 'pointer'; }
     }
 }
 

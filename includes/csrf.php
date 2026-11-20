@@ -79,8 +79,10 @@ function csrf_bootstrap(string $cookiePath = '/', bool $secure = false): void
     // This server-to-server endpoint authenticates its own secret before DB access.
     // Match the executed file, never a client-controlled URL or query parameter.
     $entry = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ?: '';
-    if ($entry === realpath(dirname(__DIR__) . '/webhooks/mailjet_webhook.php')) {
-        return;
+    foreach (['/webhooks/mailjet_webhook.php', '/shop/momo_ipn.php'] as $exempt) { // IPN MoMo: tự xác thực bằng chữ ký
+        if ($entry === realpath(dirname(__DIR__) . $exempt)) {
+            return;
+        }
     }
 
     if (session_status() !== PHP_SESSION_ACTIVE) {
