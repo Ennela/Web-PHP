@@ -691,7 +691,7 @@ require_once dirname(__DIR__) . '/config.php';
                                     </div>
                                     <button class="btn-editorial-outline-light" id="btn-cod" name="dathang" type="submit" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>>THANH TOÁN TIỀN MẶT</button>
                                     <?php require_once BASE_PATH . 'includes/momo.php'; if (momo_is_configured()): ?>
-                                    <button class="btn-editorial-danger" id="btn-momo" name="thanhtoanmomo" type="submit" style="background:#a50064;border-color:#a50064;" <?= $hasStockIssues ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '' ?>><i class="fas fa-wallet me-2"></i> THANH TOÁN MOMO</button>
+                                    <button class="btn-editorial-danger" id="btn-momo" name="thanhtoanmomo" type="submit" style="background:#a50064;border-color:#a50064;<?= $hasStockIssues ? 'opacity:0.5;cursor:not-allowed;' : '' ?>" <?= $hasStockIssues ? 'disabled' : '' ?>><i class="fas fa-wallet me-2"></i> THANH TOÁN MOMO</button>
                                     <?php endif; ?>
                                 </div>
                             </div>

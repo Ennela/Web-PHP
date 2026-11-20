@@ -271,11 +271,11 @@ CA local chưa được tự cài vào máy. Xem [cách xác minh chứng chỉ,
 1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`.
 2. **Khởi động XAMPP** (Apache + MySQL).
 3. **Database:** Truy cập phpMyAdmin, import file `database/schema_full.sql` (cần MySQL 8; môi trường được kiểm thử là Docker) để khởi tạo CSDL.
-4. Cấu hình kết nối DB trong `includes/connect.php` và `admin/connect_db.php` (mặc định: localhost, root, không mật khẩu).
+4. Sao chép `.env.example` thành `.env` rồi điền thông tin DB (`MYSQLHOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`). Ứng dụng đọc cấu hình từ biến môi trường, không sửa trong mã nguồn.
 5. **Truy cập:**
    - Trang khách hàng: `http://localhost/WEB-PHP/`
    - Trang quản trị: `http://localhost/WEB-PHP/admin/`
-   - Tài khoản admin mẫu: `noah2005` / `kudo-kun`
+   - Tài khoản quản trị: do nhóm giữ; **không** ghi mật khẩu trong README (kho mã nguồn công khai). Dữ liệu mẫu có tài khoản quản trị dùng mật khẩu yếu: đổi ngay sau khi import.
 
 ### Triển khai bằng Docker + Cloudflare Tunnel (khuyên dùng)
 
