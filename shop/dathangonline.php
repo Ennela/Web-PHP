@@ -9,8 +9,15 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
-require_once(BASE_PATH . 'vnpay_php/config.php');
-vnpay_require_configuration();
+// Cổng thanh toán do giỏ hàng chọn (session): vnpay (mặc định) hoặc momo
+$gateway = ($_SESSION['pay_gateway'] ?? 'vnpay') === 'momo' ? 'momo' : 'vnpay';
+if ($gateway === 'momo') {
+    require_once BASE_PATH . 'includes/momo.php';
+    momo_require_configuration();
+} else {
+    require_once(BASE_PATH . 'vnpay_php/config.php');
+    vnpay_require_configuration();
+}
 include BASE_PATH . 'includes/connect.php'; 
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
@@ -116,6 +123,19 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     unset($_SESSION['giohang']); 
     unset($_SESSION['chuyen']);
     unset($_SESSION['chuyen_size']);
+
+    if ($gateway === 'momo') {
+        $payUrl = momo_create_payment((int)$orderID, (int)$total, 'Thanh toan don hang ' . $orderCode);
+        if ($payUrl === null) {
+            // MoMo từ chối: hủy đơn vừa tạo và hoàn tồn kho (giỏ hàng đã được xóa như luồng VNPAY)
+            mysqli_query($con, "UPDATE `oder` SET `status` = 'CANCELLED', `payment_status` = 'FAILED' WHERE `id` = " . (int)$orderID);
+            restoreStock($con, (int)$orderID);
+            $_SESSION['swal_error'] = 'Không tạo được giao dịch MoMo. Vui lòng thử lại hoặc chọn phương thức khác.';
+            app_redirect(BASE_URL . 'shop/giohang.php');
+            exit;
+        }
+        app_payment_redirect($payUrl);
+    }
 
     // Generate VNPAY URL
     $vnp_TxnRef = $orderID;
@@ -230,7 +250,7 @@ include BASE_PATH . 'includes/header.php';
     <section class="clean-block clean-info dark">
         <div class="container">
             <div class="block-heading text-center mb-5">
-                <h2 class="text-info font-weight-bold">Thanh toán Đơn hàng VNPAY</h2>
+                <h2 class="text-info font-weight-bold">Thanh toán Đơn hàng <?= $gateway === 'momo' ? 'MoMo' : 'VNPAY' ?></h2>
                 <p>Nhập thông tin giao hàng để tiếp tục thanh toán nhanh chóng và bảo mật</p>
             </div>
             
@@ -264,7 +284,7 @@ include BASE_PATH . 'includes/header.php';
                                     <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú về thời gian giao hàng..."></textarea>
                                 </div>
                                 <button type="submit" name="xacnhan" class="btn btn-info btn-lg w-100 font-weight-bold shadow-sm" style="font-size: 1.1rem; padding: 12px;">
-                                    Tiến hành Thanh Toán VNPAY <i class="fas fa-arrow-right ml-2"></i>
+                                    Tiến hành Thanh Toán <?= $gateway === 'momo' ? 'MoMo' : 'VNPAY' ?> <i class="fas fa-arrow-right ml-2"></i>
                                 </button>
                             </form>
                         </div>

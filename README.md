@@ -319,6 +319,8 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 
 **Sao lưu / khôi phục:** `scripts\backup_db.ps1` sao lưu DB + ảnh upload ra `D:\backup\shop` (giữ 14 bản). Hướng dẫn đăng ký Task Scheduler và lệnh khôi phục nằm ở đầu file script. Script KHÔNG sao lưu khóa mã hóa và `.env.docker`.
 
+**Thanh toán MoMo (tùy chọn):** đặt `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY` (và `MOMO_ENDPOINT`) trong `.env.docker`, rồi `docker compose --env-file .env.docker up -d`. Nút "THANH TOÁN MOMO" chỉ hiện khi đủ 3 khóa. Mặc định trỏ môi trường test của MoMo; production dùng `https://payment.momo.vn/v2/gateway/api/create`. Địa chỉ nhận kết quả (`/shop/momo_return.php` cho trình duyệt, `/shop/momo_ipn.php` cho máy chủ MoMo) được app tự gửi kèm mỗi giao dịch, không cần đăng ký thêm; IPN cần domain truy cập được từ Internet (đã có qua tunnel).
+
 **Cập nhật bản mới:** `git pull` rồi `docker compose --env-file .env.docker up -d --build`.
 
 **Lưu ý vận hành**
