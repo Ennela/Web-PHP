@@ -1,6 +1,6 @@
 # Website Bán Giày Thể Thao
 
-Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai bằng Docker + Cloudflare Tunnel (XAMPP khi phát triển). Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
+Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai bằng Docker + Cloudflare Tunnel (XAMPP khi phát triển). Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán MoMo/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
 
 
 ---
@@ -23,7 +23,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 - Dashboard doanh thu, Quản lý Danh mục, Đơn hàng, Khách hàng, Sản phẩm, Tin tức, Thành viên
 
 ### Giao diện mua hàng (Shop) — Kiên
-- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Đặt hàng Online, Tra cứu đơn hàng cá nhân, Thanh toán (VNPAY/COD), Tracking đơn hàng
+- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Đặt hàng Online, Tra cứu đơn hàng cá nhân, Thanh toán (MoMo/COD), Tracking đơn hàng
 
 ### Chức năng hỗ trợ & Thông tin — Nhân
 - Trang chủ (Banner Carousel), Quản lý tài khoản (Thông tin, Địa chỉ, Size giày, Đổi mật khẩu), Quên mật khẩu, Blog/Tin tức, Liên hệ, Về chúng tôi
@@ -50,7 +50,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 | **Web Server** | Apache (XAMPP) | Môi trường phát triển cục bộ trọn gói, thao tác khởi động dịch vụ web thuận tiện cho Windows. |
 | **Frontend** | HTML5, Vanilla JS, CSS/Bootstrap | Áp dụng thiết kế Mobile-First hiện đại trên các trang shop/cart/thanh toán, kết hợp tùy biến linh hoạt hiệu ứng micro-animations. |
 | **Font & Icon** | Montserrat, FontAwesome 5.3.1 | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện. |
-| **Thanh toán** | VNPAY Sandbox | API thanh toán uy tín và sát thực tế, giúp làm quen với luồng thanh toán bảo mật, xác thực giao dịch chuẩn e-Commerce (HMAC-SHA512). |
+| **Thanh toán** | MoMo (test) | Cổng ví MoMo: ký HMAC-SHA256, nhận kết quả qua trình duyệt và IPN từ máy chủ MoMo. Có COD làm phương án không cần cổng. |
 | **Email** | Mailjet HTTP API v3.1 | Gửi email giao dịch (xác nhận đơn hàng, đặt lại mật khẩu, liên hệ) qua REST API. Free tier 200 email/ngày, gửi được đến mọi địa chỉ email mà không cần verify domain. |
 | **Thông báo UI** | SweetAlert2 | Hiển thị thông báo (Toast Notifications) không chặn màn hình, thay thế hoàn toàn `alert()` mặc định của trình duyệt. |
 | **Bảo mật** | bcrypt (password_hash/password_verify) | Mã hóa mật khẩu người dùng và admin bằng bcrypt, chống SQL injection bằng prepared statements. |
@@ -108,8 +108,9 @@ WEB-PHP/
 │   ├── chitietsanpham.php     # Chi tiết sản phẩm: chọn size, tồn kho real-time, zoom ảnh
 │   ├── giohang.php            # Giỏ hàng AJAX: thay đổi size/số lượng, auto-save, kiểm tra tồn kho
 │   ├── infodathang.php        # Thanh toán & đặt hàng COD (auto-fill thông tin)
-│   ├── dathangonline.php      # Thanh toán & đặt hàng VNPAY (tạo cổng thanh toán)
-│   ├── vnpay_return.php       # Xử lý kết quả trả về từ VNPAY, cập nhật trạng thái đơn
+│   ├── dathangonline.php      # Nhập thông tin giao hàng & đặt hàng thanh toán MoMo (tạo giao dịch)
+│   ├── momo_return.php        # Kết quả MoMo trả về trình duyệt, chốt trạng thái đơn
+│   ├── momo_ipn.php           # IPN: MoMo gọi từ máy chủ (POST JSON, tự xác thực bằng chữ ký)
 │   ├── tradonhang.php         # Danh sách đơn hàng cá nhân của khách
 │   ├── chitietdonhang.php     # Chi tiết & timeline trạng thái của đơn hàng
 │   ├── tracking.php           # Tra cứu đơn hàng bằng mã đơn + token (không cần login)
@@ -150,8 +151,6 @@ WEB-PHP/
 │   ├── pagination.php         # Helper phân trang của trang admin
 │   └── connect_db.php         # Kết nối DB riêng cho admin
 │
-├── vnpay_php/                 # Tích hợp cổng thanh toán VNPAY
-│   └── config.php             # Cấu hình tham số kết nối VNPAY Sandbox
 │
 ├── webhooks/                  # Webhook xử lý sự kiện từ bên thứ ba
 │   └── mailjet_webhook.php    # Endpoint tiếp nhận sự kiện bounce/spam từ Mailjet
@@ -205,7 +204,7 @@ WEB-PHP/
 - **Bảo vệ CSRF toàn ứng dụng:** Token gắn với session cho form và AJAX; thao tác thay đổi dữ liệu dùng POST. Xem [cơ chế, callback và cách kiểm thử](./documents/CSRF_SECURITY.md).
 - **Cấu hình bảo mật:** Chặn file nhạy cảm, ẩn lỗi, HTTP security header, kiểm tra Host/proxy, cấu hình production và upload ảnh an toàn. Xem [hướng dẫn cấu hình và kiểm thử](./documents/SECURITY_CONFIGURATION.md).
 - **Bảo vệ XSS:** Escape đầu ra theo ngữ cảnh, lọc rich HTML bằng HTML Purifier, dùng DOM API an toàn và CSP nonce. Xem [cơ chế, demo và kiểm thử](./documents/XSS_SECURITY.md).
-- **Bảo vệ chuyển hướng:** Kiểm tra đích nội bộ, dùng mã trang cho bước quay lại sau đăng nhập và giới hạn endpoint VNPay. Xem [Unvalidated Redirects and Forwards: cơ chế, demo và kiểm thử](./documents/REDIRECT_SECURITY.md).
+- **Bảo vệ chuyển hướng:** Kiểm tra đích nội bộ, dùng mã trang cho bước quay lại sau đăng nhập và giới hạn endpoint thanh toán MoMo. Xem [Unvalidated Redirects and Forwards: cơ chế, demo và kiểm thử](./documents/REDIRECT_SECURITY.md).
 - **Bảo vệ đường truyền:** HTTPS/TLS 1.2–1.3, cookie Secure, HSTS production, kiểm tra proxy và chứng chỉ dịch vụ ngoài. Chạy `./run-https.sh`; xem [hướng dẫn transport security và demo](./documents/TRANSPORT_SECURITY.md).
 
 ### Phía Khách hàng
@@ -223,8 +222,8 @@ WEB-PHP/
 - **Chi tiết sản phẩm:** Gallery nhiều ảnh, zoom ảnh theo tọa độ chuột (Vanilla Zoom), lightbox, hiển thị tồn kho real-time theo size, tự động áp dụng size giày yêu thích.
 - **Giỏ hàng AJAX thông minh:** AJAX auto-save (thay đổi size/số lượng tự động cập nhật không tải lại trang), chọn size trực tiếp trong giỏ hàng, cảnh báo hết hàng/vượt tồn kho, animation xóa sản phẩm mượt mà, debounce tránh spam.
 - **Tự động điền thông tin (Auto-fill Checkout):** Tự động điền trước thông tin thanh toán (Tên, SĐT, Địa chỉ từ sổ mặc định, Email) của khách hàng đã đăng nhập.
-- **Thanh toán COD & VNPAY:** 2 hình thức thanh toán. VNPAY sử dụng HMAC-SHA512 để bảo mật chữ ký, xử lý duplicate tab, chống race condition bằng MySQL Transaction.
-- **Email xác nhận tự động:** Gửi email xác nhận đơn hàng tự động cho khách hàng qua Mailjet API cho cả COD và VNPAY.
+- **Thanh toán COD & MoMo:** 2 hình thức thanh toán. MoMo ký HMAC-SHA256, chốt đơn idempotent (redirect và IPN dùng chung `momo_finalize`), đối chiếu số tiền, hoàn tồn kho đúng một lần khi hủy/thất bại.
+- **Email xác nhận tự động:** Gửi email xác nhận đơn hàng tự động cho khách hàng qua Mailjet API cho cả COD và MoMo.
 - **Tra cứu đơn hàng linh hoạt:** Xem lịch sử mua hàng cá nhân sau khi đăng nhập, hoặc tracking bằng mã đơn + token (không cần login) qua link gửi trong email xác nhận.
 - **SweetAlert2 & Toast:** Hiển thị thông báo Toast đẹp mắt, không chặn màn hình.
 
@@ -327,7 +326,7 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 - `docker compose down -v` **xóa DB và ảnh upload**. Dùng `docker compose down` (không `-v`) để tắt.
 - Để web tự chạy lại sau khi khởi động Windows: Docker Desktop > Settings > General > *Start Docker Desktop when you sign in*. Dịch vụ có `restart: unless-stopped`.
 - Cloudflare chặn User-Agent mặc định của Python (`Python-urllib`) bằng 403; khi chạy `scripts/test_*.py` nhắm vào domain, đặt User-Agent giống trình duyệt.
-- Đổi URL trả về VNPAY và URL webhook Mailjet sang domain mới ở phía nhà cung cấp.
+- Đổi URL webhook Mailjet sang domain mới ở phía nhà cung cấp (URL MoMo do app tự gửi kèm mỗi giao dịch).
 - Checklist bảo mật: [documents/DEPLOY_SECURITY_CHECKLIST.md](./documents/DEPLOY_SECURITY_CHECKLIST.md).
 
 ---
@@ -339,7 +338,7 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 | **Service** | Mailjet — HTTP REST API v3.1 |
 | **Free tier** | 200 email/ngày, gửi đến mọi email |
 | **Helper** | `includes/mail_helper.php` — hàm `sendMailBrevo()` |
-| **Nơi sử dụng** | Xác nhận đơn hàng (COD + VNPAY), Quên mật khẩu, Liên hệ |
+| **Nơi sử dụng** | Xác nhận đơn hàng (COD + MoMo), Quên mật khẩu, Liên hệ |
 | **Env variables** | `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` |
 | **Auth** | HTTP Basic Auth (API Key : Secret Key) |
 | **Timeout** | 10 giây (tránh treo trang) |
@@ -364,7 +363,7 @@ Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu t
 | [SRS_CHI_TIET_SAN_PHAM.MD](./documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả Chi tiết sản phẩm, Chọn size & Zoom |
 | [SRS_GIO_HANG.MD](./documents/SRS_GIO_HANG.MD) | Đặc tả Giỏ hàng AJAX |
 | [SRS_DAT_HANG.MD](./documents/SRS_DAT_HANG.MD) | Đặc tả Đặt hàng (COD) |
-| [SRS_THANH_TOAN.MD](./documents/SRS_THANH_TOAN.MD) | Đặc tả Thanh toán COD + VNPAY |
+| [SRS_THANH_TOAN.MD](./documents/SRS_THANH_TOAN.MD) | Đặc tả Thanh toán COD + VNPAY (tài liệu gốc, nay đã thay bằng MoMo) |
 | [SRS_TIM_KIEM_SAN_PHAM.MD](./documents/SRS_TIM_KIEM_SAN_PHAM.MD) | Đặc tả Tìm kiếm & Lọc sản phẩm |
 | [SRS_LIEN_HE.MD](./documents/SRS_LIEN_HE.MD) | Đặc tả Trang liên hệ |
 | [SRS_DANG_KY.MD](./documents/SRS_DANG_KY.MD) | Đặc tả Đăng ký tài khoản |

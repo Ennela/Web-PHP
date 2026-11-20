@@ -142,9 +142,9 @@ echo 'REDIRECT_FELL_THROUGH';
             self.assertNotIn('REDIRECT_FELL_THROUGH', body)
 
     def test_payment_exact_endpoint_and_https_upgrade(self):
-        endpoint = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-        valid = [endpoint + '?vnp_TxnRef=123&vnp_ReturnUrl=https%3A%2F%2Fshop.example.test%2Fshop%2Fvnpay_return.php',
-                 'https://pay.vnpay.vn/vpcpay.html?vnp_TxnRef=123']
+        endpoint = 'https://test-payment.momo.vn/v2/gateway/pay'
+        valid = [endpoint + '?t=abc&s=def',
+                 'https://payment.momo.vn/v2/gateway/pay?t=123']
         for url in valid:
             status, _, headers = self.call(url, 'payment_redirect')
             self.assertEqual(status, 303)
@@ -152,8 +152,8 @@ echo 'REDIRECT_FELL_THROUGH';
         for url in [endpoint.replace('https:', 'http:'), endpoint + '/extra', endpoint + '#evil',
                     endpoint.replace('.vn/', '.vn.attacker.invalid/'),
                     endpoint.replace('.vn/', '.vn:443/'), endpoint.replace('.vn/', '.vn@attacker.invalid/'),
-                    endpoint.replace('/paymentv2/', '/other/'), endpoint + '?x=%0a',
-                    '//sandbox.vnpayment.vn/paymentv2/vpcpay.html']:
+                    endpoint.replace('/gateway/', '/other/'), endpoint + '?x=%0a',
+                    '//test-payment.momo.vn/v2/gateway/pay']:
             status, _, headers = self.call(url, 'payment_redirect')
             self.assertEqual(status, 400)
             self.assertIsNone(headers.get('Location'))

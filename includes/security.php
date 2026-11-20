@@ -146,7 +146,7 @@ function app_security_headers(): void
     // Nonces authorize scripts from trusted source templates, never arbitrary rendered HTML.
     $nonce = csp_nonce();
     header("Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
-        . "form-action 'self' https://sandbox.vnpayment.vn https://pay.vnpay.vn https://test-payment.momo.vn https://payment.momo.vn; "
+        . "form-action 'self' https://test-payment.momo.vn https://payment.momo.vn; "
         . "script-src 'self' 'nonce-$nonce' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://kit.fontawesome.com; script-src-attr 'none'; "
         . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://use.fontawesome.com https://ka-f.fontawesome.com https://afeld.github.io; "
         . "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://use.fontawesome.com https://ka-f.fontawesome.com; "
@@ -230,7 +230,7 @@ function app_security_bootstrap(): ?string
     $relative = str_replace('\\', '/', substr($entry, strlen($project)));
     if (strpos($entry, $project) === 0 && (
         preg_match('~^(?:includes|database|documents|scripts|scratch|deploy|vendor|lib|backups|tests|\.secrets|\.git|\.codex|\.agents)(?:/|$)~i', $relative)
-        || in_array($relative, ['config.php', 'admin/connect_db.php', 'admin/function.php', 'admin/pagination.php', 'vnpay_php/config.php'], true)
+        || in_array($relative, ['config.php', 'admin/connect_db.php', 'admin/function.php', 'admin/pagination.php'], true)
         || preg_match('~^(?:auth|admin)/uploads/~i', $relative)
     )) {
         app_fail(404, 'Không tìm thấy trang.');

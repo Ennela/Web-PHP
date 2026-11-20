@@ -98,9 +98,6 @@ services:
       BRAND_PHONE: ${BRAND_PHONE:-}
       BRAND_ADDRESS: ${BRAND_ADDRESS:-}
       BRAND_TAX_ID: ${BRAND_TAX_ID:-}
-      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
-      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
-      VNPAY_URL: ${VNPAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
       MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
       MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
       MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}

@@ -594,7 +594,7 @@ include BASE_PATH . 'includes/header.php';
                             <div class="info-row">
                                 <span class="info-label">Phương thức</span>
                                 <span class="info-value">
-                                    <?= !empty($order['vnpay_tranId']) ? '<i class="fas fa-credit-card mr-1" style="color:#3b82f6"></i> VNPAY' : '<i class="fas fa-money-bill-wave mr-1" style="color:#10b981"></i> COD' ?>
+                                    <?= !empty($order['vnpay_tranId']) ? '<i class="fas fa-credit-card mr-1" style="color:#3b82f6"></i> MoMo' : '<i class="fas fa-money-bill-wave mr-1" style="color:#10b981"></i> COD' ?>
                                 </span>
                             </div>
                             <?php if (!empty($order['vnpay_tranId'])): ?>
