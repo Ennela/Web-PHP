@@ -98,6 +98,12 @@ function sendMailjet($toEmail, $toName, $subject, $htmlBody, $mailType = MAIL_TY
         $message['Priority'] = $options['priority'] ?? 2;
     }
 
+    // Link trong email giao dịch mang token (đặt lại mật khẩu, tra cứu đơn): không để Mailjet
+    // bọc qua tên miền theo dõi (lộ token cho bên thứ ba, và link có thể không mở được).
+    if ($mailType === MAIL_TYPE_TRANSACTIONAL) {
+        $message['TrackClicks'] = 'disabled';
+    }
+
     // Unsubscribe header cho Marketing
     if ($mailType === MAIL_TYPE_MARKETING && !empty(MAIL_UNSUBSCRIBE_URL)) {
         $message['Headers'] = [
