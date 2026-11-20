@@ -133,6 +133,7 @@ function momo_finalize(mysqli $con, array $data): string
         return 'failed';
     }
 
+    // Cột `vnpay_tranId` giữ tên cũ nhưng nay lưu mã giao dịch MoMo (đổi tên cần migration DB).
     $trans = substr((string)($data['transId'] ?? ''), 0, 100);
     $u = mysqli_prepare($con, "UPDATE `oder` SET `status` = 'CONFIRMED', `payment_status` = 'PAID', `vnpay_tranId` = ? WHERE `id` = ? AND `payment_status` = 'UNPAID' AND `status` <> 'CANCELLED'");
     mysqli_stmt_bind_param($u, 'si', $trans, $orderId);
