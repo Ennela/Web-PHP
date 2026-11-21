@@ -14,22 +14,28 @@ if (!$order) {
     unset($_SESSION['sepay_order_id']);
     app_redirect(BASE_URL . 'shop/giohang.php');
 }
+$returnToken = (string)($_SESSION['sepay_return_token'] ?? '');
+if ($returnToken === '') {
+    $returnToken = $_SESSION['sepay_return_token'] = bin2hex(random_bytes(16));
+}
+
+if (isset($_GET['status'])) { // trang "đang xác nhận" hỏi định kỳ, chờ IPN (không gọi API SePay ở đây)
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode(['state' => sepay_order_state($order)]);
+    exit;
+}
 sepay_expire_stale($con);
 
 // SePay chuyển về: URL không có chữ ký nên chỉ được HỦY đơn của chính phiên, không bao giờ đánh dấu đã thanh toán.
+// Mã t (chỉ phiên này và SePay biết) chặn trang khác dụ trình duyệt mở link hủy (CSRF) khi khách đang trả tiền.
 $back = is_string($_GET['r'] ?? null) ? $_GET['r'] : '';
-if ($back === 'cancel' || $back === 'error') {
+$tokenOk = is_string($_GET['t'] ?? null) && hash_equals($returnToken, $_GET['t']);
+if (($back === 'cancel' || $back === 'error') && $tokenOk) {
     sepay_cancel($con, $orderId);
 }
 $order = sepay_find_order($con, $orderId);
 $state = sepay_order_state($order);
-
-if (isset($_GET['status'])) { // trang "đang xác nhận" hỏi định kỳ, chờ IPN
-    header('Content-Type: application/json; charset=utf-8');
-    header('Cache-Control: no-store');
-    echo json_encode(['state' => $state]);
-    exit;
-}
 
 $redirectToGateway = $state === 'pending' && $back === '';
 include BASE_PATH . 'includes/header.php';
@@ -44,7 +50,7 @@ $failText = $back === 'cancel' ? 'Bạn đã hủy thanh toán.' : ($back === 'e
                         <h3 class="text-info fw-bold mb-2">Đang chuyển sang SePay…</h3>
                         <p class="text-muted">Đơn hàng số <?= e($order['order_code']) ?> — <?= e(number_format((int)$order['tongtien'], 0, ',', '.')) ?> đ</p>
                         <form id="sepay-checkout-form" method="post" action="<?= e(sepay_checkout_url()) ?>">
-                            <?php foreach (sepay_form_fields($order) as $name => $value): ?>
+                            <?php foreach (sepay_form_fields($order, $returnToken) as $name => $value): ?>
                             <input type="hidden" name="<?= e($name) ?>" value="<?= e($value) ?>">
                             <?php endforeach; ?>
                             <div class="d-grid"><button type="submit" class="btn btn-info text-white">Tiếp tục thanh toán</button></div>

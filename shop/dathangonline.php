@@ -118,6 +118,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
 
     // Đơn chờ thanh toán SePay: chỉ phiên vừa đặt được chuyển sang cổng / xem kết quả của đơn này (không nhận id từ URL).
     $_SESSION['sepay_order_id'] = (int)$orderID;
+    $_SESSION['sepay_return_token'] = bin2hex(random_bytes(16)); // mã cho URL quay về, chống link hủy giả mạo
     app_redirect(BASE_URL . 'shop/thanhtoansepay.php');
     exit;
 }

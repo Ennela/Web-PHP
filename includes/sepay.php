@@ -65,10 +65,13 @@ function sepay_sign(array $fields): string
     return base64_encode(hash_hmac('sha256', implode(',', $signed), sepay_config()['secret'], true));
 }
 
-/** Các trường form gửi sang SePay, thứ tự giống SDK (thứ tự này cũng là thứ tự ký). */
-function sepay_form_fields(array $order): array
+/**
+ * Các trường form gửi sang SePay, thứ tự giống SDK (thứ tự này cũng là thứ tự ký).
+ * $returnToken: mã ngẫu nhiên của phiên, gắn vào URL quay về để link hủy giả mạo (CSRF) không hủy được đơn.
+ */
+function sepay_form_fields(array $order, string $returnToken): array
 {
-    $back = BASE_URL . 'shop/thanhtoansepay.php?r=';
+    $back = BASE_URL . 'shop/thanhtoansepay.php?t=' . rawurlencode($returnToken) . '&r=';
     $fields = [
         'merchant'             => sepay_config()['merchant'],
         'currency'             => 'VND',
@@ -101,18 +104,93 @@ function sepay_find_order(mysqli $con, int $orderId): ?array
     return $order && str_starts_with((string)$order['vnpay_tranId'], 'SEPAY') ? $order : null;
 }
 
-/** Hủy đơn SePay quá hạn chưa thanh toán và hoàn kho (chạy khi có người mở trang đặt hàng/thanh toán). */
-function sepay_expire_stale(mysqli $con): void
+function sepay_find_by_invoice(mysqli $con, string $invoice): ?array
 {
+    if (!preg_match('/\ADH(\d{9})\z/', $invoice, $m)) {
+        return null;
+    }
+    $s = mysqli_prepare($con, 'SELECT * FROM `oder` WHERE `order_code` = ? LIMIT 1');
+    mysqli_stmt_bind_param($s, 's', $m[1]);
+    mysqli_stmt_execute($s);
+    $row = mysqli_fetch_assoc(mysqli_stmt_get_result($s)) ?: null;
+    mysqli_stmt_close($s);
+    return $row && str_starts_with((string)$row['vnpay_tranId'], 'SEPAY') ? $row : null;
+}
+
+/** Giá trị đầu tiên của một khóa trong JSON lồng nhau (phản hồi chi tiết đơn của API chưa có tài liệu dạng dữ liệu). */
+function sepay_json_find($data, string $key)
+{
+    if (!is_array($data)) {
+        return null;
+    }
+    if (array_key_exists($key, $data) && !is_array($data[$key])) {
+        return $data[$key];
+    }
+    foreach ($data as $v) {
+        $found = sepay_json_find($v, $key);
+        if ($found !== null) {
+            return $found;
+        }
+    }
+    return null;
+}
+
+/**
+ * Hỏi SePay trạng thái thật của hóa đơn (GET /v1/order/detail/{invoice}, Basic merchant:secret — như SDK).
+ * SePay chỉ tạo đơn khi khách đã thanh toán, nên 404 = chưa thanh toán.
+ * @return array ['paid', order] | ['unpaid', null] | ['unknown', null]
+ */
+function sepay_api_invoice_state(string $invoice): array
+{
+    $c = sepay_config();
+    $base = $c['env'] === 'production' ? 'https://pgapi.sepay.vn' : 'https://pgapi-sandbox.sepay.vn';
+    $ch = curl_init($base . '/v1/order/detail/' . rawurlencode($invoice));
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_TIMEOUT => 6,
+        CURLOPT_HTTPHEADER => ['Accept: application/json',
+            'Authorization: Basic ' . base64_encode($c['merchant'] . ':' . $c['secret'])],
+    ]);
+    $body = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code === 404) {
+        return ['unpaid', null];
+    }
+    $json = ($code === 200 && is_string($body)) ? json_decode($body, true) : null;
+    $status = sepay_json_find($json, 'order_status');
+    if (!is_string($status)) {
+        error_log('SEPAY_API_UNKNOWN: invoice=' . $invoice . ' http=' . $code);
+        return ['unknown', null];
+    }
+    if ($status !== 'CAPTURED') {
+        return ['unpaid', null];
+    }
+    return ['paid', ['order_invoice_number' => sepay_json_find($json, 'order_invoice_number'),
+        'order_amount' => sepay_json_find($json, 'order_amount'), 'id' => sepay_json_find($json, 'id')]];
+}
+
+/**
+ * Đơn SePay quá hạn: hỏi SePay trước khi hủy, để không hủy đơn khách đã trả tiền.
+ * Đã trả → chốt như IPN; chưa trả → hủy, hoàn kho; không hỏi được → để lần sau (quá 24 giờ thì vẫn hủy).
+ * $lookup: thay hàm hỏi API (dùng trong kiểm thử).
+ */
+function sepay_expire_stale(mysqli $con, ?callable $lookup = null): void
+{
+    $lookup = $lookup ?? 'sepay_api_invoice_state';
     $before = time() - SEPAY_EXPIRE_SECONDS;
     $pending = SEPAY_PENDING;
-    $s = mysqli_prepare($con, "SELECT `id` FROM `oder` WHERE `vnpay_tranId` = ? AND `payment_status` = 'UNPAID' AND `status` = 'PENDING' AND `ngaytao` < ?");
+    $s = mysqli_prepare($con, "SELECT * FROM `oder` WHERE `vnpay_tranId` = ? AND `payment_status` = 'UNPAID' AND `status` = 'PENDING' AND `ngaytao` < ? LIMIT 20");
     mysqli_stmt_bind_param($s, 'si', $pending, $before);
     mysqli_stmt_execute($s);
-    $ids = array_map('intval', array_column(mysqli_fetch_all(mysqli_stmt_get_result($s), MYSQLI_ASSOC), 'id'));
+    $rows = mysqli_fetch_all(mysqli_stmt_get_result($s), MYSQLI_ASSOC);
     mysqli_stmt_close($s);
-    foreach ($ids as $id) {
-        sepay_cancel($con, $id);
+    foreach ($rows as $row) {
+        [$state, $remote] = $lookup(sepay_invoice_number($row));
+        if ($state === 'paid') {
+            sepay_settle($con, $row, $remote, '');
+        } elseif ($state === 'unpaid' || (int)$row['ngaytao'] < time() - 86400) {
+            sepay_cancel($con, (int)$row['id']);
+        }
     }
 }
 
@@ -133,38 +211,20 @@ function sepay_cancel(mysqli $con, int $orderId): bool
 }
 
 /**
- * Xử lý IPN đã xác thực (an toàn khi SePay gửi lại nhiều lần).
- * @return string 'paid' | 'duplicate' | 'ignored' | 'mismatch' | 'late' | 'unknown'
+ * Chốt đơn đã thanh toán (dùng chung cho IPN và kiểm tra qua API). $remote: object order từ SePay.
+ * @return string 'paid' | 'duplicate' | 'mismatch' | 'late'
  */
-function sepay_handle_ipn(mysqli $con, array $data): string
+function sepay_settle(mysqli $con, array $row, array $remote, string $txId): string
 {
-    $order = is_array($data['order'] ?? null) ? $data['order'] : [];
-    $tx = is_array($data['transaction'] ?? null) ? $data['transaction'] : [];
-    if (($data['notification_type'] ?? '') !== 'ORDER_PAID' || ($order['order_status'] ?? '') !== 'CAPTURED'
-        || (isset($tx['transaction_status']) && $tx['transaction_status'] !== 'APPROVED')) {
-        return 'ignored';
-    }
-    $invoice = (string)($order['order_invoice_number'] ?? '');
-    if (!preg_match('/\ADH(\d{9})\z/', $invoice, $m)) {
-        return 'unknown';
-    }
-    $s = mysqli_prepare($con, 'SELECT * FROM `oder` WHERE `order_code` = ? LIMIT 1');
-    mysqli_stmt_bind_param($s, 's', $m[1]);
-    mysqli_stmt_execute($s);
-    $row = mysqli_fetch_assoc(mysqli_stmt_get_result($s));
-    mysqli_stmt_close($s);
-    if (!$row || !str_starts_with((string)$row['vnpay_tranId'], 'SEPAY')) {
-        error_log('SEPAY_UNKNOWN_ORDER: invoice=' . $invoice);
-        return 'unknown';
-    }
     $orderId = (int)$row['id'];
-    // order_amount dạng chuỗi "100000.00": phải đúng bằng tổng đơn.
-    $amount = $order['order_amount'] ?? null;
-    if (!is_numeric($amount) || (int)round((float)$amount) !== (int)$row['tongtien']) {
+    // order_amount dạng chuỗi "100000.00": phải đúng bằng tổng đơn; mã hóa đơn phải khớp.
+    $amount = $remote['order_amount'] ?? null;
+    if (($remote['order_invoice_number'] ?? null) !== sepay_invoice_number($row)
+        || !is_numeric($amount) || (int)round((float)$amount) !== (int)$row['tongtien']) {
         error_log('SEPAY_AMOUNT_MISMATCH: order=' . $orderId);
         return 'mismatch';
     }
-    $ref = 'SEPAY:' . substr(preg_replace('/[^A-Za-z0-9_-]/', '', (string)($tx['transaction_id'] ?? $tx['id'] ?? $order['id'] ?? '')), 0, 60);
+    $ref = 'SEPAY:' . substr(preg_replace('/[^A-Za-z0-9_-]/', '', (string)($txId !== '' ? $txId : ($remote['id'] ?? ''))), 0, 60);
     $pending = SEPAY_PENDING;
     $u = mysqli_prepare($con, "UPDATE `oder` SET `status` = 'CONFIRMED', `payment_status` = 'PAID', `vnpay_tranId` = ? WHERE `id` = ? AND `vnpay_tranId` = ? AND `payment_status` = 'UNPAID' AND `status` = 'PENDING'");
     mysqli_stmt_bind_param($u, 'sis', $ref, $orderId, $pending);
@@ -175,12 +235,75 @@ function sepay_handle_ipn(mysqli $con, array $data): string
         sepay_send_confirmation($con, $row);
         return 'paid';
     }
-    if ($row['status'] === 'CANCELLED') {
-        // Tiền đến sau khi đơn đã hủy/hết hạn: không tự mở lại đơn (kho đã hoàn), admin hoàn tiền.
+    // Tiền đến sau khi đơn đã hủy/hết hạn: đánh dấu LATE_PAID để admin thấy, hoàn tiền hoặc khôi phục đơn.
+    $u = mysqli_prepare($con, "UPDATE `oder` SET `payment_status` = 'LATE_PAID', `vnpay_tranId` = ? WHERE `id` = ? AND `status` = 'CANCELLED' AND `payment_status` IN ('UNPAID', 'FAILED')");
+    mysqli_stmt_bind_param($u, 'si', $ref, $orderId);
+    mysqli_stmt_execute($u);
+    $late = mysqli_stmt_affected_rows($u) > 0;
+    mysqli_stmt_close($u);
+    if ($late) {
         error_log('SEPAY_LATE_PAYMENT: order=' . $orderId . ' ref=' . $ref);
         return 'late';
     }
     return 'duplicate';
+}
+
+/**
+ * Giao dịch bị hủy/hoàn phía SePay (TRANSACTION_VOID): đơn chưa giao thì hủy + hoàn kho,
+ * đang giao/đã giao thì chỉ ghi REFUNDED để admin xử lý.
+ * @return string 'voided' | 'refunded' | 'duplicate'
+ */
+function sepay_void(mysqli $con, array $row): string
+{
+    require_once BASE_PATH . 'includes/inventory_helper.php';
+    $orderId = (int)$row['id'];
+    $u = mysqli_prepare($con, "UPDATE `oder` SET `status` = 'CANCELLED', `payment_status` = 'REFUNDED' WHERE `id` = ? AND `payment_status` = 'PAID' AND `status` IN ('PENDING', 'CONFIRMED')");
+    mysqli_stmt_bind_param($u, 'i', $orderId);
+    mysqli_stmt_execute($u);
+    $cancelled = mysqli_stmt_affected_rows($u) > 0;
+    mysqli_stmt_close($u);
+    if ($cancelled) {
+        restoreStock($con, $orderId);
+        return 'voided';
+    }
+    $u = mysqli_prepare($con, "UPDATE `oder` SET `payment_status` = 'REFUNDED' WHERE `id` = ? AND `payment_status` IN ('PAID', 'LATE_PAID')");
+    mysqli_stmt_bind_param($u, 'i', $orderId);
+    mysqli_stmt_execute($u);
+    $refunded = mysqli_stmt_affected_rows($u) > 0;
+    mysqli_stmt_close($u);
+    if ($refunded) {
+        error_log('SEPAY_VOID_AFTER_SHIPPING: order=' . $orderId);
+        return 'refunded';
+    }
+    return 'duplicate';
+}
+
+/**
+ * Xử lý IPN đã xác thực (an toàn khi SePay gửi lại nhiều lần).
+ * @return string 'paid' | 'duplicate' | 'mismatch' | 'late' | 'voided' | 'refunded' | 'ignored' | 'unknown'
+ */
+function sepay_handle_ipn(mysqli $con, array $data): string
+{
+    $order = is_array($data['order'] ?? null) ? $data['order'] : [];
+    $tx = is_array($data['transaction'] ?? null) ? $data['transaction'] : [];
+    $type = $data['notification_type'] ?? '';
+    if ($type !== 'ORDER_PAID' && $type !== 'TRANSACTION_VOID') {
+        return 'ignored';
+    }
+    $invoice = (string)($order['order_invoice_number'] ?? '');
+    $row = sepay_find_by_invoice($con, $invoice);
+    if (!$row) {
+        error_log('SEPAY_UNKNOWN_ORDER: invoice=' . preg_replace('/[^A-Za-z0-9_-]/', '', $invoice));
+        return 'unknown';
+    }
+    if ($type === 'TRANSACTION_VOID') {
+        return sepay_void($con, $row);
+    }
+    if (($order['order_status'] ?? '') !== 'CAPTURED'
+        || (isset($tx['transaction_status']) && $tx['transaction_status'] !== 'APPROVED')) {
+        return 'ignored';
+    }
+    return sepay_settle($con, $row, $order, (string)($tx['transaction_id'] ?? $tx['id'] ?? ''));
 }
 
 function sepay_order_state(array $order): string
