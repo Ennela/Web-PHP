@@ -39,37 +39,59 @@ $failText = $back === 'cancel' ? 'Bạn đã hủy thanh toán.' : ($back === 'e
     <section class="clean-block clean-info dark">
         <div class="container d-flex justify-content-center">
             <div class="card shadow-lg border-0" style="width: 100%; max-width: 520px; border-radius: 12px;">
-                <div class="card-body text-center p-4">
+                <div class="card-body text-center p-4 p-sm-5">
                     <?php if ($redirectToGateway): ?>
-                        <h3 class="text-info font-weight-bold mb-2">Đang chuyển sang SePay…</h3>
+                        <h3 class="text-info fw-bold mb-2">Đang chuyển sang SePay…</h3>
                         <p class="text-muted">Đơn hàng số <?= e($order['order_code']) ?> — <?= e(number_format((int)$order['tongtien'], 0, ',', '.')) ?> đ</p>
                         <form id="sepay-checkout-form" method="post" action="<?= e(sepay_checkout_url()) ?>">
                             <?php foreach (sepay_form_fields($order) as $name => $value): ?>
                             <input type="hidden" name="<?= e($name) ?>" value="<?= e($value) ?>">
                             <?php endforeach; ?>
-                            <button type="submit" class="btn btn-info btn-block">Tiếp tục thanh toán</button>
+                            <div class="d-grid"><button type="submit" class="btn btn-info text-white">Tiếp tục thanh toán</button></div>
                         </form>
                     <?php else: ?>
-                    <div id="st-pending" <?= $state === 'pending' ? '' : 'hidden' ?>>
+                    <?php if ($state === 'pending'): ?>
                         <div class="spinner-border text-info mb-3" role="status" aria-hidden="true"></div>
-                        <h3 class="text-info font-weight-bold">Đang xác nhận thanh toán</h3>
-                        <p class="text-muted">Hệ thống đang chờ SePay xác nhận giao dịch. Trang sẽ tự cập nhật.</p>
-                    </div>
-                    <div id="st-paid" <?= $state === 'paid' ? '' : 'hidden' ?>>
+                        <h3 class="text-info fw-bold mb-1">Đang xác nhận thanh toán</h3>
+                        <p class="text-muted mb-4">Hệ thống đang chờ SePay xác nhận giao dịch. Trang sẽ tự cập nhật.</p>
+                    <?php elseif ($state === 'paid'): ?>
                         <div class="mb-3"><i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i></div>
-                        <h3 class="text-success font-weight-bold">Thanh Toán Thành Công!</h3>
-                        <p class="text-muted">Đơn hàng số <?= e($order['order_code']) ?> đã được xác nhận. Email xác nhận sẽ được gửi trong ít phút.</p>
-                    </div>
-                    <div id="st-cancelled" <?= $state === 'cancelled' ? '' : 'hidden' ?>>
+                        <h3 class="text-success fw-bold mb-1">Thanh Toán Thành Công!</h3>
+                        <p class="text-muted mb-4">Email xác nhận đơn hàng sẽ được gửi trong ít phút.</p>
+                    <?php else: ?>
                         <div class="mb-3"><i class="fas fa-times-circle text-danger" style="font-size: 4rem;"></i></div>
-                        <h3 class="text-danger font-weight-bold">Giao Dịch Không Thành Công</h3>
-                        <p class="text-muted"><?= e($failText) ?> Đơn hàng đã được hủy và tồn kho được hoàn lại.</p>
-                    </div>
-                    <div class="mt-3">
-                        <?php if (!empty($_SESSION['dangnhap'])): ?>
-                        <a href="<?= e(BASE_URL) ?>shop/tradonhang.php" class="btn btn-outline-info btn-block mb-2">XEM ĐƠN HÀNG CỦA TÔI</a>
+                        <h3 class="text-danger fw-bold mb-1">Giao Dịch Không Thành Công</h3>
+                        <p class="text-muted mb-4"><?= e($failText) ?> Đơn hàng đã được hủy và tồn kho được hoàn lại.</p>
+                    <?php endif; ?>
+                    <div class="text-start bg-light p-3 rounded mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Mã đơn hàng:</span>
+                            <span class="fw-bold">#<?= e($order['order_code']) ?></span>
+                        </div>
+                        <?php if ($state === 'paid'): ?>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Mã giao dịch:</span>
+                            <span class="fw-bold text-break ms-3"><?= e(substr((string)$order['vnpay_tranId'], 6) ?: 'N/A') ?></span>
+                        </div>
                         <?php endif; ?>
-                        <a href="<?= e(BASE_URL) ?>home/trangchu.php" class="btn btn-info btn-block">TIẾP TỤC MUA SẮM</a>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Phương thức:</span>
+                            <span class="fw-bold">Cổng thanh toán SePay</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Thời gian đặt:</span>
+                            <span class="fw-bold"><?= e(date('d/m/Y H:i', (int)$order['ngaytao'])) ?></span>
+                        </div>
+                        <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">SỐ TIỀN:</span>
+                            <span class="h4 fw-bold text-info m-0"><?= e(number_format((int)$order['tongtien'], 0, ',', '.')) ?> VND</span>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <?php if (!empty($_SESSION['dangnhap'])): ?>
+                        <a href="<?= e(BASE_URL) ?>shop/tradonhang.php" class="btn btn-outline-info btn-lg fw-bold" style="font-size: 1rem;"><i class="fas fa-list-alt me-2"></i>XEM ĐƠN HÀNG CỦA TÔI</a>
+                        <?php endif; ?>
+                        <a href="<?= e(BASE_URL) ?>home/trangchu.php" class="btn btn-info btn-lg fw-bold text-white" style="font-size: 1rem;">TIẾP TỤC MUA SẮM</a>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -81,14 +103,11 @@ $failText = $back === 'cancel' ? 'Bạn đã hủy thanh toán.' : ($back === 'e
 (function () {
     const form = document.getElementById('sepay-checkout-form');
     if (form) { form.submit(); return; }
-    let state = <?= js_value($state) ?>;
+    if (<?= js_value($state) ?> !== 'pending') return;
     const poll = setInterval(async () => {
-        if (state !== 'pending') { clearInterval(poll); return; }
         try {
             const res = await fetch('thanhtoansepay.php?status=1', { cache: 'no-store', credentials: 'same-origin' });
-            if (!res.ok) return;
-            state = (await res.json()).state;
-            ['pending', 'paid', 'cancelled'].forEach(k => { document.getElementById('st-' + k).hidden = k !== state; });
+            if (res.ok && (await res.json()).state !== 'pending') { clearInterval(poll); location.reload(); }
         } catch (e) { /* mạng chập chờn: thử lại lần sau */ }
     }, 3000);
 })();
