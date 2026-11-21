@@ -61,6 +61,7 @@ __pycache__/
 # Tài liệu nội bộ (không push lên remote)
 images_docx/
 *.docx
+*.pdf
 ~$*.docx
 
 # Thư mục lưu avatar upload của user (runtime data)
