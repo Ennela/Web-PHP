@@ -59,7 +59,6 @@ __pycache__/
 *.pyc
 
 # Tài liệu nội bộ (không push lên remote)
-documents/SRS_USECASE_DIAGRAMS.MD
 images_docx/
 *.docx
 ~$*.docx

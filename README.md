@@ -37,7 +37,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 - [Cơ sở dữ liệu](#cơ-sở-dữ-liệu)
 - [Chức năng nổi bật](#chức-năng-nổi-bật)
 - [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
-- [Tài liệu SRS](#tài-liệu-srs)
+- [Tài liệu](#tài-liệu)
 
 ---
 
@@ -163,11 +163,9 @@ WEB-PHP/
 │   ├── migration_email_system.sql # Migration bảng email blacklist & log webhook
 │   └── check_and_fix_all.sql  # Script kiểm tra và tự động sửa lỗi cấu trúc CSDL
 │
-├── documents/                 # Tài liệu đặc tả SRS, kiến trúc & báo cáo
-│   ├── De_cuong_chuc_nang.md  # Đề cương chức năng hệ thống
-│   ├── MAILJET_DNS_SETUP.md   # Hướng dẫn cấu hình DNS cho email
-│   ├── RECORD_2026_04_03.md   # Báo cáo tiến độ phân tích và code
-│   └── ... (các tài liệu đặc tả SRS chi tiết khác)
+├── documents/                 # Tài liệu bảo mật & triển khai
+│   ├── DEPLOY_SECURITY_CHECKLIST.md # Checklist bảo mật khi deploy
+│   └── ... (tài liệu từng biện pháp bảo mật: CSRF, XSS, redirect, transport...)
 │
 ├── Dockerfile                 # Image app (PHP/Apache); stack đầy đủ ở docker-compose.yml
 └── docker-entrypoint.sh       # Script khởi động tự động trên môi trường cloud
@@ -345,36 +343,19 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 
 ---
 
-## Tài liệu SRS
+## Tài liệu
 
-Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu trong thư mục `documents/`:
+Tài liệu bảo mật và triển khai nằm trong thư mục `documents/`:
 
 | File | Mô tả |
 |------|-------|
-| [De_cuong_chuc_nang.md](./documents/De_cuong_chuc_nang.md) | Đề cương chức năng kiến trúc |
-| [MAILJET_DNS_SETUP.md](./documents/MAILJET_DNS_SETUP.md) | Hướng dẫn cấu hình DNS (SPF, DKIM, DMARC) cho Mailjet |
-| [RECORD_2026_04_03.md](./documents/RECORD_2026_04_03.md) | Nhật ký báo cáo tiến độ phân tích & lập trình hàng ngày |
-| [SRS_ADMIN_DASHBOARD.MD](./documents/SRS_ADMIN_DASHBOARD.MD) | Đặc tả Dashboard & Báo cáo doanh thu |
-| [SRS_ADMIN_QL_SAN_PHAM.MD](./documents/SRS_ADMIN_QL_SAN_PHAM.MD) | Đặc tả Quản lý Sản phẩm / Size |
-| [SRS_ADMIN_QL_DON_HANG.MD](./documents/SRS_ADMIN_QL_DON_HANG.MD) | Đặc tả Quản lý Đơn hàng (Admin) |
-| [SRS_ADMIN_QL_KHACH_HANG.MD](./documents/SRS_ADMIN_QL_KHACH_HANG.MD) | Đặc tả Quản lý Khách hàng |
-| [SRS_ADMIN_QL_DANH_MUC.MD](./documents/SRS_ADMIN_QL_DANH_MUC.MD) | Đặc tả Quản lý Danh mục |
-| [SRS_ADMIN_QL_TIN_TUC.MD](./documents/SRS_ADMIN_QL_TIN_TUC.MD) | Đặc tả Quản lý Tin tức |
-| [SRS_CHI_TIET_SAN_PHAM.MD](./documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả Chi tiết sản phẩm, Chọn size & Zoom |
-| [SRS_GIO_HANG.MD](./documents/SRS_GIO_HANG.MD) | Đặc tả Giỏ hàng AJAX |
-| [SRS_DAT_HANG.MD](./documents/SRS_DAT_HANG.MD) | Đặc tả Đặt hàng (COD) |
-| [SRS_THANH_TOAN.MD](./documents/SRS_THANH_TOAN.MD) | Đặc tả Thanh toán COD + VNPAY (tài liệu gốc, nay đã thay bằng cổng thanh toán SePay) |
-| [SRS_TIM_KIEM_SAN_PHAM.MD](./documents/SRS_TIM_KIEM_SAN_PHAM.MD) | Đặc tả Tìm kiếm & Lọc sản phẩm |
-| [SRS_LIEN_HE.MD](./documents/SRS_LIEN_HE.MD) | Đặc tả Trang liên hệ |
-| [SRS_DANG_KY.MD](./documents/SRS_DANG_KY.MD) | Đặc tả Đăng ký tài khoản |
-| [SRS_DANG_NHAP.MD](./documents/SRS_DANG_NHAP.MD) | Đặc tả Đăng nhập |
-| [SRS_DANG_XUAT.MD](./documents/SRS_DANG_XUAT.MD) | Đặc tả Đăng xuất |
-| [SRS_QUEN_MAT_KHAU.MD](./documents/SRS_QUEN_MAT_KHAU.MD) | Đặc tả Quên mật khẩu |
-| [SRS_QUAN_LY_TAI_KHOAN.MD](./documents/SRS_QUAN_LY_TAI_KHOAN.MD) | Đặc tả Quản lý tài khoản |
-| [SRS_TRA_CUU_DON_HANG.MD](./documents/SRS_TRA_CUU_DON_HANG.MD) | Đặc tả Tra cứu đơn hàng |
-| [SRS_TRANG_CHU.MD](./documents/SRS_TRANG_CHU.MD) | Đặc tả Trang chủ |
-| [SRS_BLOG_TIN_TUC.MD](./documents/SRS_BLOG_TIN_TUC.MD) | Đặc tả Blog tin tức |
-| [SRS_USECASE_DIAGRAMS.MD](./documents/SRS_USECASE_DIAGRAMS.MD) | Sơ đồ Use Case tổng hợp (Mermaid) |
+| [Bao_Cao_Bao_Mat.md](./documents/Bao_Cao_Bao_Mat.md) | Báo cáo tổng hợp các biện pháp bảo mật |
+| [CSRF_SECURITY.md](./documents/CSRF_SECURITY.md) | Chống CSRF (token, SameSite cookie) |
+| [XSS_SECURITY.md](./documents/XSS_SECURITY.md) | Chống XSS (escape đầu ra, CSP) |
+| [REDIRECT_SECURITY.md](./documents/REDIRECT_SECURITY.md) | Chống chuyển hướng không kiểm soát |
+| [TRANSPORT_SECURITY.md](./documents/TRANSPORT_SECURITY.md) | Bảo mật đường truyền (HTTPS, HSTS) |
+| [SECURITY_CONFIGURATION.md](./documents/SECURITY_CONFIGURATION.md) | Cấu hình bảo mật máy chủ và PHP |
+| [DEPLOY_SECURITY_CHECKLIST.md](./documents/DEPLOY_SECURITY_CHECKLIST.md) | Checklist bảo mật khi deploy |
 
 ---
 > **Deploy:** [https://shop.doquangha.id.vn](https://shop.doquangha.id.vn)
