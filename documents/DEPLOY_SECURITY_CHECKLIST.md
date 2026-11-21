@@ -16,7 +16,7 @@ Làm theo thứ tự, trên staging trước, production sau.
 6. Sau khi migration xong và đăng nhập/đặt hàng/tra cứu đơn đã kiểm thử: đặt `APP_CRYPTO_STRICT_READ=1`.
 7. **Kiểm thử trên staging** (cần server + DB): `scripts/test_xss.py`, `test_csrf.py`,
    `test_csrf_authenticated.py`, `test_redirects.py`, `test_security_configuration.py`,
-   `test_transport.py`, và thử tay: đăng nhập khách/admin, quên + đặt lại mật khẩu, đặt hàng (COD + VNPay), tra cứu đơn.
+   `test_transport.py`, và thử tay: đăng nhập khách/admin, quên + đặt lại mật khẩu, đặt hàng (COD + SePay), tra cứu đơn.
 
 ---
 

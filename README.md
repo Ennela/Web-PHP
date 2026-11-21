@@ -1,6 +1,6 @@
 # Website Bán Giày Thể Thao
 
-Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai bằng Docker + Cloudflare Tunnel (XAMPP khi phát triển). Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán VNPAY/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
+Dự án môn học xây dựng website bán giày thể thao fullstack với PHP thuần, triển khai bằng Docker + Cloudflare Tunnel (XAMPP khi phát triển). Hệ thống cung cấp đầy đủ chức năng cho **khách hàng** (duyệt sản phẩm, giỏ hàng, đặt hàng, thanh toán online qua cổng SePay/COD, tra cứu đơn hàng, quản lý tài khoản) và **quản trị viên** (quản lý sản phẩm, đơn hàng, khách hàng, bài viết, danh mục, thành viên).
 
 
 ---
@@ -23,7 +23,7 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 - Dashboard doanh thu, Quản lý Danh mục, Đơn hàng, Khách hàng, Sản phẩm, Tin tức, Thành viên
 
 ### Giao diện mua hàng (Shop) — Kiên
-- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Đặt hàng Online, Tra cứu đơn hàng cá nhân, Thanh toán (VNPAY/COD), Tracking đơn hàng
+- Tìm kiếm sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Đặt hàng Online, Tra cứu đơn hàng cá nhân, Thanh toán (SePay/COD), Tracking đơn hàng
 
 ### Chức năng hỗ trợ & Thông tin — Nhân
 - Trang chủ (Banner Carousel), Quản lý tài khoản (Thông tin, Địa chỉ, Size giày, Đổi mật khẩu), Quên mật khẩu, Blog/Tin tức, Liên hệ, Về chúng tôi
@@ -37,7 +37,8 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 - [Cơ sở dữ liệu](#cơ-sở-dữ-liệu)
 - [Chức năng nổi bật](#chức-năng-nổi-bật)
 - [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
-- [Tài liệu SRS](#tài-liệu-srs)
+- [Kiến trúc Email](#kiến-trúc-email)
+- [Tài liệu](#tài-liệu)
 
 ---
 
@@ -46,14 +47,14 @@ Dự án môn học xây dựng website bán giày thể thao fullstack với PH
 | Thành phần | Công nghệ | Lý do lựa chọn |
 |------------|-----------|----------------|
 | **Ngôn ngữ** | PHP 8.x (thuần) | Dễ triển khai, cú pháp trực quan, giúp sinh viên nắm vững kiến thức cốt lõi về backend, session và luồng xử lý web động trước khi học Framework. |
-| **Database** | MariaDB 10.4 | Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ, mã nguồn mở, tích hợp sẵn trong XAMPP. |
-| **Web Server** | Apache (XAMPP) | Môi trường phát triển cục bộ trọn gói, thao tác khởi động dịch vụ web thuận tiện cho Windows. |
+| **Database** | MySQL 8 (Docker, kết nối TLS) | Hệ quản trị CSDL quan hệ mã nguồn mở; khi phát triển có thể dùng MySQL/MariaDB của XAMPP. |
+| **Web Server** | Apache (Docker); FrankenPHP/Caddy hoặc XAMPP khi chạy local | Bản triển khai chạy Apache trong container; khi phát triển có thể chạy nhanh bằng `./run.sh` hoặc XAMPP. |
 | **Frontend** | HTML5, Vanilla JS, CSS/Bootstrap | Áp dụng thiết kế Mobile-First hiện đại trên các trang shop/cart/thanh toán, kết hợp tùy biến linh hoạt hiệu ứng micro-animations. |
 | **Font & Icon** | Montserrat, FontAwesome 5.3.1 | Phông chữ hiện đại cùng bộ icon đầy đủ giúp giao diện trở nên chuyên nghiệp, thân thiện. |
-| **Thanh toán** | VNPAY Sandbox | API thanh toán uy tín và sát thực tế, giúp làm quen với luồng thanh toán bảo mật, xác thực giao dịch chuẩn e-Commerce (HMAC-SHA512). |
+| **Thanh toán** | Cổng thanh toán SePay (sandbox / production) | Form ký HMAC-SHA256 chuyển sang trang SePay (thẻ / chuyển khoản); SePay xác nhận qua IPN (header X-Secret-Key). Có COD làm phương án không cần cổng. |
 | **Email** | Mailjet HTTP API v3.1 | Gửi email giao dịch (xác nhận đơn hàng, đặt lại mật khẩu, liên hệ) qua REST API. Free tier 200 email/ngày, gửi được đến mọi địa chỉ email mà không cần verify domain. |
 | **Thông báo UI** | SweetAlert2 | Hiển thị thông báo (Toast Notifications) không chặn màn hình, thay thế hoàn toàn `alert()` mặc định của trình duyệt. |
-| **Bảo mật** | bcrypt (password_hash/password_verify) | Mã hóa mật khẩu người dùng và admin bằng bcrypt, chống SQL injection bằng prepared statements. |
+| **Bảo mật** | Argon2id, AEAD (libsodium / OpenSSL), HTML Purifier | Băm mật khẩu bằng Argon2id (dự phòng bcrypt), mã hóa dữ liệu cá nhân trong CSDL, prepared statements chống SQL injection, token CSRF, CSP chống XSS. |
 | **Triển khai** | Docker Compose & Cloudflare Tunnel | Đóng gói app, MySQL 8 (TLS) và tunnel thành một stack chạy trên máy cá nhân, không cần mở cổng router. |
 
 ---
@@ -82,7 +83,15 @@ WEB-PHP/
 │   ├── order_helper.php       # Sinh mã đơn hàng: generateOrderCode()
 │   ├── mail_helper.php        # Gửi email qua Mailjet API: sendMailBrevo() (tương thích ngược)
 │   ├── mail_config.php        # Cấu hình API key, sender email cho Mailjet
-│   └── email_templates.php    # Các template email giao dịch (xác nhận đơn, reset mật khẩu)
+│   ├── email_templates.php    # Các template email giao dịch (xác nhận đơn, reset mật khẩu)
+│   ├── sepay.php              # Cổng SePay: ký form, xác thực IPN, chốt/hủy/hoàn đơn
+│   ├── security.php           # Header bảo mật, CSP nonce, ẩn lỗi, kiểm tra Host
+│   ├── csrf.php               # Token CSRF cho form và AJAX
+│   ├── xss.php                # e(), js_value(), safe_url(), clean_html() (HTML Purifier)
+│   ├── redirect.php           # Chuyển hướng an toàn: app_redirect(), app_return_destination()
+│   ├── auth.php               # Phiên đăng nhập, giới hạn số lần đăng nhập sai
+│   ├── crypto.php             # Băm mật khẩu Argon2id, mã hóa AEAD dữ liệu cá nhân
+│   └── upload_helper.php      # Kiểm tra và lưu ảnh tải lên
 │
 ├── home/                      # Các trang tĩnh & giới thiệu (Khách hàng)
 │   ├── trangchu.php           # Trang chủ: Hero Carousel, Editorial, Bestsellers, Team
@@ -108,8 +117,9 @@ WEB-PHP/
 │   ├── chitietsanpham.php     # Chi tiết sản phẩm: chọn size, tồn kho real-time, zoom ảnh
 │   ├── giohang.php            # Giỏ hàng AJAX: thay đổi size/số lượng, auto-save, kiểm tra tồn kho
 │   ├── infodathang.php        # Thanh toán & đặt hàng COD (auto-fill thông tin)
-│   ├── dathangonline.php      # Thanh toán & đặt hàng VNPAY (tạo cổng thanh toán)
-│   ├── vnpay_return.php       # Xử lý kết quả trả về từ VNPAY, cập nhật trạng thái đơn
+│   ├── dathangonline.php      # Nhập thông tin giao hàng & tạo đơn chờ thanh toán SePay
+│   ├── thanhtoansepay.php     # Gửi form đã ký sang SePay; trang kết quả success/error/cancel, chờ IPN
+│   ├── sepay_ipn.php          # IPN SePay (POST JSON, xác thực X-Secret-Key), chốt đơn đã thanh toán
 │   ├── tradonhang.php         # Danh sách đơn hàng cá nhân của khách
 │   ├── chitietdonhang.php     # Chi tiết & timeline trạng thái của đơn hàng
 │   ├── tracking.php           # Tra cứu đơn hàng bằng mã đơn + token (không cần login)
@@ -122,8 +132,8 @@ WEB-PHP/
 │   └── chitietbaiviet.php     # Chi tiết bài viết tin tức
 │
 ├── admin/                     # Hệ thống quản trị (Admin Panel)
-│   ├── canhbao.php            # Đăng nhập admin với prepared statements + bcrypt (ưu tiên)
-│   ├── dangnhap.php           # Đăng nhập admin (backup, tự động hash mật khẩu cũ)
+│   ├── canhbao.php            # Trang đăng nhập admin duy nhất (giới hạn đăng nhập sai, chống session fixation)
+│   ├── dangnhap.php           # Trang cũ, chỉ chuyển hướng về canhbao.php
 │   ├── trangchu.php           # Dashboard thống kê doanh thu, top sản phẩm, trạng thái đơn
 │   ├── quanlidonhang.php      # Quản lý đơn hàng: đổi trạng thái, lọc, in hóa đơn
 │   ├── ajax_order_detail.php  # API lấy nhanh chi tiết đơn hàng (inline AJAX)
@@ -141,7 +151,7 @@ WEB-PHP/
 │   ├── edit_qlbaidang.php     # Chỉnh sửa bài viết
 │   ├── delete_qlbaidang.php   # Xóa bài viết
 │   ├── quanlithanhvien.php    # Quản lý thành viên quản trị (Admin/Nhân viên)
-│   ├── themthanhvien.php      # Tạo thành viên admin mới (mật khẩu bcrypt)
+│   ├── themthanhvien.php      # Tạo thành viên admin mới (mật khẩu Argon2id)
 │   ├── edit_qlthanhvien.php   # Chỉnh sửa thông tin thành viên admin
 │   ├── delete_qlthanhvien.php # Xóa thành viên admin
 │   ├── function.php           # Thư viện hàm hỗ trợ admin
@@ -150,8 +160,6 @@ WEB-PHP/
 │   ├── pagination.php         # Helper phân trang của trang admin
 │   └── connect_db.php         # Kết nối DB riêng cho admin
 │
-├── vnpay_php/                 # Tích hợp cổng thanh toán VNPAY
-│   └── config.php             # Cấu hình tham số kết nối VNPAY Sandbox
 │
 ├── webhooks/                  # Webhook xử lý sự kiện từ bên thứ ba
 │   └── mailjet_webhook.php    # Endpoint tiếp nhận sự kiện bounce/spam từ Mailjet
@@ -162,14 +170,20 @@ WEB-PHP/
 │   ├── migration_tonkho.sql   # Migration thêm bảng tồn kho theo size
 │   ├── migration_quenmatkhau.sql # Migration thêm token reset mật khẩu
 │   ├── migration_email_system.sql # Migration bảng email blacklist & log webhook
+│   ├── migration_broken_auth.sql  # Migration bảng đếm số lần đăng nhập sai
+│   ├── migration_crypto_security.sql # Migration mở rộng cột cho dữ liệu mã hóa
 │   └── check_and_fix_all.sql  # Script kiểm tra và tự động sửa lỗi cấu trúc CSDL
 │
-├── documents/                 # Tài liệu đặc tả SRS, kiến trúc & báo cáo
-│   ├── De_cuong_chuc_nang.md  # Đề cương chức năng hệ thống
-│   ├── MAILJET_DNS_SETUP.md   # Hướng dẫn cấu hình DNS cho email
-│   ├── RECORD_2026_04_03.md   # Báo cáo tiến độ phân tích và code
-│   └── ... (các tài liệu đặc tả SRS chi tiết khác)
+├── documents/                 # Tài liệu bảo mật & triển khai
+│   ├── DEPLOY_SECURITY_CHECKLIST.md # Checklist bảo mật khi deploy
+│   └── ... (tài liệu từng biện pháp bảo mật: CSRF, XSS, redirect, transport...)
 │
+├── deploy/                    # Cấu hình Apache, PHP, Caddy cho production
+├── scripts/                   # Sao lưu DB, migrate mã hóa, các script kiểm thử bảo mật
+├── lib/htmlpurifier/          # Thư viện HTML Purifier (lọc nội dung bài viết)
+│
+├── docker-compose.yml         # Stack app + db + cloudflared
+├── run.sh, run-https.sh       # Chạy local bằng FrankenPHP (HTTP / HTTPS)
 ├── Dockerfile                 # Image app (PHP/Apache); stack đầy đủ ở docker-compose.yml
 └── docker-entrypoint.sh       # Script khởi động tự động trên môi trường cloud
 ```
@@ -184,18 +198,19 @@ WEB-PHP/
 
 | Bảng dữ liệu | Chức năng |
 |---------------|-----------|
-| `tbl_tkkhachhang` | Tài khoản khách hàng (username, password bcrypt, email, họ tên, SĐT, địa chỉ, avatar, trạng thái nhận tin, token reset mật khẩu). |
+| `tbl_tkkhachhang` | Tài khoản khách hàng (username, mật khẩu băm Argon2id, email, họ tên, SĐT và địa chỉ đã mã hóa, avatar, token reset mật khẩu dạng băm). |
 | `tbl_qlsanpham` | Thông tin sản phẩm: tên, giá, ảnh, mô tả, nhóm SP. |
 | `tbl_tonkho` | Tồn kho theo từng size của sản phẩm (masp + size + số lượng). |
-| `oder` | Đơn hàng: mã đơn (order_code), thông tin KH, tổng tiền, trạng thái (PENDING/CONFIRMED/SHIPPING/DELIVERED/CANCELLED), payment_status, token bảo mật, liên kết makh. |
+| `oder` | Đơn hàng: mã đơn (order_code), thông tin KH (SĐT, địa chỉ, ghi chú đã mã hóa), tổng tiền, trạng thái (PENDING/CONFIRMED/SHIPPING/DELIVERED/CANCELLED), payment_status, token bảo mật, liên kết makh. |
 | `oder_chitiet` | Chi tiết đơn hàng: sản phẩm, số lượng, size, giá. Liên kết N-1 với `oder`. |
-| `tbl_qlthanhvien` | Tài khoản admin/nhân viên (tài khoản, mật khẩu bcrypt, họ tên, chức vụ, địa chỉ, ngày sinh, giới tính). |
+| `tbl_qlthanhvien` | Tài khoản admin/nhân viên (tài khoản, mật khẩu Argon2id, họ tên, chức vụ, địa chỉ, ngày sinh, giới tính). |
 | `tbl_qlbaidang` | Bài viết / tin tức. |
 | `tbl_danhmuc` | Danh mục sản phẩm. |
 | `tbl_diachi` | Sổ địa chỉ của khách hàng (nhiều địa chỉ, tối đa 5 địa chỉ, chọn mặc định). |
 | `tbl_sizegiay` | Size giày yêu thích của khách hàng (he_size EU/US/CM, size_value, ghichu). |
 | `tbl_thuvienanh` | Thư viện ảnh bổ sung của sản phẩm. |
 | `tbl_email_blacklist` | Danh sách email bị chặn (bounce, spam_complaint, blocked) để ngừng gửi mail tự động. |
+| `tbl_login_attempts` | Đếm số lần đăng nhập sai theo tài khoản và IP để tạm khóa đăng nhập 15 phút. |
 | `tbl_email_webhook_log` | Nhật ký nhận các sự kiện phản hồi từ Webhook của Mailjet (event_type, message_id, error_info, event_time). |
 
 ---
@@ -205,32 +220,32 @@ WEB-PHP/
 - **Bảo vệ CSRF toàn ứng dụng:** Token gắn với session cho form và AJAX; thao tác thay đổi dữ liệu dùng POST. Xem [cơ chế, callback và cách kiểm thử](./documents/CSRF_SECURITY.md).
 - **Cấu hình bảo mật:** Chặn file nhạy cảm, ẩn lỗi, HTTP security header, kiểm tra Host/proxy, cấu hình production và upload ảnh an toàn. Xem [hướng dẫn cấu hình và kiểm thử](./documents/SECURITY_CONFIGURATION.md).
 - **Bảo vệ XSS:** Escape đầu ra theo ngữ cảnh, lọc rich HTML bằng HTML Purifier, dùng DOM API an toàn và CSP nonce. Xem [cơ chế, demo và kiểm thử](./documents/XSS_SECURITY.md).
-- **Bảo vệ chuyển hướng:** Kiểm tra đích nội bộ, dùng mã trang cho bước quay lại sau đăng nhập và giới hạn endpoint VNPay. Xem [Unvalidated Redirects and Forwards: cơ chế, demo và kiểm thử](./documents/REDIRECT_SECURITY.md).
+- **Bảo vệ chuyển hướng:** Kiểm tra đích nội bộ, dùng mã trang cho bước quay lại sau đăng nhập và không có chuyển hướng ra ngoài website. Xem [Unvalidated Redirects and Forwards: cơ chế, demo và kiểm thử](./documents/REDIRECT_SECURITY.md).
 - **Bảo vệ đường truyền:** HTTPS/TLS 1.2–1.3, cookie Secure, HSTS production, kiểm tra proxy và chứng chỉ dịch vụ ngoài. Chạy `./run-https.sh`; xem [hướng dẫn transport security và demo](./documents/TRANSPORT_SECURITY.md).
 
 ### Phía Khách hàng
 
 - **Giao diện Mobile-First & Responsive:** Toàn bộ trang shop, giỏ hàng, thanh toán được tối ưu hóa hiển thị trên mọi thiết bị với CSS Grid/Flexbox và kĩ thuật clamp typography.
 - **Trang chủ sinh động:** Hero Carousel (Bootstrap 5) slide hình ảnh động kèm caption mượt mà, Editorial Section với hiệu ứng hover float, Features Section giới thiệu USP, Bestseller Section hiển thị sản phẩm bán chạy trích xuất từ DB, và Team Section giới thiệu đội ngũ.
-- **Đăng ký / Đăng nhập:** Tài khoản khách hàng hỗ trợ đăng ký bằng email/SĐT, mật khẩu mã hóa bcrypt. Đăng nhập để đồng bộ giỏ hàng đa thiết bị, lưu profile.
+- **Đăng ký / Đăng nhập:** Tài khoản khách hàng hỗ trợ đăng ký bằng email/SĐT, mật khẩu băm Argon2id. Đăng nhập để đồng bộ giỏ hàng đa thiết bị, lưu profile.
 - **Quên mật khẩu:** Gửi link đặt lại mật khẩu với token bảo mật 256-bit qua Mailjet API, token có thời hạn 30 phút.
 - **Quản lý tài khoản:** Trang cá nhân gồm 5 tab chức năng:
   - *Thông tin cá nhân:* Sửa profile, upload avatar (JPG/PNG/WebP, max 2MB) qua AJAX.
-  - *Đổi mật khẩu:* Nhập mật khẩu cũ, mật khẩu mới (có Password Strength Indicator 4 mức), mã hóa bcrypt.
+  - *Đổi mật khẩu:* Nhập mật khẩu cũ, mật khẩu mới (có Password Strength Indicator 4 mức), băm Argon2id.
   - *Sổ địa chỉ:* Quản lý tối đa 5 địa chỉ giao hàng, tích hợp API tỉnh/huyện/xã Việt Nam, thiết lập địa chỉ mặc định.
   - *Size giày yêu thích:* Lưu size theo hệ EU/US/CM và ghi chú sở thích (chân rộng, dẹt...), tự động gợi ý size khi mua hàng.
   - *Đơn hàng của tôi:* Xem lịch sử 20 đơn hàng gần nhất với timeline trạng thái và xem chi tiết.
 - **Chi tiết sản phẩm:** Gallery nhiều ảnh, zoom ảnh theo tọa độ chuột (Vanilla Zoom), lightbox, hiển thị tồn kho real-time theo size, tự động áp dụng size giày yêu thích.
 - **Giỏ hàng AJAX thông minh:** AJAX auto-save (thay đổi size/số lượng tự động cập nhật không tải lại trang), chọn size trực tiếp trong giỏ hàng, cảnh báo hết hàng/vượt tồn kho, animation xóa sản phẩm mượt mà, debounce tránh spam.
 - **Tự động điền thông tin (Auto-fill Checkout):** Tự động điền trước thông tin thanh toán (Tên, SĐT, Địa chỉ từ sổ mặc định, Email) của khách hàng đã đăng nhập.
-- **Thanh toán COD & VNPAY:** 2 hình thức thanh toán. VNPAY sử dụng HMAC-SHA512 để bảo mật chữ ký, xử lý duplicate tab, chống race condition bằng MySQL Transaction.
-- **Email xác nhận tự động:** Gửi email xác nhận đơn hàng tự động cho khách hàng qua Mailjet API cho cả COD và VNPAY.
+- **Thanh toán COD & SePay:** 2 hình thức thanh toán. Đơn SePay giữ hàng 30 phút; chỉ IPN (xác thực X-Secret-Key, đối chiếu mã hóa đơn và số tiền) mới chốt đã thanh toán, idempotent; hủy/lỗi/quá hạn thì hoàn tồn kho đúng một lần.
+- **Email xác nhận tự động:** Gửi email xác nhận đơn hàng tự động cho khách hàng qua Mailjet API cho cả COD và SePay.
 - **Tra cứu đơn hàng linh hoạt:** Xem lịch sử mua hàng cá nhân sau khi đăng nhập, hoặc tracking bằng mã đơn + token (không cần login) qua link gửi trong email xác nhận.
 - **SweetAlert2 & Toast:** Hiển thị thông báo Toast đẹp mắt, không chặn màn hình.
 
 ### Phía Quản trị viên (Admin Panel)
 
-- **Đăng nhập bảo mật:** Tách biệt hoàn toàn, sử dụng prepared statements chống SQL injection, mật khẩu mã hóa bcrypt. Hỗ trợ auto-hash migration (tự động cập nhật mật khẩu plaintext cũ sang bcrypt khi đăng nhập lần đầu).
+- **Đăng nhập bảo mật:** Tách biệt hoàn toàn, sử dụng prepared statements chống SQL injection, mật khẩu băm Argon2id, giới hạn số lần đăng nhập sai. Tự động băm lại mật khẩu cũ (plaintext/MD5/SHA1/bcrypt) sang Argon2id khi đăng nhập thành công.
 - **Phân quyền Admin:** Chỉ admin đã đăng nhập mới có quyền quản trị và tạo tài khoản admin mới.
 - **Dashboard tổng quan:** Trực quan hóa doanh thu bằng biểu đồ theo ngày/tuần/tháng; số liệu trạng thái đơn (thành công - DELIVERED, chờ, hủy); thống kê top sản phẩm chạy nhất, sản phẩm sắp hết hàng, tăng trưởng user.
 - **Quản lý đơn hàng:** Lọc đơn hàng theo tên, trạng thái; xem chi tiết nhanh bằng inline AJAX không tải lại trang; in hóa đơn chuẩn in ấn.
@@ -239,7 +254,7 @@ WEB-PHP/
 - **Quản lý danh mục:** CRUD phân loại sản phẩm.
 - **Quản lý khách hàng:** Theo dõi danh sách tài khoản, chi tiêu trung bình, số đơn hàng đã đặt; ban/unban người dùng vi phạm.
 - **Quản lý tin tức:** CRUD bài viết blog bằng WYSIWYG editor.
-- **Quản lý thành viên:** CRUD tài khoản admin/nhân viên với mật khẩu bcrypt.
+- **Quản lý thành viên:** CRUD tài khoản admin/nhân viên với mật khẩu băm Argon2id.
 
 ---
 
@@ -272,11 +287,11 @@ CA local chưa được tự cài vào máy. Xem [cách xác minh chứng chỉ,
 1. **Clone mã nguồn** vào `C:\xampp\htdocs\WEB-PHP`.
 2. **Khởi động XAMPP** (Apache + MySQL).
 3. **Database:** Truy cập phpMyAdmin, import file `database/schema_full.sql` (cần MySQL 8; môi trường được kiểm thử là Docker) để khởi tạo CSDL.
-4. Cấu hình kết nối DB trong `includes/connect.php` và `admin/connect_db.php` (mặc định: localhost, root, không mật khẩu).
+4. Sao chép `.env.example` thành `.env` rồi điền thông tin DB (`MYSQLHOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`). Ứng dụng đọc cấu hình từ biến môi trường, không sửa trong mã nguồn.
 5. **Truy cập:**
    - Trang khách hàng: `http://localhost/WEB-PHP/`
    - Trang quản trị: `http://localhost/WEB-PHP/admin/`
-   - Tài khoản admin mẫu: `noah2005` / `kudo-kun`
+   - Tài khoản quản trị: do nhóm giữ; **không** ghi mật khẩu trong README (kho mã nguồn công khai). Dữ liệu mẫu có tài khoản quản trị dùng mật khẩu yếu: đổi ngay sau khi import.
 
 ### Triển khai bằng Docker + Cloudflare Tunnel (khuyên dùng)
 
@@ -319,7 +334,7 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 
 **Sao lưu / khôi phục:** `scripts\backup_db.ps1` sao lưu DB + ảnh upload ra `D:\backup\shop` (giữ 14 bản). Hướng dẫn đăng ký Task Scheduler và lệnh khôi phục nằm ở đầu file script. Script KHÔNG sao lưu khóa mã hóa và `.env.docker`.
 
-**Thanh toán MoMo (tùy chọn):** đặt `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY` (và `MOMO_ENDPOINT`) trong `.env.docker`, rồi `docker compose --env-file .env.docker up -d`. Nút "THANH TOÁN MOMO" chỉ hiện khi đủ 3 khóa. Mặc định trỏ môi trường test của MoMo; production dùng `https://payment.momo.vn/v2/gateway/api/create`. Địa chỉ nhận kết quả (`/shop/momo_return.php` cho trình duyệt, `/shop/momo_ipn.php` cho máy chủ MoMo) được app tự gửi kèm mỗi giao dịch, không cần đăng ký thêm; IPN cần domain truy cập được từ Internet (đã có qua tunnel).
+**Thanh toán SePay (tùy chọn):** trên my.sepay.vn → Cổng thanh toán, lấy Merchant ID và Secret Key ở mục thông tin tích hợp; ở phần IPN đặt URL `https://<domain>/shop/sepay_ipn.php`, Auth Type `SECRET_KEY` với một chuỗi tự đặt (>= 16 ký tự). Đặt `SEPAY_ENV` (`sandbox`/`production`), `SEPAY_MERCHANT_ID`, `SEPAY_SECRET_KEY`, `SEPAY_IPN_SECRET` (đúng chuỗi IPN vừa đặt) trong `.env.docker`, rồi `docker compose --env-file .env.docker up -d --build`. Nút "THANH TOÁN SEPAY" chỉ hiện khi đủ cấu hình. IPN cần domain truy cập được từ Internet (đã có qua tunnel).
 
 **Cập nhật bản mới:** `git pull` rồi `docker compose --env-file .env.docker up -d --build`.
 
@@ -327,7 +342,7 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 - `docker compose down -v` **xóa DB và ảnh upload**. Dùng `docker compose down` (không `-v`) để tắt.
 - Để web tự chạy lại sau khi khởi động Windows: Docker Desktop > Settings > General > *Start Docker Desktop when you sign in*. Dịch vụ có `restart: unless-stopped`.
 - Cloudflare chặn User-Agent mặc định của Python (`Python-urllib`) bằng 403; khi chạy `scripts/test_*.py` nhắm vào domain, đặt User-Agent giống trình duyệt.
-- Đổi URL trả về VNPAY và URL webhook Mailjet sang domain mới ở phía nhà cung cấp.
+- Đổi URL webhook Mailjet sang domain mới ở phía nhà cung cấp và URL IPN SePay (`/shop/sepay_ipn.php`) trên my.sepay.vn.
 - Checklist bảo mật: [documents/DEPLOY_SECURITY_CHECKLIST.md](./documents/DEPLOY_SECURITY_CHECKLIST.md).
 
 ---
@@ -339,47 +354,30 @@ Mở `http://127.0.0.1:18080/`. Cần `TUNNEL_TOKEN` điền giá trị bất k�
 | **Service** | Mailjet — HTTP REST API v3.1 |
 | **Free tier** | 200 email/ngày, gửi đến mọi email |
 | **Helper** | `includes/mail_helper.php` — hàm `sendMailBrevo()` |
-| **Nơi sử dụng** | Xác nhận đơn hàng (COD + VNPAY), Quên mật khẩu, Liên hệ |
+| **Nơi sử dụng** | Xác nhận đơn hàng (COD + SePay), Quên mật khẩu, Liên hệ |
 | **Env variables** | `MAILJET_API_KEY`, `MAILJET_SECRET_KEY` |
 | **Auth** | HTTP Basic Auth (API Key : Secret Key) |
 | **Timeout** | 10 giây (tránh treo trang) |
 
 ---
 
-## Tài liệu SRS
+## Tài liệu
 
-Tất cả tài liệu đặc tả yêu cầu phần mềm (SRS) được lưu trong thư mục `documents/`:
+Tài liệu bảo mật và triển khai nằm trong thư mục `documents/`:
 
 | File | Mô tả |
 |------|-------|
-| [De_cuong_chuc_nang.md](./documents/De_cuong_chuc_nang.md) | Đề cương chức năng kiến trúc |
-| [MAILJET_DNS_SETUP.md](./documents/MAILJET_DNS_SETUP.md) | Hướng dẫn cấu hình DNS (SPF, DKIM, DMARC) cho Mailjet |
-| [RECORD_2026_04_03.md](./documents/RECORD_2026_04_03.md) | Nhật ký báo cáo tiến độ phân tích & lập trình hàng ngày |
-| [SRS_ADMIN_DASHBOARD.MD](./documents/SRS_ADMIN_DASHBOARD.MD) | Đặc tả Dashboard & Báo cáo doanh thu |
-| [SRS_ADMIN_QL_SAN_PHAM.MD](./documents/SRS_ADMIN_QL_SAN_PHAM.MD) | Đặc tả Quản lý Sản phẩm / Size |
-| [SRS_ADMIN_QL_DON_HANG.MD](./documents/SRS_ADMIN_QL_DON_HANG.MD) | Đặc tả Quản lý Đơn hàng (Admin) |
-| [SRS_ADMIN_QL_KHACH_HANG.MD](./documents/SRS_ADMIN_QL_KHACH_HANG.MD) | Đặc tả Quản lý Khách hàng |
-| [SRS_ADMIN_QL_DANH_MUC.MD](./documents/SRS_ADMIN_QL_DANH_MUC.MD) | Đặc tả Quản lý Danh mục |
-| [SRS_ADMIN_QL_TIN_TUC.MD](./documents/SRS_ADMIN_QL_TIN_TUC.MD) | Đặc tả Quản lý Tin tức |
-| [SRS_CHI_TIET_SAN_PHAM.MD](./documents/SRS_CHI_TIET_SAN_PHAM.MD) | Đặc tả Chi tiết sản phẩm, Chọn size & Zoom |
-| [SRS_GIO_HANG.MD](./documents/SRS_GIO_HANG.MD) | Đặc tả Giỏ hàng AJAX |
-| [SRS_DAT_HANG.MD](./documents/SRS_DAT_HANG.MD) | Đặc tả Đặt hàng (COD) |
-| [SRS_THANH_TOAN.MD](./documents/SRS_THANH_TOAN.MD) | Đặc tả Thanh toán COD + VNPAY |
-| [SRS_TIM_KIEM_SAN_PHAM.MD](./documents/SRS_TIM_KIEM_SAN_PHAM.MD) | Đặc tả Tìm kiếm & Lọc sản phẩm |
-| [SRS_LIEN_HE.MD](./documents/SRS_LIEN_HE.MD) | Đặc tả Trang liên hệ |
-| [SRS_DANG_KY.MD](./documents/SRS_DANG_KY.MD) | Đặc tả Đăng ký tài khoản |
-| [SRS_DANG_NHAP.MD](./documents/SRS_DANG_NHAP.MD) | Đặc tả Đăng nhập |
-| [SRS_DANG_XUAT.MD](./documents/SRS_DANG_XUAT.MD) | Đặc tả Đăng xuất |
-| [SRS_QUEN_MAT_KHAU.MD](./documents/SRS_QUEN_MAT_KHAU.MD) | Đặc tả Quên mật khẩu |
-| [SRS_QUAN_LY_TAI_KHOAN.MD](./documents/SRS_QUAN_LY_TAI_KHOAN.MD) | Đặc tả Quản lý tài khoản |
-| [SRS_TRA_CUU_DON_HANG.MD](./documents/SRS_TRA_CUU_DON_HANG.MD) | Đặc tả Tra cứu đơn hàng |
-| [SRS_TRANG_CHU.MD](./documents/SRS_TRANG_CHU.MD) | Đặc tả Trang chủ |
-| [SRS_BLOG_TIN_TUC.MD](./documents/SRS_BLOG_TIN_TUC.MD) | Đặc tả Blog tin tức |
-| [SRS_USECASE_DIAGRAMS.MD](./documents/SRS_USECASE_DIAGRAMS.MD) | Sơ đồ Use Case tổng hợp (Mermaid) |
+| [Bao_Cao_Bao_Mat.md](./documents/Bao_Cao_Bao_Mat.md) | Báo cáo tổng hợp các biện pháp bảo mật |
+| [CSRF_SECURITY.md](./documents/CSRF_SECURITY.md) | Chống CSRF (token, SameSite cookie) |
+| [XSS_SECURITY.md](./documents/XSS_SECURITY.md) | Chống XSS (escape đầu ra, CSP) |
+| [REDIRECT_SECURITY.md](./documents/REDIRECT_SECURITY.md) | Chống chuyển hướng không kiểm soát |
+| [TRANSPORT_SECURITY.md](./documents/TRANSPORT_SECURITY.md) | Bảo mật đường truyền (HTTPS, HSTS) |
+| [SECURITY_CONFIGURATION.md](./documents/SECURITY_CONFIGURATION.md) | Cấu hình bảo mật máy chủ và PHP |
+| [DEPLOY_SECURITY_CHECKLIST.md](./documents/DEPLOY_SECURITY_CHECKLIST.md) | Checklist bảo mật khi deploy |
 
 ---
 > **Deploy:** [https://shop.doquangha.id.vn](https://shop.doquangha.id.vn)
 >
 > **Video demo:** [Google Drive](https://drive.google.com/file/d/1UZFdJLBt1ztZObS_CWFB_YAro2ERURke/view)
 
-*Website bán giày thể thao được xây dựng theo tiêu chuẩn Web Responsive, Mobile-First, với hệ thống bảo mật bcrypt, chống Race Condition và SQL Injection.*
+*Website bán giày thể thao được xây dựng theo tiêu chuẩn Web Responsive, Mobile-First, với các biện pháp bảo mật theo OWASP Top 10 – 2010 (Argon2id, mã hóa dữ liệu cá nhân, CSRF, XSS, SQL Injection, HTTPS).*
