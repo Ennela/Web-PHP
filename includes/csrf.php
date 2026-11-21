@@ -79,7 +79,7 @@ function csrf_bootstrap(string $cookiePath = '/', bool $secure = false): void
     // This server-to-server endpoint authenticates its own secret before DB access.
     // Match the executed file, never a client-controlled URL or query parameter.
     $entry = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ?: '';
-    foreach (['/webhooks/mailjet_webhook.php', '/shop/momo_ipn.php'] as $exempt) { // IPN MoMo: tự xác thực bằng chữ ký
+    foreach (['/webhooks/mailjet_webhook.php', '/shop/sepay_ipn.php'] as $exempt) { // IPN SePay: tự xác thực bằng X-Secret-Key
         if ($entry === realpath(dirname(__DIR__) . $exempt)) {
             return;
         }

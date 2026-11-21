@@ -68,7 +68,7 @@ class PublicServerTests(unittest.TestCase):
             'scripts/test_csrf.py', 'scratch/backups/giaythethao2-before-migration.sql',
             'scratch/runtime/frankenphp', 'includes/connect.php', 'includes/security.php',
             'config.php', 'config.php/extra', 'admin/connect_db.php', 'admin/function.php',
-            'includes/momo.php', 'deploy/php-security.ini', 'Dockerfile', 'Caddyfile',
+            'includes/sepay.php', 'deploy/php-security.ini', 'Dockerfile', 'Caddyfile',
             'lib/htmlpurifier/library/HTMLPurifier.php', 'lib/htmlpurifier/UPSTREAM.json',
             'docker-entrypoint.sh', 'composer.json', 'composer.lock',
             'backup.sql.gz', 'backup.sql.zip', 'settings.ini.old', 'application.log.1',
@@ -149,14 +149,12 @@ if ($case === 'db_failure' || $case === 'production_db_root') {
     app_database_connection();
 }
 if (in_array($case, ['payment_valid', 'payment_invalid_url', 'payment_missing'], true)) {
-    putenv('MOMO_PARTNER_CODE=TEST0001');
-    putenv('MOMO_ACCESS_KEY=isolated-access-key');
-    putenv('MOMO_SECRET_KEY=' . ($case === 'payment_missing' ? '' : 'isolated-payment-test-secret'));
-    putenv('MOMO_ENDPOINT=' . ($case === 'payment_invalid_url'
-        ? 'https://test-payment.momo.vn.attacker.invalid/v2/gateway/api/create'
-        : 'https://test-payment.momo.vn/v2/gateway/api/create'));
-    require __ROOT__ . '/includes/momo.php';
-    momo_require_configuration();
+    putenv('SEPAY_ENV=' . ($case === 'payment_invalid_url' ? 'https://pay.sepay.vn.attacker.invalid' : 'sandbox'));
+    putenv('SEPAY_MERCHANT_ID=SP-TEST-ISOLATED1');
+    putenv('SEPAY_SECRET_KEY=' . ($case === 'payment_missing' ? '' : 'isolated-payment-test-secret'));
+    putenv('SEPAY_IPN_SECRET=isolated-ipn-test-secret');
+    require __ROOT__ . '/includes/sepay.php';
+    sepay_require_configuration();
 }
 header('Content-Type: application/json; charset=utf-8');
 if ($case === 'lint') {

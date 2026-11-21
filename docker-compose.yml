@@ -98,10 +98,10 @@ services:
       BRAND_PHONE: ${BRAND_PHONE:-}
       BRAND_ADDRESS: ${BRAND_ADDRESS:-}
       BRAND_TAX_ID: ${BRAND_TAX_ID:-}
-      MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
-      MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
-      MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
-      MOMO_ENDPOINT: ${MOMO_ENDPOINT:-https://test-payment.momo.vn/v2/gateway/api/create}
+      SEPAY_ENV: ${SEPAY_ENV:-sandbox}
+      SEPAY_MERCHANT_ID: ${SEPAY_MERCHANT_ID:-}
+      SEPAY_SECRET_KEY: ${SEPAY_SECRET_KEY:-}
+      SEPAY_IPN_SECRET: ${SEPAY_IPN_SECRET:-}
     volumes:
       - dbcerts:/certs:ro
       # Ảnh upload sống ngoài image. Volume trống lần đầu sẽ được Docker tự chép ảnh mẫu từ

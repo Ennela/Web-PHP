@@ -9,9 +9,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
-require_once BASE_PATH . 'includes/momo.php';
-momo_require_configuration();
+require_once BASE_PATH . 'includes/sepay.php';
+sepay_require_configuration();
 include BASE_PATH . 'includes/connect.php'; 
+sepay_expire_stale($con); // trả lại kho cho các đơn SePay quá hạn
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
 // Load the cart from session
@@ -91,7 +92,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $__tong   = (string)$total;
     $__ngay   = time();
     $__stmt = mysqli_prepare($con,
-        "INSERT INTO `oder` (`order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', ?)");
+        "INSERT INTO `oder` (`order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `vnpay_tranId`, `makh`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', '" . SEPAY_PENDING . "', ?)");
     mysqli_stmt_bind_param($__stmt, "ssssssssii", $orderCode, $tokenHash, $__tenkh, $__sdt, $__email, $__diachi, $__note, $__tong, $__ngay, $makh_val);
     $insertOrder = mysqli_stmt_execute($__stmt);
     $orderID = mysqli_stmt_insert_id($__stmt);
@@ -115,16 +116,9 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     unset($_SESSION['chuyen']);
     unset($_SESSION['chuyen_size']);
 
-    $payUrl = momo_create_payment((int)$orderID, (int)$total, 'Thanh toan don hang ' . $orderCode);
-    if ($payUrl === null) {
-        // MoMo từ chối: hủy đơn vừa tạo và hoàn tồn kho (giỏ hàng đã được xóa trước khi gọi MoMo)
-        mysqli_query($con, "UPDATE `oder` SET `status` = 'CANCELLED', `payment_status` = 'FAILED' WHERE `id` = " . (int)$orderID);
-        restoreStock($con, (int)$orderID);
-        $_SESSION['swal_error'] = 'Không tạo được giao dịch MoMo. Vui lòng thử lại hoặc chọn phương thức khác.';
-        app_redirect(BASE_URL . 'shop/giohang.php');
-        exit;
-    }
-    app_payment_redirect($payUrl);
+    // Đơn chờ thanh toán SePay: chỉ phiên vừa đặt được chuyển sang cổng / xem kết quả của đơn này (không nhận id từ URL).
+    $_SESSION['sepay_order_id'] = (int)$orderID;
+    app_redirect(BASE_URL . 'shop/thanhtoansepay.php');
     exit;
 }
 
@@ -183,7 +177,7 @@ include BASE_PATH . 'includes/header.php';
     <section class="clean-block clean-info dark">
         <div class="container">
             <div class="block-heading text-center mb-5">
-                <h2 class="text-info font-weight-bold">Thanh toán Đơn hàng MoMo</h2>
+                <h2 class="text-info font-weight-bold">Thanh toán qua SePay</h2>
                 <p>Nhập thông tin giao hàng để tiếp tục thanh toán nhanh chóng và bảo mật</p>
             </div>
             
@@ -217,7 +211,7 @@ include BASE_PATH . 'includes/header.php';
                                     <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú về thời gian giao hàng..."></textarea>
                                 </div>
                                 <button type="submit" name="xacnhan" class="btn btn-info btn-lg w-100 font-weight-bold shadow-sm" style="font-size: 1.1rem; padding: 12px;">
-                                    Tiến hành Thanh Toán MoMo <i class="fas fa-arrow-right ml-2"></i>
+                                    Tiến hành thanh toán SePay <i class="fas fa-arrow-right ml-2"></i>
                                 </button>
                             </form>
                         </div>

@@ -37,7 +37,6 @@ $value = $_GET['value'] ?? '';
 $op = $_GET['op'] ?? '';
 switch ($op) {
     case 'redirect': app_redirect($value, 303);
-    case 'payment_redirect': app_payment_redirect($value);
     case 'https': app_https_redirect('https://shop.example.test/', $value);
     case 'require_user': require_user($value); break;
     case 'require_admin': require_admin($value); break;
@@ -45,7 +44,6 @@ switch ($op) {
     default:
         header('Content-Type: application/json');
         echo json_encode(match ($op) {
-            'payment' => app_payment_redirect_url($value),
             'return' => app_return_destination($value),
             default => app_local_redirect_url($value),
         });
@@ -141,22 +139,7 @@ echo 'REDIRECT_FELL_THROUGH';
             self.assertIsNone(headers.get('Location'))
             self.assertNotIn('REDIRECT_FELL_THROUGH', body)
 
-    def test_payment_exact_endpoint_and_https_upgrade(self):
-        endpoint = 'https://test-payment.momo.vn/v2/gateway/pay'
-        valid = [endpoint + '?t=abc&s=def',
-                 'https://payment.momo.vn/v2/gateway/pay?t=123']
-        for url in valid:
-            status, _, headers = self.call(url, 'payment_redirect')
-            self.assertEqual(status, 303)
-            self.assertEqual(headers['Location'], url)
-        for url in [endpoint.replace('https:', 'http:'), endpoint + '/extra', endpoint + '#evil',
-                    endpoint.replace('.vn/', '.vn.attacker.invalid/'),
-                    endpoint.replace('.vn/', '.vn:443/'), endpoint.replace('.vn/', '.vn@attacker.invalid/'),
-                    endpoint.replace('/gateway/', '/other/'), endpoint + '?x=%0a',
-                    '//test-payment.momo.vn/v2/gateway/pay']:
-            status, _, headers = self.call(url, 'payment_redirect')
-            self.assertEqual(status, 400)
-            self.assertIsNone(headers.get('Location'))
+    def test_https_upgrade(self):
         status, _, headers = self.call('/shop/shop.php?search=giay%20nam', 'https')
         self.assertEqual(status, 308)
         self.assertEqual(headers['Location'], 'https://shop.example.test/shop/shop.php?search=giay%20nam')
