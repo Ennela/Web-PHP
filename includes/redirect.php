@@ -46,7 +46,7 @@ function app_redirect_pages(): array
         'auth/dangnhap.php', 'auth/dangki.php', 'auth/quenmatkhau.php',
         'auth/datlamatkhau.php', 'auth/thongtintaikhoan.php',
         'shop/shop.php', 'shop/chitietsanpham.php', 'shop/giohang.php',
-        'shop/infodathang.php', 'shop/dathangonline.php', 'shop/tradonhang.php', 'shop/chitietdonhang.php',
+        'shop/infodathang.php', 'shop/dathangonline.php', 'shop/thanhtoansepay.php', 'shop/tradonhang.php', 'shop/chitietdonhang.php',
         'admin/', 'admin/index.php', 'admin/canhbao.php', 'admin/dangnhap.php', 'admin/trangchu.php',
         'admin/quanlisanpham.php', 'admin/quanlibaidang.php', 'admin/quanlidanhmuc.php',
         'admin/quanlithanhvien.php', 'admin/quanlikhachhang.php', 'admin/quanlidonhang.php',
@@ -117,32 +117,6 @@ function app_return_destination($id): string
         app_fail(400, 'Đích chuyển hướng không hợp lệ.');
     }
     return BASE_URL . $pages[$id];
-}
-
-function app_payment_endpoints(): array
-{
-    return ['https://sandbox.vnpayment.vn/paymentv2/vpcpay.html', 'https://pay.vnpay.vn/vpcpay.html',
-        // MoMo: payUrl trả về từ API tạo thanh toán (test và production)
-        'https://test-payment.momo.vn/v2/gateway/pay', 'https://payment.momo.vn/v2/gateway/pay'];
-}
-
-/** Payment is the sole external redirect: exact HTTPS endpoint, no fragment/userinfo/alternate port. */
-function app_payment_redirect_url($target): ?string
-{
-    if (!app_redirect_syntax_valid($target) || str_contains($target, '#')) {
-        return null;
-    }
-    $endpoint = explode('?', $target, 2)[0];
-    return in_array($endpoint, app_payment_endpoints(), true) ? $target : null;
-}
-
-function app_payment_redirect($target): never
-{
-    $location = app_payment_redirect_url($target);
-    if ($location === null) {
-        app_fail(400, 'Đích thanh toán không hợp lệ.');
-    }
-    app_send_redirect($location, 303);
 }
 
 /** HTTPS upgrade happens before BASE_URL exists. Pin origin to validated APP_URL. */

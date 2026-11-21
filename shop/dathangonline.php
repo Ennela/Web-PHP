@@ -9,16 +9,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
-// Cổng thanh toán do giỏ hàng chọn (session): vnpay (mặc định) hoặc momo
-$gateway = ($_SESSION['pay_gateway'] ?? 'vnpay') === 'momo' ? 'momo' : 'vnpay';
-if ($gateway === 'momo') {
-    require_once BASE_PATH . 'includes/momo.php';
-    momo_require_configuration();
-} else {
-    require_once(BASE_PATH . 'vnpay_php/config.php');
-    vnpay_require_configuration();
-}
+require_once BASE_PATH . 'includes/sepay.php';
+sepay_require_configuration();
 include BASE_PATH . 'includes/connect.php'; 
+sepay_expire_stale($con); // trả lại kho cho các đơn SePay quá hạn
 require_once BASE_PATH . 'includes/inventory_helper.php';
 
 // Load the cart from session
@@ -63,7 +57,6 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
         exit;
     }
 
-    // Lưu email khách vào session để dùng ở vnpay_return.php
     $_SESSION['email_kh'] = $email_kh;
     $_SESSION['tenkh_order'] = $tenkh;
 
@@ -99,12 +92,11 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     $__tong   = (string)$total;
     $__ngay   = time();
     $__stmt = mysqli_prepare($con,
-        "INSERT INTO `oder` (`order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `makh`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', ?)");
+        "INSERT INTO `oder` (`order_code`, `token`, `tenkh`, `sdt`, `email`, `diachi`, `note`, `tongtien`, `ngaytao`, `status`, `payment_status`, `vnpay_tranId`, `makh`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', '" . SEPAY_PENDING . "', ?)");
     mysqli_stmt_bind_param($__stmt, "ssssssssii", $orderCode, $tokenHash, $__tenkh, $__sdt, $__email, $__diachi, $__note, $__tong, $__ngay, $makh_val);
     $insertOrder = mysqli_stmt_execute($__stmt);
     $orderID = mysqli_stmt_insert_id($__stmt);
     mysqli_stmt_close($__stmt);
-    $_SESSION['vnpay_order_tokens'][(int)$orderID] = $token;
 
     $__stmtItem = mysqli_prepare($con,
         "INSERT INTO `oder_chitiet` (`madonhang`, `masp`, `quantity`, `size`, `price`, `created_time`, `last_updated`) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -124,74 +116,10 @@ if(isset($_GET['action']) && $_GET['action'] == 'submit'){
     unset($_SESSION['chuyen']);
     unset($_SESSION['chuyen_size']);
 
-    if ($gateway === 'momo') {
-        $payUrl = momo_create_payment((int)$orderID, (int)$total, 'Thanh toan don hang ' . $orderCode);
-        if ($payUrl === null) {
-            // MoMo từ chối: hủy đơn vừa tạo và hoàn tồn kho (giỏ hàng đã được xóa như luồng VNPAY)
-            mysqli_query($con, "UPDATE `oder` SET `status` = 'CANCELLED', `payment_status` = 'FAILED' WHERE `id` = " . (int)$orderID);
-            restoreStock($con, (int)$orderID);
-            $_SESSION['swal_error'] = 'Không tạo được giao dịch MoMo. Vui lòng thử lại hoặc chọn phương thức khác.';
-            app_redirect(BASE_URL . 'shop/giohang.php');
-            exit;
-        }
-        app_payment_redirect($payUrl);
-    }
-
-    // Generate VNPAY URL
-    $vnp_TxnRef = $orderID;
-    $vnp_OrderInfo = "Thanh_toan_don_hang_" . $orderID; 
-    $vnp_OrderType = "billpayment";
-    $vnp_Amount = (int)($total * 100);
-    $vnp_Locale = "vn";
-    $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
-
-    $inputData = array(
-        "vnp_Version" => "2.1.0",
-        "vnp_TmnCode" => $vnp_TmnCode,
-        "vnp_Amount" => $vnp_Amount,
-        "vnp_Command" => "pay",
-        "vnp_CreateDate" => date('YmdHis'),
-        "vnp_CurrCode" => "VND",
-        "vnp_IpAddr" => $vnp_IpAddr,
-        "vnp_Locale" => $vnp_Locale,
-        "vnp_OrderInfo" => $vnp_OrderInfo,
-        "vnp_OrderType" => $vnp_OrderType,
-        "vnp_ReturnUrl" => $vnp_Returnurl,
-        "vnp_TxnRef" => $vnp_TxnRef,
-        "vnp_ExpireDate" => $expire
-    );
-
-    // Loại bỏ các trường rỗng
-    $inputData = array_filter($inputData, function($val) {
-        return $val !== "" && $val !== null;
-    });
-
-    ksort($inputData);
-    $query_string = "";
-    $i = 0;
-    $hashdata = "";
-
-    function hashUrlEncode($value) {
-        return urlencode($value);
-    }
-
-    foreach ($inputData as $key => $value) {
-        if ($i == 1) {
-            $hashdata .= '&' . hashUrlEncode($key) . "=" . hashUrlEncode($value);
-        } else {
-            $hashdata .= hashUrlEncode($key) . "=" . hashUrlEncode($value);
-            $i = 1;
-        }
-        $query_string .= urlencode($key) . "=" . urlencode($value) . '&';
-    }
-
-    $vnp_Url = $vnp_Url . "?" . $query_string;
-    if (isset($vnp_HashSecret)) {
-        $vnpSecureHash = hash_hmac('sha512', $hashdata, trim($vnp_HashSecret));
-        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-    }
-
-    app_payment_redirect($vnp_Url);
+    // Đơn chờ thanh toán SePay: chỉ phiên vừa đặt được chuyển sang cổng / xem kết quả của đơn này (không nhận id từ URL).
+    $_SESSION['sepay_order_id'] = (int)$orderID;
+    $_SESSION['sepay_return_token'] = bin2hex(random_bytes(16)); // mã cho URL quay về, chống link hủy giả mạo
+    app_redirect(BASE_URL . 'shop/thanhtoansepay.php');
     exit;
 }
 
@@ -250,7 +178,7 @@ include BASE_PATH . 'includes/header.php';
     <section class="clean-block clean-info dark">
         <div class="container">
             <div class="block-heading text-center mb-5">
-                <h2 class="text-info font-weight-bold">Thanh toán Đơn hàng <?= $gateway === 'momo' ? 'MoMo' : 'VNPAY' ?></h2>
+                <h2 class="text-info font-weight-bold">Thanh toán qua SePay</h2>
                 <p>Nhập thông tin giao hàng để tiếp tục thanh toán nhanh chóng và bảo mật</p>
             </div>
             
@@ -284,7 +212,7 @@ include BASE_PATH . 'includes/header.php';
                                     <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú về thời gian giao hàng..."></textarea>
                                 </div>
                                 <button type="submit" name="xacnhan" class="btn btn-info btn-lg w-100 font-weight-bold shadow-sm" style="font-size: 1.1rem; padding: 12px;">
-                                    Tiến hành Thanh Toán <?= $gateway === 'momo' ? 'MoMo' : 'VNPAY' ?> <i class="fas fa-arrow-right ml-2"></i>
+                                    Tiến hành thanh toán SePay <i class="fas fa-arrow-right ml-2"></i>
                                 </button>
                             </form>
                         </div>

@@ -52,7 +52,8 @@ if (!empty($_POST['action']) && $_POST['action'] == 'update_status') {
             }
             $stockResult = validateAndDeductStock($con, $items);
             if ($stockResult['success']) {
-                $paymentUpdate = ($new_status === 'DELIVERED') ? ", `payment_status` = 'PAID'" : "";
+                // Khôi phục đơn đã nhận tiền SePay muộn (LATE_PAID) thì đơn coi như đã thanh toán.
+                $paymentUpdate = ($new_status === 'DELIVERED' || $paymentStatus === 'LATE_PAID') ? ", `payment_status` = 'PAID'" : "";
                 mysqli_query($con, "UPDATE `oder` SET `status` = '$new_status' $paymentUpdate WHERE `id` = $order_id");
             } else {
                 // Không đủ tồn kho, không cho chuyển trạng thái
@@ -673,6 +674,11 @@ function getAdminStatusInfo($status) {
                                             <i class="fas <?= e($statusInfo['icon']) ?>"></i>
                                             <?= e($statusInfo['label']) ?>
                                         </span>
+                                        <?php if (($row['payment_status'] ?? '') === 'LATE_PAID'): ?>
+                                        <div class="text-xs font-bold mt-1" style="color:#dc2626;" title="Tiền SePay về sau khi đơn đã hủy">Đã nhận tiền sau khi hủy: hoàn tiền hoặc khôi phục đơn</div>
+                                        <?php elseif (($row['payment_status'] ?? '') === 'REFUNDED'): ?>
+                                        <div class="text-xs mt-1" style="color:#6b7280;">Đã hoàn tiền</div>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-center">
                                         <form method="POST" action="quanlidonhang.php<?= e(!empty($_GET['page']) ? '?page=' . max(1, (int)$_GET['page']) : '') ?>" class="status-form">

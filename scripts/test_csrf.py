@@ -178,9 +178,10 @@ class CsrfTests(unittest.TestCase):
         for method in ['PUT', 'PATCH', 'DELETE']:
             status, _, _ = self.browser.request('auth/dangki.php', b'', method=method)
             self.assertEqual(status, 405)
-        for query in ['', '?vnp_TxnRef=1&vnp_ResponseCode=24', '?vnp_SecureHash[]=bad']:
-            status, _, _ = self.browser.request('shop/vnpay_return.php' + query)
-            self.assertIn(status, [403, 503])  # Payment is disabled until merchant secrets are configured.
+        for headers in [{'Content-Type': 'application/json'},
+                        {'Content-Type': 'application/json', 'X-Secret-Key': 'wrong-secret-0000000000'}]:
+            status, _, _ = self.browser.request('shop/sepay_ipn.php', b'{"notification_type":"ORDER_PAID"}', headers)
+            self.assertIn(status, [401, 503])  # No IPN secret, no state change (503 while SePay is unconfigured).
         status, _, _ = self.browser.request('webhooks/mailjet_webhook.php', b'[]', {
             'Content-Type': 'application/json', 'X-Webhook-Secret': 'invalid-secret',
         })

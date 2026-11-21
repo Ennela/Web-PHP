@@ -68,7 +68,7 @@ class PublicServerTests(unittest.TestCase):
             'scripts/test_csrf.py', 'scratch/backups/giaythethao2-before-migration.sql',
             'scratch/runtime/frankenphp', 'includes/connect.php', 'includes/security.php',
             'config.php', 'config.php/extra', 'admin/connect_db.php', 'admin/function.php',
-            'vnpay_php/config.php', 'deploy/php-security.ini', 'Dockerfile', 'Caddyfile',
+            'includes/sepay.php', 'deploy/php-security.ini', 'Dockerfile', 'Caddyfile',
             'lib/htmlpurifier/library/HTMLPurifier.php', 'lib/htmlpurifier/UPSTREAM.json',
             'docker-entrypoint.sh', 'composer.json', 'composer.lock',
             'backup.sql.gz', 'backup.sql.zip', 'settings.ini.old', 'application.log.1',
@@ -149,13 +149,12 @@ if ($case === 'db_failure' || $case === 'production_db_root') {
     app_database_connection();
 }
 if (in_array($case, ['payment_valid', 'payment_invalid_url', 'payment_missing'], true)) {
-    putenv('VNPAY_TMN_CODE=TEST0001');
-    putenv('VNPAY_HASH_SECRET=' . ($case === 'payment_missing' ? '' : 'isolated-payment-test-secret'));
-    putenv('VNPAY_URL=' . ($case === 'payment_invalid_url'
-        ? 'https://sandbox.vnpayment.vn.attacker.invalid/paymentv2/vpcpay.html'
-        : 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'));
-    require __ROOT__ . '/vnpay_php/config.php';
-    vnpay_require_configuration();
+    putenv('SEPAY_ENV=' . ($case === 'payment_invalid_url' ? 'https://pay.sepay.vn.attacker.invalid' : 'sandbox'));
+    putenv('SEPAY_MERCHANT_ID=SP-TEST-ISOLATED1');
+    putenv('SEPAY_SECRET_KEY=' . ($case === 'payment_missing' ? '' : 'isolated-payment-test-secret'));
+    putenv('SEPAY_IPN_SECRET=isolated-ipn-test-secret');
+    require __ROOT__ . '/includes/sepay.php';
+    sepay_require_configuration();
 }
 header('Content-Type: application/json; charset=utf-8');
 if ($case === 'lint') {
